@@ -1,0 +1,31 @@
+import { ProLayoutSkeleton } from '@/components/ProLayoutSkeleton'
+
+export default function ReportsLoading() {
+  return (
+    <ProLayoutSkeleton activeHref="/reports">
+      <div className="p-8">
+        <div className="animate-pulse">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="h-8 w-32 bg-muted rounded mb-2" />
+              <div className="h-4 w-48 bg-muted rounded" />
+            </div>
+            <div className="h-10 w-28 bg-muted rounded-lg" />
+          </div>
+
+          <div className="bg-background rounded-xl border divide-y">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="p-4 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-muted" />
+                <div className="flex-1">
+                  <div className="h-4 w-48 bg-muted rounded mb-2" />
+                  <div className="h-3 w-32 bg-muted rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </ProLayoutSkeleton>
+  )
+}

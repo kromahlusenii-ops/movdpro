@@ -1,0 +1,436 @@
+/* Import distinctive fonts - must be first */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * movd Design System
+ * Editorial, warm, trustworthy - not generic AI/tech
+ * Inspired by: Airbnb editorial, The Cut, local neighborhood guides
+ */
+
+@layer base {
+  :root {
+    /* Dieter Rams inspired - minimal, functional palette */
+    --background: 45 33% 97%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    /* Primary: Warm orange - human, approachable */
+    --primary: 24 53% 51%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Light accent background */
+    --secondary: 144 20% 94%;
+    --secondary-foreground: 144 33% 27%;
+
+    --muted: 40 14% 94%;
+    --muted-foreground: 40 5% 40%;
+
+    /* Accent: Forest green - trustworthy, grounded */
+    --accent: 144 33% 27%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 14% 89%;
+    --input: 40 14% 89%;
+    --ring: 144 33% 27%;
+    --radius: 0.5rem;
+
+    /* Landing page specific */
+    --warm: 24 53% 51%;
+    --warm-light: 30 50% 96%;
+    --accent-light: 144 30% 94%;
+
+    /* Editorial typography scale */
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+  }
+
+  .dark {
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 24 53% 55%;
+    --primary-foreground: 0 0% 8%;
+
+    --secondary: 144 15% 18%;
+    --secondary-foreground: 144 20% 85%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 144 30% 40%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 144 30% 40%;
+
+    --warm: 24 53% 55%;
+    --warm-light: 24 30% 15%;
+    --accent-light: 144 20% 15%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Editorial typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+}
+
+/* ===== CUSTOM COMPONENTS ===== */
+
+/* Editorial headline styles */
+.headline-display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.headline-editorial {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+/* Atmospheric backgrounds */
+.bg-texture {
+  background-image:
+    radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+.bg-warm-gradient {
+  background: linear-gradient(
+    135deg,
+    hsl(42 33% 98%) 0%,
+    hsl(40 25% 96%) 50%,
+    hsl(38 20% 94%) 100%
+  );
+}
+
+.bg-editorial-dark {
+  background: linear-gradient(
+    180deg,
+    hsl(24 10% 10%) 0%,
+    hsl(24 15% 8%) 100%
+  );
+}
+
+/* Card styles - editorial, not generic */
+.card-editorial {
+  @apply bg-card rounded-lg border shadow-sm;
+  box-shadow:
+    0 1px 2px hsl(var(--foreground) / 0.04),
+    0 4px 12px hsl(var(--foreground) / 0.03);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card-editorial:hover {
+  box-shadow:
+    0 2px 4px hsl(var(--foreground) / 0.05),
+    0 8px 24px hsl(var(--foreground) / 0.08);
+  transform: translateY(-2px);
+}
+
+/* Quote/testimonial style */
+.quote-block {
+  @apply relative pl-6 border-l-2 border-primary/30;
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+.quote-block::before {
+  content: '"';
+  @apply absolute -left-1 -top-4 text-6xl text-primary/20;
+  font-family: var(--font-display);
+  line-height: 1;
+}
+
+/* Grade badges - more refined, less gamified */
+.grade-badge {
+  @apply inline-flex items-center justify-center w-10 h-10 rounded-lg font-semibold text-lg;
+  font-family: var(--font-display);
+}
+
+.grade-a {
+  @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+}
+
+.grade-b {
+  @apply bg-sky-50 text-sky-700 border border-sky-200;
+}
+
+.grade-c {
+  @apply bg-amber-50 text-amber-700 border border-amber-200;
+}
+
+.grade-d {
+  @apply bg-orange-50 text-orange-700 border border-orange-200;
+}
+
+.grade-f {
+  @apply bg-red-50 text-red-700 border border-red-200;
+}
+
+/* Score bars - subtle, not flashy */
+.score-bar {
+  @apply h-1.5 rounded-full bg-muted overflow-hidden;
+}
+
+.score-bar-fill {
+  @apply h-full rounded-full transition-all duration-500 ease-out;
+}
+
+/* Priority pills - refined selection */
+.priority-pill {
+  @apply px-4 py-2.5 rounded-full border transition-all duration-200 cursor-pointer;
+  @apply hover:border-primary/40 hover:bg-primary/5;
+}
+
+.priority-pill.selected {
+  @apply bg-primary text-primary-foreground border-primary;
+}
+
+/* Editorial divider */
+.divider-editorial {
+  @apply relative my-12;
+}
+
+.divider-editorial::before {
+  content: '';
+  @apply absolute left-1/2 -translate-x-1/2 w-16 h-px bg-border;
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ===== ANIMATIONS ===== */
+
+/* Subtle fade in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slide up with fade */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Staggered reveal for lists */
+@keyframes staggerReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Gentle scale */
+@keyframes gentleScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+.animate-stagger-reveal {
+  animation: staggerReveal 0.5s ease-out forwards;
+}
+
+.animate-gentle-scale {
+  animation: gentleScale 0.4s ease-out forwards;
+}
+
+/* Stagger delays */
+.stagger-1 { animation-delay: 0.1s; opacity: 0; }
+.stagger-2 { animation-delay: 0.2s; opacity: 0; }
+.stagger-3 { animation-delay: 0.3s; opacity: 0; }
+.stagger-4 { animation-delay: 0.4s; opacity: 0; }
+.stagger-5 { animation-delay: 0.5s; opacity: 0; }
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+/* Focus ring - warm, not harsh blue */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 focus:ring-offset-background;
+}
+
+/* ===== OVERRIDES ===== */
+
+/* Mapbox overrides */
+.mapboxgl-ctrl-logo {
+  display: none !important;
+}
+
+/* Button refinements */
+button, [role="button"] {
+  font-family: var(--font-body);
+}
+
+/* Input refinements */
+input, textarea, select {
+  font-family: var(--font-body);
+}
+
+input::placeholder, textarea::placeholder {
+  @apply text-muted-foreground/60;
+}
+
+/* Link hover effect */
+a {
+  @apply transition-colors duration-200;
+}
+
+/* Selection color */
+::selection {
+  @apply bg-primary/20 text-foreground;
+}
+
+/* ===== LIQUID GLASS TEXT EFFECT ===== */
+.liquid-glass-text {
+  color: transparent;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.7) 25%,
+    rgba(200, 220, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0.75) 75%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    0 0 30px rgba(255, 255, 255, 0.3),
+    0 0 60px rgba(255, 255, 255, 0.1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Glass card effect for quiz container */
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Glass input styling */
+.glass-input {
+  @apply bg-white/10 border-white/20 text-white placeholder:text-white/50;
+  backdrop-filter: blur(10px);
+}
+
+.glass-input:focus {
+  @apply bg-white/15 border-white/40 ring-white/20;
+}
+
+/* Glass button */
+.glass-button {
+  @apply bg-white/20 border border-white/30 text-white;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.glass-button:hover {
+  @apply bg-white/30 border-white/40;
+}
+
+.glass-button-primary {
+  @apply bg-white text-black font-medium;
+}
+
+.glass-button-primary:hover {
+  @apply bg-white/90;
+}

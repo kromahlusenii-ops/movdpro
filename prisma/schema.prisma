@@ -1,0 +1,714 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User account for authentication and data management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions       QuizSession[]
+  magicLinks     MagicLink[]
+  shareLinks     ShareLink[]
+  locatorProfile LocatorProfile?
+
+  @@index([email])
+}
+
+// Magic link tokens for passwordless authentication
+model MagicLink {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  email     String
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([token])
+  @@index([email])
+}
+
+// Share links for public report access
+model ShareLink {
+  id        String      @id @default(cuid())
+  shareId   String      @unique @default(cuid())
+  sessionId String
+  session   QuizSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  showTopN  Int         @default(3)
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+
+  @@index([shareId])
+  @@index([sessionId])
+}
+
+model Neighborhood {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+  tier Int    // 1, 2, or 3
+
+  // Scores (0-100)
+  infrastructureScore Float @default(0)
+  safetyScore         Float @default(0)
+  livabilityScore     Float @default(0)
+  trajectoryScore     Float @default(0)
+  sentimentScore      Float @default(0)
+  compositeScore      Float @default(0)
+
+  // Letter grade (A+, A, A-, B+, etc.)
+  grade String @default("B")
+
+  // Raw data
+  walkScore    Int?
+  transitScore Int?
+  bikeScore    Int?
+  medianRent   Int?
+  rentMin      Int?
+  rentMax      Int?
+
+  // GeoJSON boundary for map
+  boundary  Json?
+  centerLat Float
+  centerLng Float
+
+  // Metadata
+  description String?
+  warnings    String[] // Array of warning strings
+  highlights  String[] // Array of positive highlights
+
+  // Neighborhood character (e.g., "HISTORIC", "WALKABLE", "TRENDY")
+  characterTags String[] // Short descriptor tags for the neighborhood vibe
+  tagline       String?  // One-line character summary (e.g., "Where historic charm meets modern dining")
+
+  // 311 data insights (informational, not heavily scored)
+  civicInsights String?  // AI-analyzed 311 data insights (noise, infrastructure issues, etc.)
+
+  // Imagery
+  heroImage   String?  // Main lifestyle image for the neighborhood
+  thumbImage  String?  // Thumbnail for cards
+
+  // AI-generated content
+  sentimentSummary String?  // AI summary of what residents say
+  lifestyleSummary String?  // AI summary of lifestyle/venues
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sentimentQuotes     SentimentQuote[]
+  quizResults         QuizResult[]
+  lifestyleVenues     LifestyleVenue[]
+  apartmentListings   ApartmentListing[]
+  buildings           Building[]
+}
+
+model SentimentQuote {
+  id             String       @id @default(cuid())
+  neighborhoodId String
+  neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
+  source         String       // "reddit" or "tiktok"
+  content        String
+  sentiment      String       // "positive", "negative", "neutral"
+  theme          String?      // "noise", "safety", "walkability", etc.
+  postUrl        String?      // URL to original post
+  postId         String?      // Reddit post ID or TikTok video ID
+  author         String?      // Username/handle
+  subreddit      String?      // For Reddit: subreddit name
+  upvotes        Int?         // For Reddit: upvote count
+  postDate       DateTime?    // When the original post was made
+  createdAt      DateTime     @default(now())
+
+  @@index([neighborhoodId])
+}
+
+model QuizSession {
+  id String @id @default(cuid())
+
+  // Quiz inputs
+  budgetMin   Int
+  budgetMax   Int
+  priorities  String[] // ["quiet", "walkable", "safe"]
+  vibes       String[] // ["young-professional", "foodie"] - multiple vibes now
+  workAddress String?
+  maxCommute  Int?     // minutes
+
+  // New demographic inputs
+  ageBracket      String?  // "18-24", "25-34", "35-44", "45-54", "55+"
+  bedrooms        String?  // "studio", "1br", "2br", "3br+"
+  bathrooms       String?  // "1ba", "1.5ba", "2ba", "2.5ba+"
+  hasKids         Boolean  @default(false)
+  hasDog          Boolean  @default(false)
+  moveStatus      String?  // "moving" (relocating to Charlotte) or "local" (already living here)
+  transportation  String?  // "has-car" or "no-car"
+  additionalNotes String?  // Optional free-form context for better AI personalization
+
+  // Traffic source tracking (captured from UTM parameters)
+  utmSource   String?  // e.g., "reddit", "instagram", "facebook", "google"
+  utmMedium   String?  // e.g., "social", "cpc", "organic", "email"
+  utmCampaign String?  // e.g., "summer_promo", "charlotte_launch"
+  utmTerm     String?  // e.g., "relocation", "apartment_hunting" - ad keyword/targeting
+  utmContent  String?  // e.g., "move_before_listings" - ad variation/creative
+  referrer    String?  // Document referrer if no UTM params
+
+  // Results
+  results QuizResult[]
+
+  // User relation
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Share links
+  shareLinks ShareLink[]
+
+  // Payment
+  paid            Boolean  @default(false)
+  stripeSessionId String?  @unique
+  stripePaymentId String?
+  email           String?
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+
+  @@index([stripeSessionId])
+  @@index([userId])
+  @@index([email])
+}
+
+model QuizResult {
+  id             String       @id @default(cuid())
+  sessionId      String
+  session        QuizSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  neighborhoodId String
+  neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
+
+  matchScore Float // Weighted match percentage
+  rank       Int
+
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([neighborhoodId])
+}
+
+model Waitlist {
+  id        String   @id @default(cuid())
+  email     String
+  city      String
+  createdAt DateTime @default(now())
+
+  @@unique([email, city])
+}
+
+model LifestyleVenue {
+  id             String       @id @default(cuid())
+  neighborhoodId String
+  neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
+
+  name        String
+  category    String // "restaurant", "bar", "cafe", "park", "gym", "grocery", "nightlife"
+  subcategory String? // "brunch", "fine_dining", "dive_bar", "dog_park", etc.
+  address     String?
+  rating      Float? // 0-5 stars
+  priceLevel  Int? // 1-4 ($-$$$$)
+  description String?
+  googlePlaceId String?
+  yelpId      String?
+
+  // Coordinates for map
+  lat Float?
+  lng Float?
+
+  // Imagery
+  photoUrl    String?  // Google Places photo URL
+  photoRef    String?  // Google Places photo reference (for fetching)
+
+  // Metadata
+  isHighlight Boolean @default(false) // Featured venue for neighborhood
+  tags        String[] // ["outdoor_seating", "dog_friendly", "live_music"]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([neighborhoodId])
+  @@index([category])
+}
+
+model ApartmentListing {
+  id             String       @id @default(cuid())
+  neighborhoodId String
+  neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
+
+  // Core listing info
+  name        String
+  address     String
+  description String?
+
+  // Rent & units
+  rentMin   Int
+  rentMax   Int
+  bedrooms  String[] // ["studio", "1br", "2br", "3br+"]
+  bathrooms Float?
+  sqftMin   Int?
+  sqftMax   Int?
+
+  // Amenities & features
+  amenities   String[] // ["pool", "gym", "parking", "pet-friendly", "in-unit-laundry"]
+  petPolicy   String?  // "cats-only", "dogs-allowed", "no-pets"
+  parkingType String?  // "garage", "surface", "street", "none"
+
+  // Ratings & scores
+  rating      Float? // 0-5 stars from Google Places
+  reviewCount Int?
+  walkScore   Int?
+  transitScore Int?
+
+  // Coordinates
+  lat Float
+  lng Float
+
+  // Media
+  photoUrl String?  // Primary photo URL
+  photos   String[] // Array of photo URLs
+
+  // External IDs
+  rentCastId    String?  @unique // RentCast property ID
+  googlePlaceId String?  // Google Places ID for enrichment
+  listingUrl    String?  // External listing URL
+
+  // Property Management
+  managementCompany     String?  // "greystar", etc.
+  isGreystar            Boolean  @default(false)
+  greystarConfidence    String?  // "high", "medium", "none"
+  floorplansUrl         String?  // Deep link to floorplans with filters
+  greystarDetectedAt    DateTime? // When Greystar detection was last run
+
+  // Metadata
+  source      String   @default("rentcast") // "rentcast", "manual"
+  isAvailable Boolean  @default(true)
+  isHighlight Boolean  @default(false)
+  tags        String[]
+
+  // Sync tracking
+  lastSyncedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([neighborhoodId])
+  @@index([rentMin, rentMax])
+  @@index([isAvailable])
+}
+
+// ============================================================================
+// MOVD PRO v3 - Building-Centric Data Model
+// ============================================================================
+
+// Management company (Greystar, MAA, Cortland, etc.)
+model ManagementCompany {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  slug     String  @unique
+  website  String?
+  logoUrl  String?
+
+  // Scraping metadata
+  scrapeStrategy String? // "greystar", "maa-api", "cortland", etc.
+  lastScrapedAt  DateTime?
+  scrapeStatus   String    @default("active") // active, paused, error
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  buildings Building[]
+
+  @@index([slug])
+}
+
+// Physical building/property
+model Building {
+  id             String             @id @default(cuid())
+  managementId   String?
+  management     ManagementCompany? @relation(fields: [managementId], references: [id], onDelete: SetNull)
+  neighborhoodId String
+  neighborhood   Neighborhood       @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
+
+  // Core info
+  name    String
+  address String
+  city    String @default("Charlotte")
+  state   String @default("NC")
+  zipCode String?
+
+  // Location
+  lat Float
+  lng Float
+
+  // Google Places enrichment
+  googlePlaceId String?
+  rating        Float? // 0-5
+  reviewCount   Int?
+  website       String?
+  phone         String?
+
+  // Media
+  primaryPhotoUrl String?
+  photos          String[]
+
+  // Building amenities (shared across units)
+  amenities   String[] // ["pool", "gym", "parking", "pet-friendly"]
+  petPolicy   String? // "cats-only", "dogs-allowed", "no-pets"
+  parkingType String? // "garage", "covered", "surface"
+
+  // Deep link to management company
+  listingUrl    String? // Direct link to property page
+  floorplansUrl String? // Deep link to floor plans
+
+  // Metadata
+  yearBuilt    Int?
+  totalUnits   Int?
+  isAvailable  Boolean   @default(true)
+  lastSyncedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  units          Unit[]
+  specials       Special[]
+  savedToClients ClientSavedBuilding[]
+
+  @@unique([managementId, address])
+  @@index([neighborhoodId])
+  @@index([lat, lng])
+  @@index([isAvailable])
+}
+
+// Move-in specials and promotions
+model Special {
+  id         String   @id @default(cuid())
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  unitId     String?  // Null if building-wide, set if unit/floorplan-specific
+  unit       Unit?    @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  // Provider info
+  provider String // "greystar", "maa", "cortland"
+
+  // Special details
+  title         String  // Short name (e.g. "1 Month Free")
+  description   String  // Full text of the special
+  discountType  String? // months_free, reduced_rent, waived_fees, gift_card, other
+  discountValue Float?  // Dollar amount or number of months
+  conditions    String? // Move-in date requirements, lease length, etc.
+
+  // Validity dates
+  startDate DateTime?
+  endDate   DateTime?
+
+  // Source tracking
+  sourceUrl String  // URL the special was scraped from
+  rawHtml   String? // Raw HTML for debugging/reprocessing
+
+  // Metadata
+  scrapedAt DateTime @default(now())
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([buildingId])
+  @@index([unitId])
+  @@index([provider])
+  @@index([isActive])
+  @@index([endDate])
+}
+
+// Unit/floor plan within a building
+model Unit {
+  id         String   @id @default(cuid())
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+
+  // Unit/listing info
+  unitNumber String? // "Apt 552", "Unit 301", etc. (from RentCast listing)
+  name       String? // Floor plan name like "The Graham", "A1", etc.
+  bedrooms   Int // 0 for studio
+  bathrooms  Float
+  sqftMin    Int?
+  sqftMax    Int?
+
+  // Pricing
+  rentMin Int
+  rentMax Int
+
+  // Availability
+  availableCount Int       @default(0) // How many of this floor plan available
+  availableDate  DateTime?
+
+  // Floor plan specific photos
+  photoUrl String?
+
+  // RentCast integration
+  rentCastId   String? @unique // Link to RentCast listing
+  rentCastData Json?   // Raw RentCast response for reference
+
+  // Metadata
+  isAvailable  Boolean   @default(true)
+  lastSyncedAt DateTime?
+
+  // Clients who saved this listing
+  savedByClients ClientSavedListing[]
+
+  // Unit-specific specials
+  specials Special[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([buildingId])
+  @@index([bedrooms])
+  @@index([rentCastId])
+  @@index([rentMin, rentMax])
+}
+
+// Join table for clients saving buildings with AI match scores
+model ClientSavedBuilding {
+  id         String        @id @default(cuid())
+  clientId   String
+  client     LocatorClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  buildingId String
+  building   Building      @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+
+  notes       String?
+  matchScore  Float? // AI-calculated match score (0-100)
+  matchReason String? // AI-generated explanation
+
+  createdAt DateTime @default(now())
+
+  @@unique([clientId, buildingId])
+  @@index([clientId])
+  @@index([buildingId])
+}
+
+// Join table for clients saving individual listings (units)
+model ClientSavedListing {
+  id       String        @id @default(cuid())
+  clientId String
+  client   LocatorClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  unitId   String
+  unit     Unit          @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([clientId, unitId])
+  @@index([clientId])
+  @@index([unitId])
+}
+
+// ============================================================================
+// MOVD PRO - B2B Platform for Apartment Locators
+// ============================================================================
+
+// Locator professional profile
+model LocatorProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Auth (password-based for Pro)
+  passwordHash String
+
+  // Business info
+  companyName String?
+  companyLogo String?
+  phone       String?
+
+  // Subscription (Stripe)
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  subscriptionStatus   String    @default("trialing") // trialing, active, past_due, canceled
+  trialEndsAt          DateTime?
+  currentPeriodEnd     DateTime?
+
+  // Credits
+  creditsRemaining Int       @default(50)
+  creditsResetAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clients       LocatorClient[]
+  reports       ProReport[]
+  savedSearches ProSavedSearch[]
+  comparisons   ProComparison[]
+  creditLedger  CreditLedger[]
+
+  @@index([stripeCustomerId])
+  @@index([subscriptionStatus])
+}
+
+// Locator's clients (max 20 active)
+model LocatorClient {
+  id        String         @id @default(cuid())
+  locatorId String
+  locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
+
+  name   String
+  email  String?
+  phone  String?
+  notes  String?
+  status String  @default("active") // active, placed, archived
+
+  // Requirements
+  budgetMin     Int?
+  budgetMax     Int?
+  bedrooms      String[]
+  neighborhoods String[]
+  amenities     String[]
+  moveInDate    DateTime?
+
+  // Lifestyle preferences (for AI matching)
+  vibes             String[] // urban-explorer, nightlife, fitness, family-friendly, etc.
+  priorities        String[] // quiet, walkable, nightlife, family-friendly, safe, good-transit, parks, trendy, well-maintained
+  hasDog            Boolean  @default(false)
+  hasCat            Boolean  @default(false)
+  hasKids           Boolean  @default(false)
+  worksFromHome     Boolean  @default(false)
+  needsParking      Boolean  @default(false)
+  commuteAddress    String?  // Work address for commute calculations
+  commutePreference String?  // walkable, transit, driving
+
+  // Saved apartments (legacy - kept for migration)
+  savedApartmentIds String[]
+
+  // Saved buildings (v3)
+  savedBuildings ClientSavedBuilding[]
+
+  // Saved listings (individual units)
+  savedListings ClientSavedListing[]
+
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  reports      ProReport[]
+  shareReports ClientShareReport[]
+
+  @@index([locatorId])
+  @@index([status])
+}
+
+// Shareable client report (public link, no login required)
+model ClientShareReport {
+  id        String        @id @default(cuid())
+  shareId   String        @unique @default(cuid())
+  clientId  String
+  client    LocatorClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Snapshot of data at time of share
+  clientName  String
+  preferences Json   // Budget, bedrooms, neighborhoods, vibes, priorities, etc.
+  listings    Json   // Array of listing snapshots with building/neighborhood data
+
+  // Metadata
+  viewCount    Int       @default(0)
+  lastViewedAt DateTime?
+  expiresAt    DateTime?
+  isActive     Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, shareId])
+  @@index([shareId])
+}
+
+// Credit usage tracking
+model CreditLedger {
+  id        String         @id @default(cuid())
+  locatorId String
+  locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
+
+  action   String // search, report, monthly_reset
+  amount   Int // positive = credit, negative = debit
+  balance  Int
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([locatorId])
+  @@index([createdAt])
+}
+
+// Saved apartment searches
+model ProSavedSearch {
+  id        String         @id @default(cuid())
+  locatorId String
+  locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
+
+  name     String
+  filters  Json // neighborhoods, budget, beds, amenities
+  newCount Int  @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([locatorId])
+}
+
+// Property comparisons (max 3 properties)
+model ProComparison {
+  id        String         @id @default(cuid())
+  locatorId String
+  locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
+
+  name        String?
+  propertyIds String[]
+  notes       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([locatorId])
+}
+
+// Client-facing reports
+model ProReport {
+  id        String         @id @default(cuid())
+  locatorId String
+  locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    LocatorClient? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  title           String
+  propertyIds     String[] // Legacy - kept for migration
+  buildingIds     String[] // v3 - building references
+  neighborhoodIds String[]
+  customNotes     String?
+  aiSummary       String? // AI-generated report summary
+
+  // Sharing
+  shareToken String  @unique @default(cuid())
+  isPublic   Boolean @default(true)
+  viewCount  Int     @default(0)
+
+  // PDF
+  pdfUrl String?
+
+  createdAt DateTime @default(now())
+
+  @@index([locatorId])
+  @@index([clientId])
+  @@index([shareToken])
+}
