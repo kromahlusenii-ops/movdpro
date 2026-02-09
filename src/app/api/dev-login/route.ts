@@ -33,7 +33,7 @@ export async function GET() {
     // Create locator profile if doesn't exist
     if (!user.locatorProfile) {
       const trialEndsAt = new Date()
-      trialEndsAt.setDate(trialEndsAt.getDate() + 14)
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7)
 
       const passwordHash = await bcrypt.hash(testPassword, 12)
 

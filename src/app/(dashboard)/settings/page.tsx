@@ -1,8 +1,19 @@
 import { getSessionUserCached, getLocatorWithEmailCached } from '@/lib/pro-auth'
+import { SubscriptionActions } from './SubscriptionActions'
 
-export default async function ProSettingsPage() {
+export default async function ProSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>
+}) {
   const user = await getSessionUserCached()
   const locator = await getLocatorWithEmailCached(user!.id)
+  const params = await searchParams
+
+  const trialExpired =
+    locator?.subscriptionStatus === 'trialing' &&
+    locator?.trialEndsAt &&
+    new Date(locator.trialEndsAt) < new Date()
 
   return (
     <div className="p-8 max-w-2xl">
@@ -41,15 +52,25 @@ export default async function ProSettingsPage() {
                   locator?.subscriptionStatus === 'active'
                     ? 'bg-emerald-100 text-emerald-700'
                     : locator?.subscriptionStatus === 'trialing'
-                    ? 'bg-amber-100 text-amber-700'
+                    ? trialExpired
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-amber-100 text-amber-700'
+                    : locator?.subscriptionStatus === 'past_due'
+                    ? 'bg-red-100 text-red-700'
                     : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {locator?.subscriptionStatus === 'trialing' ? 'Trial' : locator?.subscriptionStatus}
+                {locator?.subscriptionStatus === 'trialing'
+                  ? trialExpired
+                    ? 'Trial Expired'
+                    : 'Trial'
+                  : locator?.subscriptionStatus === 'past_due'
+                  ? 'Past Due'
+                  : locator?.subscriptionStatus}
               </span>
             </dd>
           </div>
-          {locator?.trialEndsAt && locator?.subscriptionStatus === 'trialing' && (
+          {locator?.trialEndsAt && locator?.subscriptionStatus === 'trialing' && !trialExpired && (
             <div>
               <dt className="text-sm text-muted-foreground">Trial ends</dt>
               <dd className="font-medium">
@@ -62,6 +83,14 @@ export default async function ProSettingsPage() {
             <dd className="font-medium">{locator?.creditsRemaining} / 50</dd>
           </div>
         </dl>
+
+        <div className="mt-6">
+          <SubscriptionActions
+            subscriptionStatus={locator?.subscriptionStatus ?? 'trialing'}
+            stripeCustomerId={locator?.stripeCustomerId ?? null}
+            showSuccess={params.checkout === 'success'}
+          />
+        </div>
       </div>
 
       {/* Danger Zone */}

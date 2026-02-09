@@ -159,6 +159,84 @@ export async function sendConfirmationEmail({ to, sessionId }: SendConfirmationE
   }
 }
 
+interface SendWelcomeProEmailParams {
+  to: string
+}
+
+export async function sendWelcomeProEmail({ to }: SendWelcomeProEmailParams): Promise<{ success: boolean; error?: string }> {
+  if (!SENDGRID_API_KEY) {
+    console.error('SENDGRID_API_KEY is not set - cannot send welcome email')
+    return { success: false, error: 'Email service not configured' }
+  }
+
+  const dashboardUrl = `${APP_URL}/dashboard`
+
+  try {
+    await sgMail.send({
+      to,
+      from: FROM_EMAIL,
+      subject: 'Welcome to MOVD Pro — you\'re all set',
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; padding: 40px 20px;">
+            <div style="max-width: 520px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <div style="display: inline-block; width: 48px; height: 48px; background: #18181b; border-radius: 12px; line-height: 48px; color: white; font-weight: bold; font-size: 24px;">m</div>
+              </div>
+
+              <h1 style="font-size: 24px; font-weight: 600; color: #111827; margin: 0 0 16px; text-align: center;">
+                Thanks for joining MOVD Pro!
+              </h1>
+
+              <p style="color: #374151; font-size: 16px; line-height: 1.7; margin: 0 0 24px; text-align: center;">
+                We appreciate you trusting us. Your subscription is now active and you have full unlimited access to everything MOVD Pro offers.
+              </p>
+
+              <div style="background: #f0fdf4; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                <h2 style="font-size: 16px; font-weight: 600; color: #166534; margin: 0 0 12px;">
+                  What you get
+                </h2>
+                <ul style="color: #374151; font-size: 15px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                  <li>Search 600+ Charlotte apartments in one place</li>
+                  <li>Compare properties side by side</li>
+                  <li>Generate client-ready reports with your branding</li>
+                  <li>50 credits per month, refreshed automatically</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin-bottom: 24px;">
+                <a href="${dashboardUrl}" style="display: inline-block; background: #18181b; color: white; text-decoration: none; font-weight: 600; font-size: 16px; padding: 14px 32px; border-radius: 8px;">
+                  Go to Dashboard
+                </a>
+              </div>
+
+              <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0; text-align: center;">
+                Questions or feedback? Just reply to this email — we read every one.
+              </p>
+
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;">
+
+              <p style="color: #9ca3af; font-size: 12px; line-height: 1.5; margin: 0; text-align: center;">
+                Powered by <a href="${APP_URL}" style="color: #9ca3af;">MOVD</a>
+              </p>
+            </div>
+          </body>
+        </html>
+      `,
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to send welcome pro email:', error)
+    return { success: false, error: 'Failed to send email' }
+  }
+}
+
 interface SendShareReportEmailParams {
   to: string
   clientName: string

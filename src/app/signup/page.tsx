@@ -69,7 +69,7 @@ export default function ProSignupPage() {
           </Link>
           <h1 className="text-2xl font-bold mb-2">Create your account</h1>
           <p className="text-muted-foreground">
-            14 days free. No credit card required.
+            7 days free. No credit card required.
           </p>
         </div>
 

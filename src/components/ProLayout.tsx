@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import {
   LayoutDashboard,
   Search,
@@ -10,6 +11,7 @@ import {
   Settings,
   LogOut,
   Sparkles,
+  AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -35,6 +37,21 @@ const BOTTOM_ITEMS = [
 
 export function ProLayout({ children, locator }: ProLayoutProps) {
   const pathname = usePathname()
+  const [upgrading, setUpgrading] = useState(false)
+
+  const handleUpgrade = async () => {
+    if (upgrading) return
+    setUpgrading(true)
+    try {
+      const res = await fetch('/api/stripe/checkout', { method: 'POST' })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch {
+      setUpgrading(false)
+    }
+  }
 
   // Calculate days left in trial
   const trialDaysLeft = locator.trialEndsAt
@@ -87,7 +104,7 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
         </nav>
 
         {/* Subscription Status */}
-        {locator.subscriptionStatus === 'trialing' && (
+        {locator.subscriptionStatus === 'trialing' && trialDaysLeft > 0 && (
           <div className="p-4 border-t">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-1">
@@ -95,15 +112,55 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
                 <span className="text-sm font-medium text-amber-800">Free Trial</span>
               </div>
               <p className="text-xs text-amber-700">
-                {trialDaysLeft > 0
-                  ? `${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} remaining`
-                  : 'Trial expired'}
+                {trialDaysLeft} day{trialDaysLeft === 1 ? '' : 's'} remaining
               </p>
-              <Link
-                href="/settings"
+              <button
+                onClick={handleUpgrade}
                 className="text-xs font-medium text-amber-800 hover:underline mt-2 inline-block"
               >
                 Upgrade now →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Trial Expired */}
+        {locator.subscriptionStatus === 'trialing' && trialDaysLeft === 0 && (
+          <div className="p-4 border-t">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <span className="text-sm font-medium text-red-800">Trial Expired</span>
+              </div>
+              <p className="text-xs text-red-700">
+                Upgrade to keep using MOVD Pro
+              </p>
+              <button
+                onClick={handleUpgrade}
+                className="text-xs font-medium text-red-800 hover:underline mt-2 inline-block"
+              >
+                Upgrade now →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Past Due */}
+        {locator.subscriptionStatus === 'past_due' && (
+          <div className="p-4 border-t">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <span className="text-sm font-medium text-red-800">Payment Failed</span>
+              </div>
+              <p className="text-xs text-red-700">
+                Please update your payment method
+              </p>
+              <Link
+                href="/settings"
+                className="text-xs font-medium text-red-800 hover:underline mt-2 inline-block"
+              >
+                Manage billing →
               </Link>
             </div>
           </div>

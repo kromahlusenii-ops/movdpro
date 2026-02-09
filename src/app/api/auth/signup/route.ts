@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Create locator profile with trial
     const trialEndsAt = new Date()
-    trialEndsAt.setDate(trialEndsAt.getDate() + 14)
+    trialEndsAt.setDate(trialEndsAt.getDate() + 7)
 
     await prisma.locatorProfile.create({
       data: {

@@ -52,7 +52,7 @@ export default function ProLandingPage() {
               Start free trial
             </Link>
             <span className="text-sm text-muted-foreground">
-              $60/mo after 14 days
+              $60/mo after 7 days
             </span>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default function ProLandingPage() {
               href="/signup"
               className="px-6 py-3 rounded-full font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors text-center"
             >
-              Start 14-day free trial
+              Start 7-day free trial
             </Link>
           </div>
           <p className="text-muted-foreground">
