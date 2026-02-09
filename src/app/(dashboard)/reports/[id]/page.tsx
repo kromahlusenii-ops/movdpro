@@ -15,6 +15,12 @@ async function getReportData(userId: string, reportId: string) {
         where: { id: reportId },
         include: {
           client: true,
+          properties: {
+            orderBy: { sortOrder: 'asc' },
+          },
+          neighborhoods: {
+            orderBy: { sortOrder: 'asc' },
+          },
         },
       },
     },
@@ -25,14 +31,16 @@ async function getReportData(userId: string, reportId: string) {
   const report = locator.reports[0]
   if (!report) return null
 
-  // Fetch neighborhoods included in report
-  const neighborhoods = await prisma.neighborhood.findMany({
-    where: {
-      id: { in: report.neighborhoodIds },
-    },
-  })
+  // Fetch legacy neighborhoods included in report (if any)
+  const legacyNeighborhoods = report.neighborhoodIds.length > 0
+    ? await prisma.neighborhood.findMany({
+        where: {
+          id: { in: report.neighborhoodIds },
+        },
+      })
+    : []
 
-  // Fetch buildings included in report (v3)
+  // Fetch legacy buildings included in report (v3)
   const buildings = report.buildingIds.length > 0
     ? await prisma.building.findMany({
         where: { id: { in: report.buildingIds } },
@@ -50,7 +58,7 @@ async function getReportData(userId: string, reportId: string) {
       })
     : []
 
-  return { report, neighborhoods, buildings }
+  return { report, legacyNeighborhoods, buildings }
 }
 
 export default async function ReportDetailPage({
@@ -66,8 +74,13 @@ export default async function ReportDetailPage({
     notFound()
   }
 
-  const { report, neighborhoods, buildings } = data
+  const { report, legacyNeighborhoods, buildings } = data
   const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/r/${report.shareToken}`
+  const isPublished = !!report.publishedAt
+
+  // Use new report properties/neighborhoods if available, otherwise fall back to legacy
+  const hasNewProperties = report.properties.length > 0
+  const hasNewNeighborhoods = report.neighborhoods.length > 0
 
   return (
     <div className="p-8 max-w-3xl">
@@ -83,7 +96,18 @@ export default async function ReportDetailPage({
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold mb-2">{report.title}</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-2xl font-bold">{report.title}</h1>
+            {isPublished ? (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                Published
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                Draft
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             {report.client && (
               <Link href={`/clients/${report.clientId}`} className="hover:text-foreground">
@@ -122,8 +146,62 @@ export default async function ReportDetailPage({
         </div>
       </div>
 
-      {/* Buildings (v3) */}
-      {buildings.length > 0 && (
+      {/* New Report Properties */}
+      {hasNewProperties && (
+        <div className="bg-background rounded-xl border p-6 mb-6">
+          <h2 className="font-semibold mb-4">Properties ({report.properties.length})</h2>
+          <div className="divide-y">
+            {report.properties.map((property) => (
+              <div key={property.id} className="py-4 first:pt-0 last:pb-0">
+                <div className="flex gap-4">
+                  <div className="w-20 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden">
+                    {property.imageUrl ? (
+                      <Image
+                        src={property.imageUrl}
+                        alt={property.name}
+                        width={80}
+                        height={64}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <Building2 className="w-5 h-5" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{property.name}</span>
+                      {property.isRecommended && (
+                        <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-medium">
+                          Top Pick
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
+                      <MapPin className="w-3 h-3" />
+                      <span>{property.neighborhood}</span>
+                    </div>
+                    <p className="text-sm font-medium mt-1">
+                      ${property.rent.toLocaleString()}/mo
+                      {property.bedrooms === 0 ? ' · Studio' : ` · ${property.bedrooms} bed`}
+                      {property.bathrooms && ` · ${property.bathrooms} bath`}
+                    </p>
+                    {property.locatorNote && (
+                      <p className="text-sm text-muted-foreground mt-2 italic">
+                        &ldquo;{property.locatorNote}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Legacy Buildings (v3) */}
+      {!hasNewProperties && buildings.length > 0 && (
         <div className="bg-background rounded-xl border p-6 mb-6">
           <h2 className="font-semibold mb-4">Included Properties</h2>
           <div className="divide-y">
@@ -185,12 +263,51 @@ export default async function ReportDetailPage({
         </div>
       )}
 
-      {/* Neighborhoods */}
-      {neighborhoods.length > 0 && (
+      {/* New Report Neighborhoods */}
+      {hasNewNeighborhoods && (
+        <div className="bg-background rounded-xl border p-6 mb-6">
+          <h2 className="font-semibold mb-4">Neighborhoods ({report.neighborhoods.length})</h2>
+          <div className="grid gap-3">
+            {report.neighborhoods.map((hood) => (
+              <div
+                key={hood.id}
+                className="p-4 rounded-lg bg-muted/50"
+              >
+                <p className="font-medium mb-2">{hood.name}</p>
+                <div className="grid sm:grid-cols-2 gap-2 text-sm">
+                  {hood.vibe && (
+                    <p className="text-muted-foreground">
+                      <span className="font-medium text-foreground">Vibe:</span> {hood.vibe}
+                    </p>
+                  )}
+                  {hood.walkability && (
+                    <p className="text-muted-foreground">
+                      <span className="font-medium text-foreground">Walkability:</span> {hood.walkability}
+                    </p>
+                  )}
+                  {hood.safety && (
+                    <p className="text-muted-foreground">
+                      <span className="font-medium text-foreground">Safety:</span> {hood.safety}
+                    </p>
+                  )}
+                  {hood.dogFriendly && (
+                    <p className="text-muted-foreground">
+                      <span className="font-medium text-foreground">Dog Friendly:</span> {hood.dogFriendly}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Legacy Neighborhoods */}
+      {!hasNewNeighborhoods && legacyNeighborhoods.length > 0 && (
         <div className="bg-background rounded-xl border p-6 mb-6">
           <h2 className="font-semibold mb-4">Included Neighborhoods</h2>
           <div className="grid gap-3">
-            {neighborhoods.map((hood) => (
+            {legacyNeighborhoods.map((hood) => (
               <div
                 key={hood.id}
                 className="flex items-center justify-between p-4 rounded-lg bg-muted/50"

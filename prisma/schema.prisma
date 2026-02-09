@@ -712,6 +712,13 @@ model ProReport {
   customNotes     String?
   aiSummary       String? // AI-generated report summary
 
+  // Client info snapshot
+  locatorName      String?
+  clientBudget     String?
+  clientMoveDate   String?
+  clientPriorities String[]
+  publishedAt      DateTime?
+
   // Sharing
   shareToken String  @unique @default(cuid())
   isPublic   Boolean @default(true)
@@ -722,7 +729,70 @@ model ProReport {
 
   createdAt DateTime @default(now())
 
+  // Report content relations
+  properties    ReportProperty[]
+  neighborhoods ReportNeighborhood[]
+
   @@index([locatorId])
   @@index([clientId])
   @@index([shareToken])
+}
+
+// Per-report property with snapshot data and locator customization
+model ReportProperty {
+  id       String    @id @default(cuid())
+  reportId String
+  report   ProReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  // Source reference (optional)
+  buildingId String?
+  unitId     String?
+
+  // Snapshot data
+  name          String
+  address       String
+  neighborhood  String
+  imageUrl      String?
+  rent          Int
+  bedrooms      Int
+  bathrooms     Float
+  sqft          Int?
+  availableDate String?
+  amenities     String[]
+  walkScore     Int?
+
+  // Locator customization
+  isRecommended Boolean @default(false)
+  locatorNote   String?
+  sortOrder     Int     @default(0)
+
+  // Move-in costs
+  deposit    Int?
+  adminFee   Int?
+  petDeposit Int?
+  petRent    Int?
+  promos     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([reportId])
+}
+
+// Per-report neighborhood with snapshot data
+model ReportNeighborhood {
+  id             String    @id @default(cuid())
+  reportId       String
+  report         ProReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  neighborhoodId String?
+
+  name        String
+  vibe        String?
+  walkability String?
+  safety      String?
+  dogFriendly String?
+  sortOrder   Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([reportId])
 }

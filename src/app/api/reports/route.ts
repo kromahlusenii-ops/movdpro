@@ -20,6 +20,9 @@ export async function GET() {
             client: {
               select: { name: true },
             },
+            properties: {
+              select: { id: true },
+            },
           },
         },
       },
@@ -54,7 +57,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, clientId, neighborhoodIds, propertyIds, buildingIds, customNotes } = body
+    const {
+      title,
+      clientId,
+      neighborhoodIds,
+      propertyIds,
+      buildingIds,
+      customNotes,
+      locatorName,
+      clientBudget,
+      clientMoveDate,
+      clientPriorities,
+    } = body
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
@@ -86,6 +100,10 @@ export async function POST(request: NextRequest) {
         propertyIds: propertyIds || [], // Legacy field
         buildingIds: buildingIds || [], // v3 field
         customNotes: customNotes || null,
+        locatorName: locatorName || null,
+        clientBudget: clientBudget || null,
+        clientMoveDate: clientMoveDate || null,
+        clientPriorities: clientPriorities || [],
       },
     })
 

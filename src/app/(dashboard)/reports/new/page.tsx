@@ -1,26 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ProLayout } from '@/components/ProLayout'
-import { ArrowLeft, Loader2, Search } from 'lucide-react'
-import { cn } from '@/lib/utils'
-
-interface Client {
-  id: string
-  name: string
-  budgetMin: number | null
-  budgetMax: number | null
-  neighborhoods: string[]
-}
-
-interface Neighborhood {
-  id: string
-  name: string
-  slug: string
-  grade: string
-}
+import { ArrowLeft } from 'lucide-react'
+import {
+  StepIndicator,
+  ClientInfoStep,
+  PropertiesStep,
+  NeighborhoodsStep,
+  MoveInCostsStep,
+  PreviewStep,
+  type Step,
+  type Client,
+  type Neighborhood,
+  type SavedListing,
+  type SavedBuilding,
+  type ReportFormData,
+} from '@/components/reports/ReportBuilder'
 
 export default function NewReportPage() {
   const router = useRouter()
@@ -31,99 +29,193 @@ export default function NewReportPage() {
     companyName: string | null
     creditsRemaining: number
     subscriptionStatus: string
+    user?: { name: string | null }
   } | null>(null)
 
   const [clients, setClients] = useState<Client[]>([])
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [savedListings, setSavedListings] = useState<SavedListing[]>([])
+  const [savedBuildings, setSavedBuildings] = useState<SavedBuilding[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Form state
-  const [title, setTitle] = useState('')
-  const [selectedClient, setSelectedClient] = useState<string>(preselectedClientId || '')
-  const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([])
-  const [customNotes, setCustomNotes] = useState('')
+  // Multi-step form state
+  const [currentStep, setCurrentStep] = useState<Step>('client')
+  const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set())
 
+  const [formData, setFormData] = useState<ReportFormData>({
+    title: '',
+    clientId: preselectedClientId || '',
+    clientName: '',
+    locatorName: '',
+    clientBudget: '',
+    clientMoveDate: '',
+    clientPriorities: [],
+    customNotes: '',
+    properties: [],
+    neighborhoods: [],
+  })
+
+  // Fetch initial data
   useEffect(() => {
-    // Fetch locator profile
-    fetch('/api/me')
-      .then(res => res.json())
-      .then(data => {
-        if (data.locator) {
-          setLocator(data.locator)
+    const fetchData = async () => {
+      try {
+        // Fetch locator profile
+        const meRes = await fetch('/api/me')
+        const meData = await meRes.json()
+        if (meData.locator) {
+          setLocator(meData.locator)
+          // Set locator name
+          setFormData((prev) => ({
+            ...prev,
+            locatorName: meData.locator.user?.name || meData.locator.companyName || '',
+          }))
         }
-      })
-      .catch(console.error)
 
-    // Fetch clients
-    fetch('/api/clients')
-      .then(res => res.json())
-      .then(data => {
-        if (data.clients) {
-          setClients(data.clients.filter((c: Client & { status: string }) => c.status === 'active'))
+        // Fetch clients
+        const clientsRes = await fetch('/api/clients')
+        const clientsData = await clientsRes.json()
+        if (clientsData.clients) {
+          setClients(
+            clientsData.clients.filter(
+              (c: Client & { status: string }) => c.status === 'active'
+            )
+          )
         }
-      })
-      .catch(console.error)
 
-    // Fetch neighborhoods
-    fetch('/api/neighborhoods')
-      .then(res => res.json())
-      .then(data => {
-        if (data.neighborhoods) {
-          setNeighborhoods(data.neighborhoods)
+        // Fetch neighborhoods
+        const neighborhoodsRes = await fetch('/api/neighborhoods')
+        const neighborhoodsData = await neighborhoodsRes.json()
+        if (neighborhoodsData.neighborhoods) {
+          setNeighborhoods(neighborhoodsData.neighborhoods)
         }
-      })
-      .catch(console.error)
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
   }, [])
 
-  // Auto-fill title based on client
+  // Fetch saved listings when client changes
   useEffect(() => {
-    if (selectedClient) {
-      const client = clients.find(c => c.id === selectedClient)
-      if (client && !title) {
-        setTitle(`Neighborhood Report for ${client.name}`)
+    const fetchClientListings = async () => {
+      if (!formData.clientId) {
+        setSavedListings([])
+        setSavedBuildings([])
+        return
+      }
+
+      try {
+        const res = await fetch(`/api/clients/${formData.clientId}/saved`)
+        const data = await res.json()
+
+        if (data.savedListings) {
+          setSavedListings(data.savedListings)
+        }
+        if (data.savedBuildings) {
+          setSavedBuildings(data.savedBuildings)
+        }
+      } catch (error) {
+        console.error('Failed to fetch saved listings:', error)
       }
     }
-  }, [selectedClient, clients, title])
 
-  const toggleNeighborhood = (id: string) => {
-    setSelectedNeighborhoods(prev =>
-      prev.includes(id) ? prev.filter(n => n !== id) : [...prev, id]
-    )
+    fetchClientListings()
+  }, [formData.clientId])
+
+  const updateFormData = useCallback((updates: Partial<ReportFormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }))
+  }, [])
+
+  const goToStep = (step: Step) => {
+    setCurrentStep(step)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+  const nextStep = () => {
+    const steps: Step[] = ['client', 'properties', 'neighborhoods', 'costs', 'preview']
+    const currentIndex = steps.indexOf(currentStep)
 
-    try {
-      const res = await fetch('/api/reports', {
+    // Mark current step as completed
+    setCompletedSteps((prev) => new Set([...prev, currentStep]))
+
+    if (currentIndex < steps.length - 1) {
+      setCurrentStep(steps[currentIndex + 1])
+    }
+  }
+
+  const prevStep = () => {
+    const steps: Step[] = ['client', 'properties', 'neighborhoods', 'costs', 'preview']
+    const currentIndex = steps.indexOf(currentStep)
+
+    if (currentIndex > 0) {
+      setCurrentStep(steps[currentIndex - 1])
+    }
+  }
+
+  const handlePublish = async (): Promise<{ shareUrl: string; shareToken: string }> => {
+    // First create the report
+    const createRes = await fetch('/api/reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: formData.title,
+        clientId: formData.clientId,
+        locatorName: formData.locatorName,
+        clientBudget: formData.clientBudget,
+        clientMoveDate: formData.clientMoveDate,
+        clientPriorities: formData.clientPriorities,
+        customNotes: formData.customNotes,
+        neighborhoodIds: [],
+        buildingIds: [],
+      }),
+    })
+
+    if (!createRes.ok) {
+      const error = await createRes.json()
+      throw new Error(error.error || 'Failed to create report')
+    }
+
+    const { report } = await createRes.json()
+
+    // Add properties
+    for (const property of formData.properties) {
+      await fetch(`/api/reports/${report.id}/properties`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          clientId: selectedClient || undefined,
-          neighborhoodIds: selectedNeighborhoods,
-          customNotes: customNotes || undefined,
-        }),
+        body: JSON.stringify(property),
       })
+    }
 
-      const data = await res.json()
+    // Add neighborhoods
+    for (const neighborhood of formData.neighborhoods) {
+      await fetch(`/api/reports/${report.id}/neighborhoods`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(neighborhood),
+      })
+    }
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to create report')
-      }
+    // Publish the report
+    const publishRes = await fetch(`/api/reports/${report.id}/publish`, {
+      method: 'POST',
+    })
 
-      router.push(`/reports/${data.report.id}`)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setLoading(false)
+    if (!publishRes.ok) {
+      const error = await publishRes.json()
+      throw new Error(error.error || 'Failed to publish report')
+    }
+
+    const publishData = await publishRes.json()
+
+    return {
+      shareUrl: publishData.shareUrl,
+      shareToken: publishData.shareToken,
     }
   }
 
-  if (!locator) {
+  if (loading || !locator) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -133,7 +225,7 @@ export default function NewReportPage() {
 
   return (
     <ProLayout locator={locator}>
-      <div className="p-8 max-w-2xl">
+      <div className="p-8 max-w-3xl">
         {/* Back */}
         <Link
           href="/reports"
@@ -147,121 +239,67 @@ export default function NewReportPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold mb-1">Create Report</h1>
           <p className="text-muted-foreground">
-            Generate a shareable neighborhood report for your client.
+            Build a shareable report with property recommendations for your client.
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium mb-2">
-              Report Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="title"
-              type="text"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              required
-              placeholder="Neighborhood Report for John"
-              className="w-full px-4 py-3 rounded-lg border bg-background"
+        {/* Step Indicator */}
+        <StepIndicator
+          currentStep={currentStep}
+          onStepClick={goToStep}
+          completedSteps={completedSteps}
+        />
+
+        {/* Step Content */}
+        <div className="mt-12 bg-background rounded-xl border p-6">
+          {currentStep === 'client' && (
+            <ClientInfoStep
+              clients={clients}
+              formData={formData}
+              onUpdate={updateFormData}
+              onNext={nextStep}
             />
-          </div>
-
-          {/* Client */}
-          <div>
-            <label htmlFor="client" className="block text-sm font-medium mb-2">
-              Client
-            </label>
-            <select
-              id="client"
-              value={selectedClient}
-              onChange={e => setSelectedClient(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border bg-background"
-            >
-              <option value="">No client (general report)</option>
-              {clients.map(client => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Neighborhoods */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Neighborhoods <span className="text-red-500">*</span>
-            </label>
-            <p className="text-sm text-muted-foreground mb-3">
-              Select the neighborhoods to include in this report.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {neighborhoods.map(hood => (
-                <button
-                  key={hood.id}
-                  type="button"
-                  onClick={() => toggleNeighborhood(hood.id)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
-                    selectedNeighborhoods.includes(hood.id)
-                      ? 'bg-foreground text-background'
-                      : 'bg-muted text-muted-foreground hover:text-foreground'
-                  )}
-                >
-                  {hood.name}
-                  <span className="ml-1 opacity-60">{hood.grade}</span>
-                </button>
-              ))}
-            </div>
-            {selectedNeighborhoods.length > 0 && (
-              <p className="text-sm text-muted-foreground mt-2">
-                {selectedNeighborhoods.length} selected
-              </p>
-            )}
-          </div>
-
-          {/* Custom Notes */}
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium mb-2">
-              Personal Notes
-            </label>
-            <textarea
-              id="notes"
-              value={customNotes}
-              onChange={e => setCustomNotes(e.target.value)}
-              rows={4}
-              placeholder="Add any personalized recommendations or notes for your client..."
-              className="w-full px-4 py-3 rounded-lg border bg-background resize-none"
-            />
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-              {error}
-            </div>
           )}
 
-          {/* Submit */}
-          <div className="flex items-center gap-4">
-            <button
-              type="submit"
-              disabled={loading || !title || selectedNeighborhoods.length === 0}
-              className="px-6 py-3 rounded-lg font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              Create Report
-            </button>
-            <Link
-              href="/reports"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Cancel
-            </Link>
-          </div>
-        </form>
+          {currentStep === 'properties' && (
+            <PropertiesStep
+              formData={formData}
+              savedListings={savedListings}
+              savedBuildings={savedBuildings}
+              onUpdate={updateFormData}
+              onNext={nextStep}
+              onBack={prevStep}
+            />
+          )}
+
+          {currentStep === 'neighborhoods' && (
+            <NeighborhoodsStep
+              formData={formData}
+              allNeighborhoods={neighborhoods}
+              onUpdate={updateFormData}
+              onNext={nextStep}
+              onBack={prevStep}
+            />
+          )}
+
+          {currentStep === 'costs' && (
+            <MoveInCostsStep
+              formData={formData}
+              onUpdate={updateFormData}
+              onNext={nextStep}
+              onBack={prevStep}
+            />
+          )}
+
+          {currentStep === 'preview' && (
+            <PreviewStep
+              formData={formData}
+              onUpdate={updateFormData}
+              onBack={prevStep}
+              onPublish={handlePublish}
+            />
+          )}
+        </div>
       </div>
     </ProLayout>
   )

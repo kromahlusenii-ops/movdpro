@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getSessionUserCached, getReportsCached } from '@/lib/pro-auth'
-import { Plus, FileText, Eye, ExternalLink } from 'lucide-react'
+import { Plus, FileText, Eye, ExternalLink, Building2 } from 'lucide-react'
 
 export default async function ProReportsPage() {
   const user = await getSessionUserCached()
@@ -28,40 +28,64 @@ export default async function ProReportsPage() {
       {/* Reports List */}
       {reports.length > 0 ? (
         <div className="bg-background rounded-xl border divide-y">
-          {reports.map(report => (
-            <div
-              key={report.id}
-              className="flex items-center gap-4 p-4"
-            >
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                <FileText className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <Link
-                  href={`/reports/${report.id}`}
-                  className="font-medium hover:underline"
-                >
-                  {report.title}
-                </Link>
-                <p className="text-sm text-muted-foreground">
-                  {report.client?.name || 'No client'} · {new Date(report.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Eye className="w-4 h-4" />
-                {report.viewCount}
-              </div>
-              <a
-                href={`/r/${report.shareToken}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-                title="View public link"
+          {reports.map(report => {
+            const propertyCount = report.properties?.length ?? 0
+            const isPublished = !!report.publishedAt
+
+            return (
+              <div
+                key={report.id}
+                className="flex items-center gap-4 p-4"
               >
-                <ExternalLink className="w-4 h-4 text-muted-foreground" />
-              </a>
-            </div>
-          ))}
+                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/reports/${report.id}`}
+                      className="font-medium hover:underline"
+                    >
+                      {report.title}
+                    </Link>
+                    {isPublished ? (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                        Published
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                        Draft
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {report.client?.name || 'No client'} · {new Date(report.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1" title="Properties">
+                    <Building2 className="w-4 h-4" />
+                    {propertyCount}
+                  </div>
+                  <div className="flex items-center gap-1" title="Views">
+                    <Eye className="w-4 h-4" />
+                    {report.viewCount}
+                  </div>
+                </div>
+                {isPublished && (
+                  <a
+                    href={`/r/${report.shareToken}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-lg hover:bg-muted transition-colors"
+                    title="View public link"
+                  >
+                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                  </a>
+                )}
+              </div>
+            )
+          })}
         </div>
       ) : (
         <div className="text-center py-16 bg-background rounded-xl border">

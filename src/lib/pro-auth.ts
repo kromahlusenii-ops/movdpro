@@ -117,6 +117,9 @@ export async function getReportsCached(userId: string) {
               client: {
                 select: { name: true },
               },
+              properties: {
+                select: { id: true },
+              },
             },
           },
         },

@@ -30,6 +30,12 @@ export async function GET(
       },
       include: {
         client: true,
+        properties: {
+          orderBy: { sortOrder: 'asc' },
+        },
+        neighborhoods: {
+          orderBy: { sortOrder: 'asc' },
+        },
       },
     })
 
@@ -41,6 +47,77 @@ export async function GET(
   } catch (error) {
     console.error('Get report error:', error)
     return NextResponse.json({ error: 'Failed to get report' }, { status: 500 })
+  }
+}
+
+// PUT - Update report metadata
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const user = await getSessionUserCached()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const locator = await prisma.locatorProfile.findUnique({
+      where: { userId: user.id },
+    })
+
+    if (!locator) {
+      return NextResponse.json({ error: 'No locator profile' }, { status: 404 })
+    }
+
+    // Verify ownership
+    const existing = await prisma.proReport.findFirst({
+      where: {
+        id,
+        locatorId: locator.id,
+      },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Report not found' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const {
+      title,
+      customNotes,
+      locatorName,
+      clientBudget,
+      clientMoveDate,
+      clientPriorities,
+    } = body
+
+    const report = await prisma.proReport.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(customNotes !== undefined && { customNotes }),
+        ...(locatorName !== undefined && { locatorName }),
+        ...(clientBudget !== undefined && { clientBudget }),
+        ...(clientMoveDate !== undefined && { clientMoveDate }),
+        ...(clientPriorities !== undefined && { clientPriorities }),
+      },
+      include: {
+        client: true,
+        properties: {
+          orderBy: { sortOrder: 'asc' },
+        },
+        neighborhoods: {
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    })
+
+    return NextResponse.json({ report })
+  } catch (error) {
+    console.error('Update report error:', error)
+    return NextResponse.json({ error: 'Failed to update report' }, { status: 500 })
   }
 }
 
