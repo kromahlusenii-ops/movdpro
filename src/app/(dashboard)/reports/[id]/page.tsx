@@ -75,7 +75,7 @@ export default async function ReportDetailPage({
   }
 
   const { report, legacyNeighborhoods, buildings } = data
-  const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/r/${report.shareToken}`
+  const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://movdpro.vercel.app'}/r/${report.shareToken}`
   const isPublished = !!report.publishedAt
 
   // Use new report properties/neighborhoods if available, otherwise fall back to legacy

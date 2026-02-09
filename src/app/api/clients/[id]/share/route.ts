@@ -11,7 +11,7 @@ import { getSessionUserCached } from '@/lib/pro-auth'
 import prisma from '@/lib/db'
 import { sendShareReportEmail } from '@/lib/email'
 
-const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://movdaway.com').replace(/\/$/, '')
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://movdpro.vercel.app').replace(/\/$/, '')
 
 // POST - Create a new share report
 export async function POST(
@@ -47,6 +47,9 @@ export async function POST(
                         grade: true,
                         walkScore: true,
                         transitScore: true,
+                        safetyScore: true,
+                        tagline: true,
+                        characterTags: true,
                       },
                     },
                     management: {
@@ -54,6 +57,22 @@ export async function POST(
                         id: true,
                         name: true,
                         slug: true,
+                      },
+                    },
+                    specials: {
+                      where: {
+                        OR: [
+                          { endDate: null },
+                          { endDate: { gte: new Date() } },
+                        ],
+                      },
+                      select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        discountType: true,
+                        discountValue: true,
+                        conditions: true,
                       },
                     },
                   },
@@ -74,6 +93,9 @@ export async function POST(
                     grade: true,
                     walkScore: true,
                     transitScore: true,
+                    safetyScore: true,
+                    tagline: true,
+                    characterTags: true,
                   },
                 },
                 management: {
@@ -81,6 +103,22 @@ export async function POST(
                     id: true,
                     name: true,
                     slug: true,
+                  },
+                },
+                specials: {
+                  where: {
+                    OR: [
+                      { endDate: null },
+                      { endDate: { gte: new Date() } },
+                    ],
+                  },
+                  select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    discountType: true,
+                    discountValue: true,
+                    conditions: true,
                   },
                 },
                 units: {
@@ -152,6 +190,7 @@ export async function POST(
           reviewCount: saved.unit.building.reviewCount,
           listingUrl: saved.unit.building.listingUrl,
           floorplansUrl: saved.unit.building.floorplansUrl,
+          specials: saved.unit.building.specials,
         },
         neighborhood: saved.unit.building.neighborhood,
         management: saved.unit.building.management,
@@ -174,6 +213,7 @@ export async function POST(
         notes: saved.notes,
         neighborhood: saved.building.neighborhood,
         management: saved.building.management,
+        specials: saved.building.specials,
         units: saved.building.units.map((u) => ({
           id: u.id,
           name: u.name,
