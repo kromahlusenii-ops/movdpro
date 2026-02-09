@@ -11,7 +11,7 @@ import {
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/search', label: 'Search', icon: Search },
-  { href: '/compare', label: 'Compare', icon: GitCompare },
+  // { href: '/compare', label: 'Compare', icon: GitCompare },
   { href: '/clients', label: 'Clients', icon: Users },
 ]
 
