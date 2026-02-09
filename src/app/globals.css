@@ -14,7 +14,7 @@
 @layer base {
   :root {
     /* Dieter Rams inspired - minimal, functional palette */
-    --background: 45 33% 97%;
+    --background: 39 32% 94%;
     --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
