@@ -1,18 +1,13 @@
 import Link from 'next/link'
-import { getSessionUserCached, getLocatorProfileCached } from '@/lib/pro-auth'
+import { getSessionUserCached, getLocatorProfileCached, getListingsCountCached } from '@/lib/pro-auth'
 import { Search, Users, Plus, ArrowRight, Building2 } from 'lucide-react'
-import prisma from '@/lib/db'
 
 export default async function ProDashboardPage() {
   const user = await getSessionUserCached()
   const locator = await getLocatorProfileCached(user!.id)
 
   const activeClientCount = locator!.clients.length
-
-  // Get total available listings count
-  const listingsCount = await prisma.unit.count({
-    where: { isAvailable: true },
-  })
+  const listingsCount = await getListingsCountCached()
 
   return (
     <div className="p-8">

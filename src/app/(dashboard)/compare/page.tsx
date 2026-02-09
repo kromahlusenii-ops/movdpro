@@ -42,12 +42,14 @@ const AMENITY_LABELS: Record<string, string> = {
 
 export default function ComparePage() {
   const searchParams = useSearchParams()
-  const ids = searchParams.get('ids')?.split(',') || []
+  const idsParam = searchParams.get('ids') || ''
 
   const [apartments, setApartments] = useState<Apartment[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const ids = idsParam ? idsParam.split(',').filter(Boolean) : []
+
     if (ids.length > 0) {
       fetch('/api/compare', {
         method: 'POST',
@@ -65,7 +67,7 @@ export default function ComparePage() {
     } else {
       setLoading(false)
     }
-  }, [ids])
+  }, [idsParam])
 
   // Get all unique amenities across all apartments
   const allAmenities = [...new Set(apartments.flatMap(apt => apt.amenities))]
@@ -91,7 +93,7 @@ export default function ComparePage() {
           </div>
           {apartments.length > 0 && (
             <Link
-              href={`/reports/new?apartments=${ids.join(',')}`}
+              href={`/reports/new?apartments=${idsParam}`}
               className="px-4 py-2.5 rounded-lg font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors flex items-center gap-2"
             >
               <FileText className="w-4 h-4" />

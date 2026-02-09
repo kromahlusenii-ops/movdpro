@@ -1,28 +1,10 @@
 import Link from 'next/link'
-import prisma from '@/lib/db'
-import { getSessionUserCached } from '@/lib/pro-auth'
+import { getSessionUserCached, getReportsCached } from '@/lib/pro-auth'
 import { Plus, FileText, Eye, ExternalLink } from 'lucide-react'
-
-async function getReportsForLocator(userId: string) {
-  const locator = await prisma.locatorProfile.findUnique({
-    where: { userId },
-    include: {
-      reports: {
-        orderBy: { createdAt: 'desc' },
-        include: {
-          client: {
-            select: { name: true },
-          },
-        },
-      },
-    },
-  })
-  return locator?.reports ?? []
-}
 
 export default async function ProReportsPage() {
   const user = await getSessionUserCached()
-  const reports = await getReportsForLocator(user!.id)
+  const reports = await getReportsCached(user!.id)
 
   return (
     <div className="p-8">

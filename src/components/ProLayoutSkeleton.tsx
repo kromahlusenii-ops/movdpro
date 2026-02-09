@@ -4,7 +4,6 @@ import {
   Search,
   GitCompare,
   Users,
-  FileText,
   Settings,
   LogOut,
 } from 'lucide-react'
@@ -14,7 +13,6 @@ const NAV_ITEMS = [
   { href: '/search', label: 'Search', icon: Search },
   { href: '/compare', label: 'Compare', icon: GitCompare },
   { href: '/clients', label: 'Clients', icon: Users },
-  { href: '/reports', label: 'Reports', icon: FileText },
 ]
 
 interface ProLayoutSkeletonProps {

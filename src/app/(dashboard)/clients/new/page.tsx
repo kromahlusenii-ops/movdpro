@@ -198,6 +198,7 @@ export default function NewClientPage() {
       } else {
         // No recommendations, go directly to clients list
         router.push('/clients')
+        router.refresh()
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -225,9 +226,11 @@ export default function NewClientPage() {
       }
 
       router.push(`/clients/${clientId}`)
+      router.refresh()
     } catch (err) {
       console.error('Failed to save listings:', err)
       router.push('/clients')
+      router.refresh()
     } finally {
       setSavingListings(false)
     }
@@ -235,6 +238,7 @@ export default function NewClientPage() {
 
   const handleSkip = () => {
     router.push(clientId ? `/clients/${clientId}` : '/clients')
+    router.refresh()
   }
 
   const formatRent = (min: number, max: number) => {

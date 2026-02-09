@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { unstable_cache } from 'next/cache'
-import { getSessionUserCached } from '@/lib/pro-auth'
+import { getSessionUserCached, getLocatorProfileCached } from '@/lib/pro-auth'
 import prisma from '@/lib/db'
 
 // Cache duration in seconds
@@ -24,7 +24,8 @@ const getCachedListings = unstable_cache(
     bedrooms: string[],
     buildings: string[],
     limit: number,
-    offset: number
+    offset: number,
+    includeCount: boolean
   ) => {
     // Build where clause for units (listings)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,39 +74,64 @@ const getCachedListings = unstable_cache(
       unitWhere.building = buildingWhere
     }
 
-    // Fetch listings with building and neighborhood context
-    const [listings, total] = await Promise.all([
-      prisma.unit.findMany({
-        where: unitWhere,
-        include: {
-          building: {
-            include: {
-              neighborhood: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  grade: true,
-                  walkScore: true,
-                  transitScore: true,
-                },
+    // Fetch listings — only count when needed (first page / filter change)
+    const listingsPromise = prisma.unit.findMany({
+      where: unitWhere,
+      select: {
+        id: true,
+        unitNumber: true,
+        name: true,
+        bedrooms: true,
+        bathrooms: true,
+        sqftMin: true,
+        sqftMax: true,
+        rentMin: true,
+        rentMax: true,
+        isAvailable: true,
+        building: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+            state: true,
+            lat: true,
+            lng: true,
+            primaryPhotoUrl: true,
+            amenities: true,
+            rating: true,
+            reviewCount: true,
+            listingUrl: true,
+            floorplansUrl: true,
+            neighborhood: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                grade: true,
+                walkScore: true,
+                transitScore: true,
               },
-              management: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  logoUrl: true,
-                },
+            },
+            management: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                logoUrl: true,
               },
             },
           },
         },
-        orderBy: [{ rentMin: 'asc' }],
-        take: limit,
-        skip: offset,
-      }),
-      prisma.unit.count({ where: unitWhere }),
+      },
+      orderBy: [{ rentMin: 'asc' }],
+      take: limit,
+      skip: offset,
+    })
+
+    const [listings, total] = await Promise.all([
+      listingsPromise,
+      includeCount ? prisma.unit.count({ where: unitWhere }) : Promise.resolve(-1),
     ])
 
     // Format response - each listing with full context
@@ -153,9 +179,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const locator = await prisma.locatorProfile.findUnique({
-      where: { userId: user.id },
-    })
+    const locator = await getLocatorProfileCached(user.id)
 
     if (!locator) {
       return NextResponse.json({ error: 'No locator profile' }, { status: 404 })
@@ -170,8 +194,9 @@ export async function GET(request: NextRequest) {
     const buildings = searchParams.get('buildings')?.split(',').filter(Boolean) || []
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
     const offset = parseInt(searchParams.get('offset') || '0')
+    const skipCount = searchParams.get('skipCount') === 'true'
 
-    // Use cached query
+    // Use cached query — skip count on pagination (offset > 0) unless explicitly requested
     const { listings, total } = await getCachedListings(
       neighborhoods,
       budgetMin,
@@ -179,7 +204,8 @@ export async function GET(request: NextRequest) {
       bedrooms,
       buildings,
       limit,
-      offset
+      offset,
+      !skipCount
     )
 
     // Return with cache headers for client-side caching

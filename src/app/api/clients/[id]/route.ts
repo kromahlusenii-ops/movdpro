@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { getSessionUserCached } from '@/lib/pro-auth'
 import prisma from '@/lib/db'
 
@@ -92,6 +93,9 @@ export async function PATCH(
       },
     })
 
+    revalidateTag(`clients-${user.id}`, 'max')
+    revalidateTag(`locator-${user.id}`, 'max')
+
     return NextResponse.json({ client })
   } catch (error) {
     console.error('Update client error:', error)
@@ -135,6 +139,9 @@ export async function DELETE(
     await prisma.locatorClient.delete({
       where: { id },
     })
+
+    revalidateTag(`clients-${user.id}`, 'max')
+    revalidateTag(`locator-${user.id}`, 'max')
 
     return NextResponse.json({ success: true })
   } catch (error) {

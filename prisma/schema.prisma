@@ -68,6 +68,8 @@ model Neighborhood {
   trajectoryScore     Float @default(0)
   sentimentScore      Float @default(0)
   compositeScore      Float @default(0)
+  nightlifeScore      Float @default(0)
+  priceScore          Float @default(0)
 
   // Letter grade (A+, A, A-, B+, etc.)
   grade String @default("B")
@@ -84,6 +86,16 @@ model Neighborhood {
   boundary  Json?
   centerLat Float
   centerLng Float
+
+  // Demographics & transit
+  ageDemoLow       Int?     // Target age range low
+  ageDemoHigh      Int?     // Target age range high
+  transitAccess    String?  // e.g., "Light Rail", "Bus", "Car Only"
+  commuteUptownMin Int?     // Minutes to Uptown Charlotte
+
+  // Archetypes
+  bestArchetypes  String[] // Ideal renter profiles (e.g., "Young Professional", "Foodie")
+  avoidArchetypes String[] // Poor-fit profiles (e.g., "Quiet Seeker", "Budget Starter")
 
   // Metadata
   description String?
@@ -481,6 +493,8 @@ model Unit {
   @@index([bedrooms])
   @@index([rentCastId])
   @@index([rentMin, rentMax])
+  @@index([isAvailable, bedrooms, rentMin])
+  @@index([isAvailable, rentMin, rentMax])
 }
 
 // Join table for clients saving buildings with AI match scores

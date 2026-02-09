@@ -163,7 +163,7 @@ export default function ProSearchPage() {
     loadInitialListings()
   }, [])
 
-  const fetchListings = useCallback(async (pageNum: number, resetPage = false) => {
+  const fetchListings = useCallback(async (pageNum: number, resetPage = false, skipCount = false) => {
     setLoading(true)
     setHasSearched(true)
 
@@ -186,13 +186,19 @@ export default function ProSearchPage() {
       }
       params.set('limit', String(pageSize))
       params.set('offset', String((pageNum - 1) * pageSize))
+      if (skipCount) {
+        params.set('skipCount', 'true')
+      }
 
       const res = await fetch(`/api/listings?${params.toString()}`)
       const data = await res.json()
 
       if (res.ok) {
         setListings(data.listings)
-        setTotal(data.total)
+        // Only update total when we actually counted
+        if (data.total !== -1) {
+          setTotal(data.total)
+        }
         if (resetPage) {
           setPage(1)
         }
@@ -211,7 +217,7 @@ export default function ProSearchPage() {
 
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage)
-    fetchListings(newPage)
+    fetchListings(newPage, false, true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [fetchListings])
 
@@ -460,11 +466,11 @@ export default function ProSearchPage() {
             <span className="text-xs font-medium text-muted-foreground">{compareList.length} selected:</span>
             <div className="flex gap-1.5">
               {compareList.map(id => {
-                const listing = listings.find(l => l.id === id)
+                const listing = listings.find(l => l.building.id === id)
                 return listing ? (
                   <div key={id} className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded-full text-xs">
                     <span className="max-w-32 truncate">
-                      {listing.unitNumber || formatBedrooms(listing.bedrooms)} @ {listing.building.name}
+                      {listing.building.name}
                     </span>
                     <button onClick={() => toggleCompare(id)} className="hover:text-foreground/70">
                       <X className="w-3 h-3" />
@@ -610,16 +616,16 @@ export default function ProSearchPage() {
                     )}
 
                     <button
-                      onClick={() => toggleCompare(listing.id)}
-                      disabled={!compareList.includes(listing.id) && compareList.length >= 3}
+                      onClick={() => toggleCompare(listing.building.id)}
+                      disabled={!compareList.includes(listing.building.id) && compareList.length >= 3}
                       className={cn(
                         'px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors',
-                        compareList.includes(listing.id)
+                        compareList.includes(listing.building.id)
                           ? 'bg-foreground text-background'
                           : 'bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50'
                       )}
                     >
-                      {compareList.includes(listing.id) ? 'Selected' : 'Compare'}
+                      {compareList.includes(listing.building.id) ? 'Selected' : 'Compare'}
                     </button>
 
                     {/* Save to Client Dropdown */}

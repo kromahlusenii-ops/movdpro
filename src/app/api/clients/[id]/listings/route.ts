@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { getSessionUserCached } from '@/lib/pro-auth'
 import prisma from '@/lib/db'
 
@@ -151,6 +152,9 @@ export async function POST(
       },
     })
 
+    revalidateTag(`clients-${user.id}`, 'max')
+    revalidateTag(`locator-${user.id}`, 'max')
+
     return NextResponse.json({ savedListing })
   } catch (error) {
     console.error('Save listing error:', error)
@@ -199,6 +203,9 @@ export async function DELETE(
         },
       },
     })
+
+    revalidateTag(`clients-${user.id}`, 'max')
+    revalidateTag(`locator-${user.id}`, 'max')
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionUserCached } from '@/lib/pro-auth'
+import { revalidateTag } from 'next/cache'
+import { getSessionUserCached, getLocatorProfileCached } from '@/lib/pro-auth'
 import prisma from '@/lib/db'
 
 // GET - List clients
@@ -11,29 +12,26 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const locator = await prisma.locatorProfile.findUnique({
-      where: { userId: user.id },
-      include: {
-        clients: {
-          orderBy: { updatedAt: 'desc' },
-          include: {
-            savedListings: {
-              select: { unitId: true },
-            },
-            savedBuildings: {
-              select: { buildingId: true },
-            },
-          },
-        },
-      },
-    })
+    // Use cached profile for auth check, then fetch clients with saved listings
+    const locator = await getLocatorProfileCached(user.id)
 
     if (!locator) {
       return NextResponse.json({ error: 'No locator profile' }, { status: 404 })
     }
 
+    // Fetch clients with savedListings for the search page save dropdown
+    const clients = await prisma.locatorClient.findMany({
+      where: { locatorId: locator.id },
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        savedListings: {
+          select: { unitId: true },
+        },
+      },
+    })
+
     // Format clients with savedListings as listingId for frontend compatibility
-    const formattedClients = locator.clients.map((client) => ({
+    const formattedClients = clients.map((client) => ({
       ...client,
       savedListings: client.savedListings.map((sl) => ({ listingId: sl.unitId })),
     }))
@@ -54,20 +52,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const locator = await prisma.locatorProfile.findUnique({
-      where: { userId: user.id },
-      include: {
-        clients: {
-          where: { status: 'active' },
-        },
-      },
-    })
+    const locator = await getLocatorProfileCached(user.id)
 
     if (!locator) {
       return NextResponse.json({ error: 'No locator profile' }, { status: 404 })
     }
 
-    // Check max clients
+    // Check max clients (locator.clients from cache only includes active clients)
     if (locator.clients.length >= 20) {
       return NextResponse.json(
         { error: 'Maximum 20 active clients allowed' },
@@ -126,6 +117,10 @@ export async function POST(request: NextRequest) {
         commutePreference: commutePreference || null,
       },
     })
+
+    // Bust server-side caches so clients list and locator profile reflect the new client
+    revalidateTag(`clients-${user.id}`, 'max')
+    revalidateTag(`locator-${user.id}`, 'max')
 
     return NextResponse.json({ client })
   } catch (error) {

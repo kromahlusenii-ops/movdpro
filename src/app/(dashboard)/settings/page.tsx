@@ -1,20 +1,8 @@
-import prisma from '@/lib/db'
-import { getSessionUserCached } from '@/lib/pro-auth'
-
-async function getLocatorWithEmail(userId: string) {
-  return prisma.locatorProfile.findUnique({
-    where: { userId },
-    include: {
-      user: {
-        select: { email: true },
-      },
-    },
-  })
-}
+import { getSessionUserCached, getLocatorWithEmailCached } from '@/lib/pro-auth'
 
 export default async function ProSettingsPage() {
   const user = await getSessionUserCached()
-  const locator = await getLocatorWithEmail(user!.id)
+  const locator = await getLocatorWithEmailCached(user!.id)
 
   return (
     <div className="p-8 max-w-2xl">

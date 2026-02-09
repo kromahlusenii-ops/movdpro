@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { unstable_cache } from 'next/cache'
-import { getSessionUserCached } from '@/lib/pro-auth'
+import { getSessionUserCached, getLocatorProfileCached } from '@/lib/pro-auth'
 import prisma from '@/lib/db'
 
 // Cache duration in seconds (5 minutes for buildings since they change less frequently)
@@ -182,9 +182,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const locator = await prisma.locatorProfile.findUnique({
-      where: { userId: user.id },
-    })
+    const locator = await getLocatorProfileCached(user.id)
 
     if (!locator) {
       return NextResponse.json({ error: 'No locator profile' }, { status: 404 })

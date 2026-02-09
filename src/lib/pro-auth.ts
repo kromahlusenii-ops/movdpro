@@ -85,6 +85,73 @@ export async function getClientsCached(userId: string) {
   return getCachedClients(userId)
 }
 
+/**
+ * Get available listings count with caching (60 second revalidation)
+ */
+export async function getListingsCountCached() {
+  const getCachedCount = unstable_cache(
+    async () => {
+      return prisma.unit.count({
+        where: { isAvailable: true },
+      })
+    },
+    ['listings-count'],
+    { revalidate: 60, tags: ['listings-count'] }
+  )
+
+  return getCachedCount()
+}
+
+/**
+ * Get reports for a locator with caching (30 second revalidation)
+ */
+export async function getReportsCached(userId: string) {
+  const getCachedReports = unstable_cache(
+    async (uid: string) => {
+      const locator = await prisma.locatorProfile.findUnique({
+        where: { userId: uid },
+        include: {
+          reports: {
+            orderBy: { createdAt: 'desc' },
+            include: {
+              client: {
+                select: { name: true },
+              },
+            },
+          },
+        },
+      })
+      return locator?.reports ?? []
+    },
+    [`reports-${userId}`],
+    { revalidate: 30, tags: [`locator-${userId}`, `reports-${userId}`] }
+  )
+
+  return getCachedReports(userId)
+}
+
+/**
+ * Get locator profile with email for settings page (30 second revalidation)
+ */
+export async function getLocatorWithEmailCached(userId: string) {
+  const getCachedLocatorWithEmail = unstable_cache(
+    async (uid: string) => {
+      return prisma.locatorProfile.findUnique({
+        where: { userId: uid },
+        include: {
+          user: {
+            select: { email: true },
+          },
+        },
+      })
+    },
+    [`locator-email-${userId}`],
+    { revalidate: 30, tags: [`locator-${userId}`] }
+  )
+
+  return getCachedLocatorWithEmail(userId)
+}
+
 export type LocatorData = {
   id: string
   companyName: string | null
