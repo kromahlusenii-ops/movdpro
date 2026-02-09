@@ -30,16 +30,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 async function getShareReport(shareId: string) {
+  console.log('[SharePage] Looking up shareId:', shareId)
+
   const report = await prisma.clientShareReport.findUnique({
     where: { shareId },
   })
 
-  if (!report || !report.isActive) {
+  console.log('[SharePage] Found report:', report ? { id: report.id, isActive: report.isActive, expiresAt: report.expiresAt } : 'null')
+
+  if (!report) {
+    console.log('[SharePage] Report not found in database')
+    return null
+  }
+
+  if (!report.isActive) {
+    console.log('[SharePage] Report is inactive')
     return null
   }
 
   // Check if expired
   if (report.expiresAt && new Date(report.expiresAt) < new Date()) {
+    console.log('[SharePage] Report is expired')
     return null
   }
 
