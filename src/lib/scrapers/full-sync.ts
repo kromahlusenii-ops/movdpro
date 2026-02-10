@@ -9,6 +9,7 @@
 
 import { chromium, Browser, Page } from 'playwright'
 import prisma from '@/lib/db'
+import { invalidateListingsCache } from '@/lib/listings-cache'
 
 // Portfolio page URLs
 const PORTFOLIO_URLS = {
@@ -1271,6 +1272,12 @@ export async function fullSync(management: 'greystar' | 'maa' | 'cortland'): Pro
   }
 
   console.log(`\n  Summary: ${result.created} created, ${result.updated} updated, ${result.unitsCreated} units`)
+
+  // Invalidate in-memory cache if data changed
+  if (result.created > 0 || result.updated > 0 || result.unitsCreated > 0) {
+    invalidateListingsCache()
+    console.log('  Cache invalidated')
+  }
 
   return result
 }
