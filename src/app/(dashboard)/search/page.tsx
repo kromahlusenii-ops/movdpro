@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getCachedListings, setCachedListings, type CachedListing } from '@/lib/listings-client-cache'
 import Link from 'next/link'
 import { SearchableDropdown } from '@/components/SearchableDropdown'
@@ -258,6 +258,37 @@ export default function ProSearchPage() {
     fetchListings(1, true)
   }, [fetchListings])
 
+  // Track if initial load is complete to avoid double-fetching
+  const initialLoadComplete = useRef(false)
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null)
+
+  // Auto-search when filters change (debounced)
+  useEffect(() => {
+    // Skip auto-search on initial mount - initial listings are loaded separately
+    if (!initialLoadComplete.current) {
+      initialLoadComplete.current = true
+      return
+    }
+
+    // Clear any existing timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current)
+    }
+
+    // Debounce the search to avoid excessive API calls while typing
+    debounceTimer.current = setTimeout(() => {
+      setPage(1)
+      fetchListings(1, true)
+    }, 300)
+
+    // Cleanup on unmount or when filters change again
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current)
+      }
+    }
+  }, [filters, fetchListings])
+
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage)
     fetchListings(newPage, false, true)
@@ -442,15 +473,13 @@ export default function ProSearchPage() {
             </button>
           </div>
 
-          {/* Search Button */}
-          <button
-            onClick={handleSearch}
-            disabled={loading}
-            className="px-5 py-2 rounded-lg font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center gap-2 text-sm"
-          >
-            <Search className="w-4 h-4" />
-            {loading ? 'Searching...' : 'Search'}
-          </button>
+          {/* Loading Indicator (shows during auto-search) */}
+          {loading && (
+            <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+              <div className="w-4 h-4 border-2 border-muted border-t-foreground rounded-full animate-spin" />
+              Filtering...
+            </div>
+          )}
         </div>
 
         {/* Active Filters Summary */}

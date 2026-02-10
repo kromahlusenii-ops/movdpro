@@ -109,6 +109,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const { id } = use(params)
   const [building, setBuilding] = useState<Building | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [clients, setClients] = useState<Client[]>([])
   const [saveDropdownOpen, setSaveDropdownOpen] = useState(false)
   const [savingTo, setSavingTo] = useState<string | null>(null)
@@ -117,13 +118,25 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   useEffect(() => {
     // Fetch building data
     fetch(`/api/buildings/${id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+        }
+        return res.json()
+      })
       .then((data) => {
         if (data.building) {
           setBuilding(data.building)
+        } else if (data.error) {
+          setError(data.error)
+        } else {
+          setError('Invalid response from server')
         }
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error('Failed to fetch building:', err)
+        setError(err.message || 'Failed to load property')
+      })
       .finally(() => setLoading(false))
 
     // Fetch clients
@@ -214,15 +227,23 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     return (
       <div className="p-8">
         <Link
-          href="/search"
+          href="/dashboard"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to search
+          Back to dashboard
         </Link>
         <div className="text-center py-16 bg-background rounded-xl border">
           <p className="text-lg font-medium mb-1">Property not found</p>
-          <p className="text-muted-foreground">This property may have been removed.</p>
+          <p className="text-muted-foreground">
+            {error || 'This property may have been removed or is no longer available.'}
+          </p>
+          <Link
+            href="/search"
+            className="inline-block mt-4 text-sm font-medium text-foreground hover:underline"
+          >
+            Search for properties
+          </Link>
         </div>
       </div>
     )
