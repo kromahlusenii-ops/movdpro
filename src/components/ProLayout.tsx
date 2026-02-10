@@ -14,6 +14,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ListingsPreloader } from './ListingsPreloader'
 
 interface ProLayoutProps {
   children: React.ReactNode
@@ -60,6 +61,9 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
 
   return (
     <div className="min-h-screen bg-muted/30">
+      {/* Preload listings in background */}
+      <ListingsPreloader />
+
       {/* Sidebar */}
       <aside className="fixed left-0 top-0 h-full w-64 bg-background border-r flex flex-col">
         {/* Logo */}

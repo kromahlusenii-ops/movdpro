@@ -11,6 +11,9 @@ async function getActiveSpecials() {
         { endDate: null },
         { endDate: { gte: new Date() } },
       ],
+      building: {
+        isAvailable: true,
+      },
     },
     include: {
       building: {

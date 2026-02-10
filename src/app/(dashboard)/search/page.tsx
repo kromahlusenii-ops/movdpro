@@ -1,14 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-
-// Module-level cache to persist listings across navigation
-let listingsCache: {
-  listings: Listing[]
-  total: number
-  timestamp: number
-} | null = null
-const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+import { getCachedListings, setCachedListings, type CachedListing } from '@/lib/listings-client-cache'
 import Link from 'next/link'
 import { SearchableDropdown } from '@/components/SearchableDropdown'
 import { BuildingImage } from '@/components/BuildingImage'
@@ -151,15 +144,16 @@ export default function ProSearchPage() {
       .catch(console.error)
   }, [])
 
-  // Load listings on mount with caching
-  // Uses module-level cache to avoid reload on navigation
+  // Load listings on mount with shared cache
+  // Cache is preloaded by ListingsPreloader when user enters dashboard
   useEffect(() => {
     const initialBatchSize = 8
 
-    // Check if we have valid cached data
-    if (listingsCache && (Date.now() - listingsCache.timestamp) < CACHE_TTL) {
-      setListings(listingsCache.listings)
-      setTotal(listingsCache.total)
+    // Check if we have preloaded/cached data
+    const cached = getCachedListings()
+    if (cached) {
+      setListings(cached.listings as Listing[])
+      setTotal(cached.total)
       setHasSearched(true)
       return // Use cached data, no loading needed
     }
@@ -193,21 +187,12 @@ export default function ProSearchPage() {
             if (remainingRes.ok && remainingData.listings) {
               const allListings = [...data.listings, ...remainingData.listings]
               setListings(allListings)
-
-              // Cache the full results
-              listingsCache = {
-                listings: allListings,
-                total: data.total,
-                timestamp: Date.now(),
-              }
+              // Update shared cache
+              setCachedListings(allListings, data.total)
             }
           } else {
             // Cache the results even if no remaining
-            listingsCache = {
-              listings: data.listings,
-              total: data.total,
-              timestamp: Date.now(),
-            }
+            setCachedListings(data.listings, data.total)
           }
         }
       } catch (error) {
