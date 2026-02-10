@@ -78,15 +78,17 @@ export default async function ProDashboardPage() {
       </div>
 
       {/* Specials */}
-      {specials.length > 0 && (
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Tag className="w-5 h-5 text-emerald-600" />
-              <span className="font-semibold text-emerald-900">Current Specials & Deals</span>
-            </div>
-            <span className="text-sm text-emerald-600">{specials.length} active</span>
+      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 p-6 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Tag className="w-5 h-5 text-emerald-600" />
+            <span className="font-semibold text-emerald-900">Latest Specials & Deals</span>
           </div>
+          {specials.length > 0 && (
+            <span className="text-sm text-emerald-600">{specials.length} active</span>
+          )}
+        </div>
+        {specials.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {specials.slice(0, 4).map((special) => (
               <Link
@@ -106,8 +108,10 @@ export default async function ProDashboardPage() {
               </Link>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-emerald-700">No active specials at the moment. Check back after the next weekly update.</p>
+        )}
+      </div>
 
       {/* Recent Clients */}
       <div className="bg-background rounded-xl border">
