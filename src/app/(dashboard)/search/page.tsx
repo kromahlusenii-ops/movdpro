@@ -139,24 +139,45 @@ export default function ProSearchPage() {
       .catch(console.error)
   }, [])
 
-  // Load listings on mount (no filters)
+  // Load listings on mount with progressive loading
+  // First batch loads fast, rest loads in background
   useEffect(() => {
+    const initialBatchSize = 8 // Show 8 listings immediately for fast perceived load
+
     const loadInitialListings = async () => {
       setLoading(true)
       try {
+        // Step 1: Load small initial batch quickly
         const params = new URLSearchParams()
-        params.set('limit', String(pageSize))
+        params.set('limit', String(initialBatchSize))
         params.set('offset', '0')
         const res = await fetch(`/api/listings?${params.toString()}`)
         const data = await res.json()
+
         if (res.ok) {
           setListings(data.listings)
           setTotal(data.total)
           setHasSearched(true)
+          setLoading(false) // Show results immediately
+
+          // Step 2: Load remaining listings in background if there are more
+          if (data.total > initialBatchSize) {
+            const remainingParams = new URLSearchParams()
+            remainingParams.set('limit', String(pageSize - initialBatchSize))
+            remainingParams.set('offset', String(initialBatchSize))
+            remainingParams.set('skipCount', 'true') // Don't recount
+
+            const remainingRes = await fetch(`/api/listings?${remainingParams.toString()}`)
+            const remainingData = await remainingRes.json()
+
+            if (remainingRes.ok && remainingData.listings) {
+              // Append remaining listings seamlessly
+              setListings(prev => [...prev, ...remainingData.listings])
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to load initial listings:', error)
-      } finally {
         setLoading(false)
       }
     }
