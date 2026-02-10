@@ -48,8 +48,17 @@ export async function POST(
                         walkScore: true,
                         transitScore: true,
                         safetyScore: true,
+                        nightlifeScore: true,
+                        sentimentScore: true,
                         tagline: true,
                         characterTags: true,
+                        highlights: true,
+                        warnings: true,
+                        lifestyleSummary: true,
+                        sentimentSummary: true,
+                        civicInsights: true,
+                        medianRent: true,
+                        bestArchetypes: true,
                       },
                     },
                     management: {
@@ -94,8 +103,17 @@ export async function POST(
                     walkScore: true,
                     transitScore: true,
                     safetyScore: true,
+                    nightlifeScore: true,
+                    sentimentScore: true,
                     tagline: true,
                     characterTags: true,
+                    highlights: true,
+                    warnings: true,
+                    lifestyleSummary: true,
+                    sentimentSummary: true,
+                    civicInsights: true,
+                    medianRent: true,
+                    bestArchetypes: true,
                   },
                 },
                 management: {
@@ -143,6 +161,45 @@ export async function POST(
         { status: 400 }
       )
     }
+
+    // Collect unique neighborhood IDs and fetch sentiment quotes
+    const neighborhoodIds = new Set<string>()
+    client.savedListings.forEach((saved) => {
+      if (saved.unit.building.neighborhood?.id) {
+        neighborhoodIds.add(saved.unit.building.neighborhood.id)
+      }
+    })
+    client.savedBuildings.forEach((saved) => {
+      if (saved.building.neighborhood?.id) {
+        neighborhoodIds.add(saved.building.neighborhood.id)
+      }
+    })
+
+    // Fetch sentiment quotes for all neighborhoods
+    const neighborhoodQuotes = await prisma.sentimentQuote.findMany({
+      where: {
+        neighborhoodId: { in: Array.from(neighborhoodIds) },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        neighborhoodId: true,
+        content: true,
+        source: true,
+        sentiment: true,
+        theme: true,
+      },
+    })
+
+    // Group quotes by neighborhood (max 3 per neighborhood)
+    const quotesByNeighborhood = new Map<string, typeof neighborhoodQuotes>()
+    neighborhoodQuotes.forEach((quote) => {
+      const existing = quotesByNeighborhood.get(quote.neighborhoodId) || []
+      if (existing.length < 3) {
+        existing.push(quote)
+        quotesByNeighborhood.set(quote.neighborhoodId, existing)
+      }
+    })
 
     const body = await request.json().catch(() => ({}))
     const { expiresInDays, sendEmail } = body
@@ -192,7 +249,10 @@ export async function POST(
           floorplansUrl: saved.unit.building.floorplansUrl,
           specials: saved.unit.building.specials,
         },
-        neighborhood: saved.unit.building.neighborhood,
+        neighborhood: {
+          ...saved.unit.building.neighborhood,
+          quotes: quotesByNeighborhood.get(saved.unit.building.neighborhood.id) || [],
+        },
         management: saved.unit.building.management,
       })),
       // Saved buildings (as building cards)
@@ -211,7 +271,10 @@ export async function POST(
         listingUrl: saved.building.listingUrl,
         floorplansUrl: saved.building.floorplansUrl,
         notes: saved.notes,
-        neighborhood: saved.building.neighborhood,
+        neighborhood: {
+          ...saved.building.neighborhood,
+          quotes: quotesByNeighborhood.get(saved.building.neighborhood.id) || [],
+        },
         management: saved.building.management,
         specials: saved.building.specials,
         units: saved.building.units.map((u) => ({

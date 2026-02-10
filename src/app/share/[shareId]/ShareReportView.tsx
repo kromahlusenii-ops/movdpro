@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { formatCurrency } from '@/lib/utils'
-import { Building2, MapPin, Star, ExternalLink, Dog, Cat, Baby, Home, Car, Footprints, Shield, PawPrint, Check } from 'lucide-react'
+import { Building2, MapPin, Star, ExternalLink, Dog, Cat, Baby, Home, Car, Footprints, Shield, PawPrint, Check, MessageCircle, TrendingUp, ThumbsUp, ThumbsDown, Volume2 } from 'lucide-react'
 
 type Preferences = {
   budgetMin: number | null
@@ -28,6 +28,14 @@ type Special = {
   conditions: string | null
 }
 
+type SentimentQuote = {
+  id: string
+  content: string
+  source: string
+  sentiment: string
+  theme: string | null
+}
+
 type NeighborhoodData = {
   id: string
   name: string
@@ -36,8 +44,18 @@ type NeighborhoodData = {
   walkScore: number | null
   transitScore: number | null
   safetyScore?: number | null
+  nightlifeScore?: number | null
+  sentimentScore?: number | null
   tagline?: string | null
   characterTags?: string[]
+  highlights?: string[]
+  warnings?: string[]
+  lifestyleSummary?: string | null
+  sentimentSummary?: string | null
+  civicInsights?: string | null
+  medianRent?: number | null
+  bestArchetypes?: string[]
+  quotes?: SentimentQuote[]
 }
 
 type ListingItem = {
@@ -664,66 +682,185 @@ export default function ShareReportView({ report }: ShareReportViewProps) {
                 return (
                   <div
                     key={hood.id}
-                    className="bg-white rounded-2xl border border-[#e2e5ea] p-6"
+                    className="bg-white rounded-2xl border border-[#e2e5ea] overflow-hidden"
                   >
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">{hood.name}</h3>
-
-                    <div className="grid sm:grid-cols-2 gap-x-8 gap-y-5">
-                      {/* Vibe */}
+                    {/* Header */}
+                    <div className="p-6 border-b border-[#e2e5ea]">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xl font-bold text-gray-900">{hood.name}</h3>
+                        <span className="px-2.5 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700">
+                          {hood.grade}
+                        </span>
+                      </div>
                       {vibe && (
-                        <div>
-                          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">
-                            Vibe
-                          </p>
-                          <p className="text-gray-700">{vibe}</p>
+                        <p className="text-gray-600">{vibe}</p>
+                      )}
+                      {hood.medianRent && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          ~${hood.medianRent.toLocaleString()}/mo median rent
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="p-6">
+                      {/* Scores Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                        {hood.walkScore && (
+                          <div className="p-3 rounded-xl bg-blue-50 text-center">
+                            <Footprints className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                            <p className="text-2xl font-bold text-gray-900">{hood.walkScore}</p>
+                            <p className="text-xs text-gray-500">Walk Score</p>
+                          </div>
+                        )}
+                        {hood.transitScore && (
+                          <div className="p-3 rounded-xl bg-purple-50 text-center">
+                            <Car className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                            <p className="text-2xl font-bold text-gray-900">{hood.transitScore}</p>
+                            <p className="text-xs text-gray-500">Transit</p>
+                          </div>
+                        )}
+                        {hood.safetyScore && (
+                          <div className="p-3 rounded-xl bg-green-50 text-center">
+                            <Shield className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                            <p className="text-2xl font-bold text-gray-900">{hood.safetyScore}/10</p>
+                            <p className="text-xs text-gray-500">Safety</p>
+                          </div>
+                        )}
+                        {hood.nightlifeScore && hood.nightlifeScore > 0 && (
+                          <div className="p-3 rounded-xl bg-amber-50 text-center">
+                            <Volume2 className="w-5 h-5 text-amber-600 mx-auto mb-1" />
+                            <p className="text-2xl font-bold text-gray-900">{hood.nightlifeScore}/10</p>
+                            <p className="text-xs text-gray-500">Nightlife</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Character Tags */}
+                      {hood.characterTags && hood.characterTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-6">
+                          {hood.characterTags.slice(0, 6).map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-medium"
+                            >
+                              {tag}
+                            </span>
+                          ))}
                         </div>
                       )}
 
-                      {/* Walkability */}
-                      {walkabilityDesc && (
-                        <div>
-                          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                            <Footprints className="w-3.5 h-3.5" />
-                            Walkability
-                          </p>
-                          <p className="text-gray-700">
-                            {hood.walkScore && <span className="font-medium">Score: {hood.walkScore}</span>}
-                            {' — '}{walkabilityDesc.split('—')[1]?.trim() || walkabilityDesc}
-                          </p>
+                      {/* Highlights & Warnings */}
+                      {((hood.highlights && hood.highlights.length > 0) || (hood.warnings && hood.warnings.length > 0)) && (
+                        <div className="grid sm:grid-cols-2 gap-6 mb-6">
+                          {hood.highlights && hood.highlights.length > 0 && (
+                            <div>
+                              <div className="flex items-center gap-1.5 mb-3">
+                                <ThumbsUp className="w-4 h-4 text-green-600" />
+                                <span className="text-sm font-semibold text-gray-900">Highlights</span>
+                              </div>
+                              <ul className="space-y-2">
+                                {hood.highlights.slice(0, 3).map((h, i) => (
+                                  <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                                    <span className="text-green-500 mt-0.5">•</span>
+                                    {h}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {hood.warnings && hood.warnings.length > 0 && (
+                            <div>
+                              <div className="flex items-center gap-1.5 mb-3">
+                                <ThumbsDown className="w-4 h-4 text-amber-600" />
+                                <span className="text-sm font-semibold text-gray-900">Heads Up</span>
+                              </div>
+                              <ul className="space-y-2">
+                                {hood.warnings.slice(0, 3).map((w, i) => (
+                                  <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                                    <span className="text-amber-500 mt-0.5">•</span>
+                                    {w}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
                       )}
 
-                      {/* Safety */}
-                      {safetyDesc && (
-                        <div>
-                          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                            <Shield className="w-3.5 h-3.5" />
-                            Safety
-                          </p>
-                          <p className="text-gray-700">{safetyDesc}</p>
+                      {/* WFH Lifestyle - show if user works from home */}
+                      {prefs.worksFromHome && hood.lifestyleSummary && (
+                        <div className="p-4 rounded-xl bg-purple-50 border border-purple-100 mb-6">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <Home className="w-4 h-4 text-purple-600" />
+                            <span className="text-sm font-semibold text-purple-900">WFH Lifestyle</span>
+                          </div>
+                          <p className="text-sm text-purple-800">{hood.lifestyleSummary}</p>
                         </div>
                       )}
 
                       {/* Dog Friendly - show if user has a dog */}
                       {prefs.hasDog && (
-                        <div>
-                          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                            <PawPrint className="w-3.5 h-3.5" />
-                            Dog-Friendly
-                          </p>
-                          <p className="text-gray-700">
+                        <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 mb-6">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <PawPrint className="w-4 h-4 text-amber-600" />
+                            <span className="text-sm font-semibold text-amber-900">Dog-Friendly</span>
+                          </div>
+                          <p className="text-sm text-amber-800">
                             {hood.walkScore && hood.walkScore >= 70
                               ? 'Good for dogs — walkable area with nearby parks and pet-friendly spots.'
                               : 'Check for nearby dog parks and pet-friendly establishments.'}
                           </p>
                         </div>
                       )}
-                    </div>
 
-                    {/* Property count */}
-                    <p className="text-sm text-gray-400 mt-4">
-                      {hood.propertyCount} propert{hood.propertyCount !== 1 ? 'ies' : 'y'} recommended in this area
-                    </p>
+                      {/* Sentiment Quotes */}
+                      {hood.quotes && hood.quotes.length > 0 && (
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-1.5">
+                              <MessageCircle className="w-4 h-4 text-gray-500" />
+                              <span className="text-sm font-semibold text-gray-900">What Residents Say</span>
+                            </div>
+                            {hood.sentimentScore && hood.sentimentScore > 0 && (
+                              <span className="flex items-center gap-1 text-xs text-gray-500">
+                                <TrendingUp className="w-3 h-3" />
+                                {hood.sentimentScore}% positive
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            {hood.quotes.map((quote) => (
+                              <div
+                                key={quote.id}
+                                className={`p-4 rounded-xl border ${
+                                  quote.sentiment === 'positive'
+                                    ? 'bg-green-50 border-green-200'
+                                    : quote.sentiment === 'negative'
+                                    ? 'bg-red-50 border-red-200'
+                                    : 'bg-gray-50 border-gray-200'
+                                }`}
+                              >
+                                <p className="text-sm italic text-gray-700">&ldquo;{quote.content}&rdquo;</p>
+                                <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                                  <span className="capitalize">{quote.source}</span>
+                                  {quote.theme && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="capitalize">{quote.theme}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Property count */}
+                      <p className="text-sm text-gray-400 mt-6 pt-4 border-t border-gray-100">
+                        {hood.propertyCount} propert{hood.propertyCount !== 1 ? 'ies' : 'y'} recommended in this area
+                      </p>
+                    </div>
                   </div>
                 )
               })
