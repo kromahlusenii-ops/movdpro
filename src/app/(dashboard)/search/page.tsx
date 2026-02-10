@@ -1,6 +1,14 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+
+// Module-level cache to persist listings across navigation
+let listingsCache: {
+  listings: Listing[]
+  total: number
+  timestamp: number
+} | null = null
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 import Link from 'next/link'
 import { SearchableDropdown } from '@/components/SearchableDropdown'
 import { BuildingImage } from '@/components/BuildingImage'
@@ -143,10 +151,18 @@ export default function ProSearchPage() {
       .catch(console.error)
   }, [])
 
-  // Load listings on mount with progressive loading
-  // First batch loads fast, rest loads in background
+  // Load listings on mount with caching
+  // Uses module-level cache to avoid reload on navigation
   useEffect(() => {
-    const initialBatchSize = 8 // Show 8 listings immediately for fast perceived load
+    const initialBatchSize = 8
+
+    // Check if we have valid cached data
+    if (listingsCache && (Date.now() - listingsCache.timestamp) < CACHE_TTL) {
+      setListings(listingsCache.listings)
+      setTotal(listingsCache.total)
+      setHasSearched(true)
+      return // Use cached data, no loading needed
+    }
 
     const loadInitialListings = async () => {
       setLoading(true)
@@ -162,21 +178,35 @@ export default function ProSearchPage() {
           setListings(data.listings)
           setTotal(data.total)
           setHasSearched(true)
-          setLoading(false) // Show results immediately
+          setLoading(false)
 
-          // Step 2: Load remaining listings in background if there are more
+          // Step 2: Load remaining listings in background
           if (data.total > initialBatchSize) {
             const remainingParams = new URLSearchParams()
             remainingParams.set('limit', String(pageSize - initialBatchSize))
             remainingParams.set('offset', String(initialBatchSize))
-            remainingParams.set('skipCount', 'true') // Don't recount
+            remainingParams.set('skipCount', 'true')
 
             const remainingRes = await fetch(`/api/listings?${remainingParams.toString()}`)
             const remainingData = await remainingRes.json()
 
             if (remainingRes.ok && remainingData.listings) {
-              // Append remaining listings seamlessly
-              setListings(prev => [...prev, ...remainingData.listings])
+              const allListings = [...data.listings, ...remainingData.listings]
+              setListings(allListings)
+
+              // Cache the full results
+              listingsCache = {
+                listings: allListings,
+                total: data.total,
+                timestamp: Date.now(),
+              }
+            }
+          } else {
+            // Cache the results even if no remaining
+            listingsCache = {
+              listings: data.listings,
+              total: data.total,
+              timestamp: Date.now(),
             }
           }
         }
