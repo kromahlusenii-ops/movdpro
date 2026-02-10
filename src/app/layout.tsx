@@ -16,8 +16,14 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://movdpro.com'),
   openGraph: {
     title: 'MOVD Pro | For Apartment Locators',
-    description: 'The professional apartment search tool for Charlotte locators.',
+    description: 'Less research. More placements. The professional apartment search tool for Charlotte locators.',
     type: 'website',
+    siteName: 'MOVD Pro',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MOVD Pro | For Apartment Locators',
+    description: 'Less research. More placements. The professional apartment search tool for Charlotte locators.',
   },
 }
 
