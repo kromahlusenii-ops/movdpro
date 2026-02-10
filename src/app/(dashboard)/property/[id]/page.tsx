@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -114,6 +114,28 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const [saveDropdownOpen, setSaveDropdownOpen] = useState(false)
   const [savingTo, setSavingTo] = useState<string | null>(null)
   const [selectedPhoto, setSelectedPhoto] = useState(0)
+
+  // Unit filters
+  const [bedroomFilter, setBedroomFilter] = useState<number | null>(null)
+  const [maxRent, setMaxRent] = useState<number | null>(null)
+
+  // Filtered units
+  const filteredUnits = useMemo(() => {
+    if (!building) return []
+    return building.units.filter((unit) => {
+      // Bedroom filter
+      if (bedroomFilter !== null) {
+        if (bedroomFilter === 3) {
+          if (unit.bedrooms < 3) return false
+        } else if (unit.bedrooms !== bedroomFilter) {
+          return false
+        }
+      }
+      // Max rent filter
+      if (maxRent !== null && unit.rentMin > maxRent) return false
+      return true
+    })
+  }, [building, bedroomFilter, maxRent])
 
   useEffect(() => {
     // Fetch building data
@@ -423,17 +445,77 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 <Building2 className="w-4 h-4" />
                 <span className="text-xs">Floor Plans</span>
               </div>
-              <p className="font-bold">{building.units.length} available</p>
+              <p className="font-bold">
+                {filteredUnits.length}
+                {(bedroomFilter !== null || maxRent !== null) && filteredUnits.length !== building.units.length && (
+                  <span className="text-sm text-muted-foreground font-normal"> of {building.units.length}</span>
+                )}
+                {' '}available
+              </p>
             </div>
           </div>
 
           {/* Floor Plans */}
           <div className="bg-background rounded-xl border">
             <div className="p-4 border-b">
-              <h2 className="font-semibold">Available Floor Plans</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold">Available Floor Plans</h2>
+                {(bedroomFilter !== null || maxRent !== null) && (
+                  <button
+                    onClick={() => {
+                      setBedroomFilter(null)
+                      setMaxRent(null)
+                    }}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+              {/* Filters */}
+              <div className="flex flex-wrap gap-2">
+                {/* Bedroom Filter */}
+                {[
+                  { value: null, label: 'All' },
+                  { value: 0, label: 'Studio' },
+                  { value: 1, label: '1 BR' },
+                  { value: 2, label: '2 BR' },
+                  { value: 3, label: '3+ BR' },
+                ].map((option) => (
+                  <button
+                    key={option.label}
+                    onClick={() => setBedroomFilter(option.value)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                      bedroomFilter === option.value
+                        ? 'bg-foreground text-background'
+                        : 'bg-muted hover:bg-muted/80'
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+                {/* Price Filter */}
+                <div className="flex items-center gap-2 ml-2">
+                  <span className="text-sm text-muted-foreground">Max:</span>
+                  <select
+                    value={maxRent || ''}
+                    onChange={(e) => setMaxRent(e.target.value ? parseInt(e.target.value) : null)}
+                    className="px-2 py-1.5 rounded-lg text-sm bg-muted border-0 focus:ring-1 focus:ring-foreground"
+                  >
+                    <option value="">Any price</option>
+                    <option value="1500">$1,500</option>
+                    <option value="2000">$2,000</option>
+                    <option value="2500">$2,500</option>
+                    <option value="3000">$3,000</option>
+                    <option value="3500">$3,500</option>
+                    <option value="4000">$4,000</option>
+                  </select>
+                </div>
+              </div>
             </div>
             <div className="divide-y">
-              {building.units.map((unit) => (
+              {filteredUnits.map((unit) => (
                 <div key={unit.id} className="p-4 flex items-center gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
@@ -474,6 +556,11 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                 </div>
               ))}
+              {filteredUnits.length === 0 && (
+                <div className="p-6 text-center text-muted-foreground">
+                  No floor plans match your filters
+                </div>
+              )}
             </div>
           </div>
 
