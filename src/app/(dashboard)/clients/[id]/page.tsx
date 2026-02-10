@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import prisma from '@/lib/db'
 import { getSessionUserCached } from '@/lib/pro-auth'
-import { ArrowLeft, Mail, Phone, FileText, MapPin, Building2, Star, Dog, Cat, Baby, Home, Car, Bed, Bath, Ruler } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, FileText, MapPin, Building2, Star, Dog, Cat, Baby, Home, Car, Bed, Bath, Ruler, Footprints, Shield, Volume2, TrendingUp, MessageCircle, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { ClientActions } from './ClientActions'
 import { RemoveListingButton } from './RemoveListingButton'
 import { ShareButton } from './ShareButton'
@@ -50,7 +50,77 @@ async function getClientData(userId: string, clientId: string) {
   const client = locator.clients[0]
   if (!client) return null
 
-  return { client }
+  // Fetch detailed neighborhood data for client's preferred neighborhoods
+  let neighborhoodInsights: Array<{
+    id: string
+    name: string
+    grade: string
+    tagline: string | null
+    walkScore: number | null
+    transitScore: number | null
+    safetyScore: number
+    nightlifeScore: number
+    sentimentScore: number
+    characterTags: string[]
+    highlights: string[]
+    warnings: string[]
+    civicInsights: string | null
+    sentimentSummary: string | null
+    lifestyleSummary: string | null
+    bestArchetypes: string[]
+    medianRent: number | null
+    quotes: Array<{
+      id: string
+      content: string
+      source: string
+      sentiment: string
+      theme: string | null
+    }>
+  }> = []
+
+  if (client.neighborhoods.length > 0) {
+    const neighborhoods = await prisma.neighborhood.findMany({
+      where: {
+        name: { in: client.neighborhoods }
+      },
+      include: {
+        sentimentQuotes: {
+          take: 3,
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            content: true,
+            source: true,
+            sentiment: true,
+            theme: true,
+          }
+        }
+      }
+    })
+
+    neighborhoodInsights = neighborhoods.map(n => ({
+      id: n.id,
+      name: n.name,
+      grade: n.grade,
+      tagline: n.tagline,
+      walkScore: n.walkScore,
+      transitScore: n.transitScore,
+      safetyScore: n.safetyScore,
+      nightlifeScore: n.nightlifeScore,
+      sentimentScore: n.sentimentScore,
+      characterTags: n.characterTags,
+      highlights: n.highlights,
+      warnings: n.warnings,
+      civicInsights: n.civicInsights,
+      sentimentSummary: n.sentimentSummary,
+      lifestyleSummary: n.lifestyleSummary,
+      bestArchetypes: n.bestArchetypes,
+      medianRent: n.medianRent,
+      quotes: n.sentimentQuotes,
+    }))
+  }
+
+  return { client, neighborhoodInsights }
 }
 
 function formatBedrooms(bedrooms: number): string {
@@ -73,7 +143,7 @@ export default async function ClientDetailPage({
     notFound()
   }
 
-  const { client } = data
+  const { client, neighborhoodInsights } = data
 
   return (
     <div className="p-8 max-w-3xl">
@@ -227,6 +297,180 @@ export default async function ClientDetailPage({
                 </dd>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Neighborhood Insights */}
+      {neighborhoodInsights.length > 0 && (
+        <div className="bg-background rounded-xl border p-6 mb-6">
+          <h2 className="font-semibold mb-4">Neighborhood Insights</h2>
+          <div className="space-y-6">
+            {neighborhoodInsights.map((hood) => (
+              <div key={hood.id} className="border-b last:border-b-0 pb-6 last:pb-0">
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-3">
+                  <h3 className="font-medium text-lg">{hood.name}</h3>
+                  <span className="px-2 py-0.5 rounded bg-muted text-sm font-medium">
+                    {hood.grade}
+                  </span>
+                  {hood.medianRent && (
+                    <span className="text-sm text-muted-foreground">
+                      ~${hood.medianRent.toLocaleString()}/mo median
+                    </span>
+                  )}
+                </div>
+
+                {hood.tagline && (
+                  <p className="text-muted-foreground mb-3">{hood.tagline}</p>
+                )}
+
+                {/* Scores Grid - Relevance-based */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  {hood.walkScore && (
+                    <div className={`p-3 rounded-lg ${client.vibes?.includes('walkable') || client.priorities?.includes('walkable') ? 'bg-blue-50 border border-blue-200' : 'bg-muted/50'}`}>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Footprints className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Walk Score</span>
+                      </div>
+                      <span className="text-xl font-bold">{hood.walkScore}</span>
+                    </div>
+                  )}
+                  {hood.transitScore && (
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Car className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Transit</span>
+                      </div>
+                      <span className="text-xl font-bold">{hood.transitScore}</span>
+                    </div>
+                  )}
+                  <div className={`p-3 rounded-lg ${client.hasKids ? 'bg-green-50 border border-green-200' : 'bg-muted/50'}`}>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Shield className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Safety</span>
+                    </div>
+                    <span className="text-xl font-bold">{hood.safetyScore}/10</span>
+                  </div>
+                  {hood.nightlifeScore > 0 && (
+                    <div className={`p-3 rounded-lg ${client.vibes?.includes('nightlife') ? 'bg-purple-50 border border-purple-200' : 'bg-muted/50'}`}>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Volume2 className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Nightlife</span>
+                      </div>
+                      <span className="text-xl font-bold">{hood.nightlifeScore}/10</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Pet-Friendly Indicator for dog owners */}
+                {client.hasDog && hood.bestArchetypes.some(a => a.toLowerCase().includes('dog') || a.toLowerCase().includes('pet')) && (
+                  <div className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-amber-50 border border-amber-200">
+                    <Dog className="w-4 h-4 text-amber-600" />
+                    <span className="text-sm font-medium text-amber-800">Dog-friendly neighborhood</span>
+                  </div>
+                )}
+
+                {/* Character Tags */}
+                {hood.characterTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {hood.characterTags.slice(0, 6).map((tag) => (
+                      <span key={tag} className="px-2 py-0.5 rounded-full bg-muted text-xs">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Highlights & Warnings */}
+                <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                  {hood.highlights.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <ThumbsUp className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium">Highlights</span>
+                      </div>
+                      <ul className="space-y-1">
+                        {hood.highlights.slice(0, 3).map((h, i) => (
+                          <li key={i} className="text-sm text-muted-foreground flex items-start gap-1.5">
+                            <span className="text-green-500 mt-1">•</span>
+                            {h}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {hood.warnings.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <ThumbsDown className="w-4 h-4 text-amber-600" />
+                        <span className="text-sm font-medium">Heads Up</span>
+                      </div>
+                      <ul className="space-y-1">
+                        {hood.warnings.slice(0, 3).map((w, i) => (
+                          <li key={i} className="text-sm text-muted-foreground flex items-start gap-1.5">
+                            <span className="text-amber-500 mt-1">•</span>
+                            {w}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Lifestyle Summary for WFH clients */}
+                {client.worksFromHome && hood.lifestyleSummary && (
+                  <div className="p-3 rounded-lg bg-purple-50 border border-purple-200 mb-4">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Home className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm font-medium text-purple-800">WFH Lifestyle</span>
+                    </div>
+                    <p className="text-sm text-purple-700">{hood.lifestyleSummary}</p>
+                  </div>
+                )}
+
+                {/* Sentiment Quotes */}
+                {hood.quotes.length > 0 && (
+                  <div className="mt-4">
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">What Residents Say</span>
+                      {hood.sentimentScore > 0 && (
+                        <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                          <TrendingUp className="w-3 h-3" />
+                          {hood.sentimentScore}% positive
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {hood.quotes.map((quote) => (
+                        <div
+                          key={quote.id}
+                          className={`p-3 rounded-lg border ${
+                            quote.sentiment === 'positive'
+                              ? 'bg-green-50 border-green-200'
+                              : quote.sentiment === 'negative'
+                              ? 'bg-red-50 border-red-200'
+                              : 'bg-muted/50 border-muted'
+                          }`}
+                        >
+                          <p className="text-sm italic">&ldquo;{quote.content}&rdquo;</p>
+                          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                            <span className="capitalize">{quote.source}</span>
+                            {quote.theme && (
+                              <>
+                                <span>•</span>
+                                <span className="capitalize">{quote.theme}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
