@@ -1,13 +1,40 @@
 import Link from 'next/link'
-import { getSessionUserCached, getLocatorProfileCached, getListingsCountCached } from '@/lib/pro-auth'
-import { Search, Users, Plus, ArrowRight, Building2 } from 'lucide-react'
+import { getSessionUserCached, getLocatorProfileCached } from '@/lib/pro-auth'
+import prisma from '@/lib/db'
+import { Search, Users, Plus, ArrowRight, Tag, ExternalLink } from 'lucide-react'
+
+async function getActiveSpecials() {
+  const specials = await prisma.special.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { endDate: null },
+        { endDate: { gte: new Date() } },
+      ],
+    },
+    include: {
+      building: {
+        select: {
+          id: true,
+          name: true,
+          neighborhood: {
+            select: { name: true }
+          }
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 6,
+  })
+  return specials
+}
 
 export default async function ProDashboardPage() {
   const user = await getSessionUserCached()
   const locator = await getLocatorProfileCached(user!.id)
+  const specials = await getActiveSpecials()
 
   const activeClientCount = locator!.clients.length
-  const listingsCount = await getListingsCountCached()
 
   return (
     <div className="p-8">
@@ -50,8 +77,9 @@ export default async function ProDashboardPage() {
         </Link>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid sm:grid-cols-2 gap-4 mb-8">
+      {/* Stats + Specials Grid */}
+      <div className="grid lg:grid-cols-3 gap-4 mb-8">
+        {/* Active Clients Card */}
         <div className="bg-background rounded-xl border p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
@@ -60,18 +88,41 @@ export default async function ProDashboardPage() {
             <span className="text-sm text-muted-foreground">Active Clients</span>
           </div>
           <p className="text-3xl font-bold">{activeClientCount}</p>
-          <p className="text-sm text-muted-foreground mt-1">of 20 max</p>
         </div>
 
-        <div className="bg-background rounded-xl border p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-muted-foreground" />
+        {/* Specials Card */}
+        <div className="lg:col-span-2 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Tag className="w-5 h-5 text-emerald-600" />
+              <span className="font-semibold text-emerald-900">Current Specials & Deals</span>
             </div>
-            <span className="text-sm text-muted-foreground">Available Listings</span>
+            <span className="text-sm text-emerald-600">{specials.length} active</span>
           </div>
-          <p className="text-3xl font-bold">{listingsCount}</p>
-          <p className="text-sm text-muted-foreground mt-1">in Charlotte</p>
+
+          {specials.length > 0 ? (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {specials.slice(0, 4).map((special) => (
+                <Link
+                  key={special.id}
+                  href={`/property/${special.building.id}`}
+                  className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow group"
+                >
+                  <p className="font-medium text-gray-900 text-sm line-clamp-1 group-hover:underline">
+                    {special.building.name}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-2">
+                    {special.building.neighborhood?.name}
+                  </p>
+                  <p className="text-sm text-emerald-600 font-medium line-clamp-2">
+                    {special.title.split('\n')[0].trim()}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-emerald-700">No active specials at the moment.</p>
+          )}
         </div>
       </div>
 
