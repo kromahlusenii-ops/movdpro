@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
     const budgetMax = searchParams.get('budgetMax') ? parseInt(searchParams.get('budgetMax')!) : undefined
     const bedrooms = searchParams.get('bedrooms')?.split(',').filter(Boolean) || []
     const buildings = searchParams.get('buildings')?.split(',').filter(Boolean) || []
+    const hasDeals = searchParams.get('hasDeals') === 'true'
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
     const offset = parseInt(searchParams.get('offset') || '0')
 
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest) {
       budgetMax,
       bedrooms,
       buildings,
+      hasDeals: hasDeals || undefined,
       limit,
       offset,
     })

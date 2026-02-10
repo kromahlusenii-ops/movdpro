@@ -11,6 +11,13 @@
 import prisma from './db'
 
 // Types
+interface CachedSpecial {
+  id: string
+  title: string
+  description: string | null
+  endDate: Date | null
+}
+
 interface CachedListing {
   id: string
   unitNumber: string | null
@@ -36,6 +43,7 @@ interface CachedListing {
     reviewCount: number | null
     listingUrl: string | null
     floorplansUrl: string | null
+    specials: CachedSpecial[]
   }
   neighborhood: {
     id: string
@@ -51,6 +59,7 @@ interface CachedListing {
     slug: string
     logoUrl: string | null
   } | null
+  hasActiveDeals: boolean
 }
 
 interface ListingsCache {
@@ -118,6 +127,21 @@ async function loadListingsCache(): Promise<ListingsCache> {
               logoUrl: true,
             },
           },
+          specials: {
+            where: {
+              isActive: true,
+              OR: [
+                { endDate: null },
+                { endDate: { gte: new Date() } },
+              ],
+            },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              endDate: true,
+            },
+          },
         },
       },
     },
@@ -152,7 +176,9 @@ async function loadListingsCache(): Promise<ListingsCache> {
         reviewCount: listing.building.reviewCount,
         listingUrl: listing.building.listingUrl,
         floorplansUrl: listing.building.floorplansUrl,
+        specials: listing.building.specials,
       },
+      hasActiveDeals: listing.building.specials.length > 0,
       neighborhood: listing.building.neighborhood,
       management: listing.building.management,
     }))
@@ -221,6 +247,7 @@ interface FilterOptions {
   budgetMax?: number
   bedrooms?: string[]
   buildings?: string[]
+  hasDeals?: boolean
   limit?: number
   offset?: number
 }
@@ -239,6 +266,7 @@ export async function searchListingsCached(options: FilterOptions): Promise<{
     budgetMax,
     bedrooms = [],
     buildings = [],
+    hasDeals,
     limit = 20,
     offset = 0,
   } = options
@@ -277,6 +305,11 @@ export async function searchListingsCached(options: FilterOptions): Promise<{
   // Building filter
   if (buildings.length > 0) {
     filtered = filtered.filter(l => buildings.includes(l.building.id))
+  }
+
+  // Active deals filter
+  if (hasDeals) {
+    filtered = filtered.filter(l => l.hasActiveDeals)
   }
 
   const total = filtered.length

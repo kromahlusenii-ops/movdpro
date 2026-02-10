@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { SearchableDropdown } from '@/components/SearchableDropdown'
 import { BuildingImage } from '@/components/BuildingImage'
-import { Search, MapPin, Bed, DollarSign, Star, X, UserPlus, Check, ExternalLink, Building2, Bath, Ruler, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, MapPin, Bed, DollarSign, Star, X, UserPlus, Check, ExternalLink, Building2, Bath, Ruler, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Listing {
@@ -18,6 +18,7 @@ interface Listing {
   rentMin: number
   rentMax: number
   isAvailable: boolean
+  hasActiveDeals: boolean
   building: {
     id: string
     name: string
@@ -32,6 +33,7 @@ interface Listing {
     reviewCount: number | null
     listingUrl: string | null
     floorplansUrl: string | null
+    specials?: { id: string; title: string }[]
   }
   neighborhood: {
     id: string
@@ -61,6 +63,7 @@ interface SearchFilters {
   budgetMax: number
   bedrooms: string[]
   buildings: string[]
+  hasDeals: boolean
 }
 
 const NEIGHBORHOOD_OPTIONS = [
@@ -100,6 +103,7 @@ export default function ProSearchPage() {
     budgetMax: 3000,
     bedrooms: [],
     buildings: [],
+    hasDeals: false,
   })
 
   const [listings, setListings] = useState<Listing[]>([])
@@ -204,6 +208,9 @@ export default function ProSearchPage() {
       }
       if (filters.buildings.length > 0) {
         params.set('buildings', filters.buildings.join(','))
+      }
+      if (filters.hasDeals) {
+        params.set('hasDeals', 'true')
       }
       params.set('limit', String(pageSize))
       params.set('offset', String((pageNum - 1) * pageSize))
@@ -403,6 +410,23 @@ export default function ProSearchPage() {
             </div>
           </div>
 
+          {/* Active Deals Toggle */}
+          <div className="flex items-center">
+            <button
+              onClick={() => setFilters(prev => ({ ...prev, hasDeals: !prev.hasDeals }))}
+              className={cn(
+                'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors border',
+                filters.hasDeals
+                  ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
+                  : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-foreground/20'
+              )}
+            >
+              <Tag className="w-4 h-4" />
+              Active Deals
+              {filters.hasDeals && <Check className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
           {/* Search Button */}
           <button
             onClick={handleSearch}
@@ -415,7 +439,7 @@ export default function ProSearchPage() {
         </div>
 
         {/* Active Filters Summary */}
-        {(filters.neighborhoods.length > 0 || filters.bedrooms.length > 0 || filters.buildings.length > 0) && (
+        {(filters.neighborhoods.length > 0 || filters.bedrooms.length > 0 || filters.buildings.length > 0 || filters.hasDeals) && (
           <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t">
             <span className="text-xs text-muted-foreground">Filters:</span>
             {filters.neighborhoods.map(hood => (
@@ -466,11 +490,24 @@ export default function ProSearchPage() {
                 </span>
               )
             })}
+            {filters.hasDeals && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs">
+                <Tag className="w-3 h-3" />
+                Active Deals
+                <button
+                  onClick={() => setFilters(prev => ({ ...prev, hasDeals: false }))}
+                  className="hover:text-emerald-900"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
             <button
               onClick={() => {
                 setNeighborhoods([])
                 setBedrooms([])
                 setBuildings([])
+                setFilters(prev => ({ ...prev, hasDeals: false }))
               }}
               className="text-xs text-muted-foreground hover:text-foreground underline"
             >
@@ -552,6 +589,12 @@ export default function ProSearchPage() {
                             <span className="font-semibold truncate">
                               {listing.building.name}
                             </span>
+                            {listing.hasActiveDeals && (
+                              <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-medium flex-shrink-0 flex items-center gap-0.5">
+                                <Tag className="w-2.5 h-2.5" />
+                                Special
+                              </span>
+                            )}
                             {listing.management && (
                               <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-medium flex-shrink-0">
                                 {listing.management.name}
