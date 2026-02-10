@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import prisma from '@/lib/db'
 import { getSessionUserCached } from '@/lib/pro-auth'
-import { ArrowLeft, Mail, Phone, MapPin, Building2, Star, Dog, Cat, Baby, Home, Car, Bed, Bath, Ruler } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, FileText, MapPin, Building2, Star, Dog, Cat, Baby, Home, Car, Bed, Bath, Ruler } from 'lucide-react'
 import { ClientActions } from './ClientActions'
 import { RemoveListingButton } from './RemoveListingButton'
 import { ShareButton } from './ShareButton'
@@ -346,6 +346,43 @@ export default async function ClientDetailPage({
             >
               Search for listings
             </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Reports */}
+      <div className="bg-background rounded-xl border">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="font-semibold">Reports</h2>
+          <Link
+            href={`/reports/new?client=${client.id}`}
+            className="text-sm font-medium text-foreground hover:underline flex items-center gap-1"
+          >
+            <FileText className="w-4 h-4" />
+            Create Report
+          </Link>
+        </div>
+        {client.reports.length > 0 ? (
+          <ul className="divide-y">
+            {client.reports.map(report => (
+              <li key={report.id}>
+                <Link
+                  href={`/reports/${report.id}`}
+                  className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <div>
+                    <p className="font-medium">{report.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {report.viewCount} views · {new Date(report.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="p-6 text-center">
+            <p className="text-muted-foreground">No reports yet</p>
           </div>
         )}
       </div>
