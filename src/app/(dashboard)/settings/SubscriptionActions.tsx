@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, CheckCircle, ExternalLink } from 'lucide-react'
+import { Loader2, CheckCircle, ExternalLink, AlertCircle } from 'lucide-react'
 
 interface SubscriptionActionsProps {
   subscriptionStatus: string
@@ -15,29 +15,40 @@ export function SubscriptionActions({
   showSuccess,
 }: SubscriptionActionsProps) {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleUpgrade = async () => {
     setLoading(true)
+    setError(null)
     try {
       const res = await fetch('/api/stripe/checkout', { method: 'POST' })
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
+      } else {
+        setError(data.error || 'Failed to start checkout')
+        setLoading(false)
       }
     } catch {
+      setError('Something went wrong. Please try again.')
       setLoading(false)
     }
   }
 
   const handleManageBilling = async () => {
     setLoading(true)
+    setError(null)
     try {
       const res = await fetch('/api/stripe/portal', { method: 'POST' })
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
+      } else {
+        setError(data.error || 'Failed to open billing portal')
+        setLoading(false)
       }
     } catch {
+      setError('Something went wrong. Please try again.')
       setLoading(false)
     }
   }
@@ -53,6 +64,13 @@ export function SubscriptionActions({
           <p className="text-sm font-medium text-emerald-800">
             Subscription activated! You now have unlimited access.
           </p>
+        </div>
+      )}
+
+      {error && (
+        <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+          <p className="text-sm font-medium text-red-800">{error}</p>
         </div>
       )}
 
