@@ -8,6 +8,13 @@ import { BuildingImage } from '@/components/BuildingImage'
 import { LiveRegion } from '@/components/ui/live-region'
 import { Search, MapPin, Bed, DollarSign, Star, X, UserPlus, Check, ExternalLink, Building2, Bath, Ruler, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  sectionAttr,
+  stateAttr,
+  filterStateAttr,
+  SECTION_TYPES,
+  STATE_TYPES,
+} from '@/lib/ai-readability'
 
 interface Listing {
   id: string
@@ -425,7 +432,19 @@ export default function ProSearchPage() {
       </header>
 
       {/* Filters */}
-      <section aria-label="Search filters" className="bg-background rounded-xl border p-4 mb-6">
+      <section
+        aria-label="Search filters"
+        className="bg-background rounded-xl border p-4 mb-6"
+        {...sectionAttr(SECTION_TYPES.SEARCH_FILTERS)}
+        {...(hasSearched ? filterStateAttr({
+          neighborhoods: filters.neighborhoods,
+          budgetMin: filters.budgetMin,
+          budgetMax: filters.budgetMax,
+          bedrooms: filters.bedrooms,
+          buildings: filters.buildings,
+          hasDeals: filters.hasDeals,
+        }) : {})}
+      >
         <div className="flex flex-wrap items-end gap-3">
           {/* Neighborhoods Dropdown */}
           <div className="w-52">
@@ -668,7 +687,14 @@ export default function ProSearchPage() {
 
       {/* Results */}
       {hasSearched && (
-        <section aria-label="Search results">
+        <section
+          aria-label="Search results"
+          {...sectionAttr(SECTION_TYPES.RESULTS_LIST)}
+          {...(loading ? stateAttr(STATE_TYPES.LOADING) : listings.length === 0 ? stateAttr(STATE_TYPES.EMPTY) : stateAttr(STATE_TYPES.LOADED))}
+          data-total={total}
+          data-page={page}
+          data-page-size={pageSize}
+        >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-muted-foreground" aria-live="polite" aria-atomic="true">
               {total} {total === 1 ? 'listing' : 'listings'} found
@@ -682,6 +708,16 @@ export default function ProSearchPage() {
                   <article
                     className="bg-background rounded-lg border p-3 flex gap-3 hover:border-foreground/20 transition-colors"
                     aria-labelledby={`listing-title-${listing.id}`}
+                    data-entity="property"
+                    data-entity-id={listing.id}
+                    data-building-id={listing.building.id}
+                    data-neighborhood={listing.neighborhood.slug}
+                    data-bedrooms={listing.bedrooms}
+                    data-bathrooms={listing.bathrooms}
+                    data-rent-min={listing.rentMin}
+                    data-rent-max={listing.rentMax}
+                    data-available={listing.isAvailable}
+                    data-has-deals={listing.hasActiveDeals}
                   >
                     {/* Clickable area - Photo + Info */}
                     <Link href={`/listing/${listing.id}`} className="flex gap-3 flex-1 min-w-0">
@@ -921,7 +957,13 @@ export default function ProSearchPage() {
 
           {/* Pagination */}
           {total > pageSize && (
-            <nav className="flex items-center justify-center mt-6 pt-4 border-t" aria-label="Pagination">
+            <nav
+              className="flex items-center justify-center mt-6 pt-4 border-t"
+              aria-label="Pagination"
+              {...sectionAttr(SECTION_TYPES.PAGINATION)}
+              data-current-page={page}
+              data-total-pages={totalPages}
+            >
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handlePageChange(page - 1)}
