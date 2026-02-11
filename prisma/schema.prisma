@@ -551,6 +551,11 @@ model LocatorProfile {
   companyLogo String?
   phone       String?
 
+  // Public intake form settings
+  intakeSlug       String?  @unique
+  intakeEnabled    Boolean  @default(true)
+  intakeWelcomeMsg String?
+
   // Subscription (Stripe)
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
@@ -573,6 +578,7 @@ model LocatorProfile {
 
   @@index([stripeCustomerId])
   @@index([subscriptionStatus])
+  @@index([intakeSlug])
 }
 
 // Locator's clients (max 20 active)
@@ -586,6 +592,11 @@ model LocatorClient {
   phone  String?
   notes  String?
   status String  @default("active") // active, placed, archived
+
+  // Intake form source tracking
+  source            String?  // "intake_form", "manual"
+  intakeRef         String?  // UTM tracking param
+  contactPreference String?  // "text", "email", "call"
 
   // Requirements
   budgetMin     Int?

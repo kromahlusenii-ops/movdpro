@@ -155,6 +155,28 @@ export async function getLocatorWithEmailCached(userId: string) {
   return getCachedLocatorWithEmail(userId)
 }
 
+/**
+ * Get locator profile with intake settings for settings page (30 second revalidation)
+ */
+export async function getLocatorWithIntakeSettingsCached(userId: string) {
+  const getCachedLocatorWithIntake = unstable_cache(
+    async (uid: string) => {
+      return prisma.locatorProfile.findUnique({
+        where: { userId: uid },
+        select: {
+          intakeSlug: true,
+          intakeEnabled: true,
+          intakeWelcomeMsg: true,
+        },
+      })
+    },
+    [`locator-intake-${userId}`],
+    { revalidate: 30, tags: [`locator-${userId}`] }
+  )
+
+  return getCachedLocatorWithIntake(userId)
+}
+
 export type LocatorData = {
   id: string
   companyName: string | null

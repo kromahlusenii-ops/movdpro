@@ -1,5 +1,6 @@
-import { getSessionUserCached, getLocatorWithEmailCached } from '@/lib/pro-auth'
+import { getSessionUserCached, getLocatorWithEmailCached, getLocatorWithIntakeSettingsCached } from '@/lib/pro-auth'
 import { SubscriptionActions } from './SubscriptionActions'
+import { IntakeSettings } from './IntakeSettings'
 
 export default async function ProSettingsPage({
   searchParams,
@@ -7,7 +8,10 @@ export default async function ProSettingsPage({
   searchParams: Promise<{ checkout?: string }>
 }) {
   const user = await getSessionUserCached()
-  const locator = await getLocatorWithEmailCached(user!.id)
+  const [locator, intakeSettings] = await Promise.all([
+    getLocatorWithEmailCached(user!.id),
+    getLocatorWithIntakeSettingsCached(user!.id),
+  ])
   const params = await searchParams
 
   const trialExpired =
@@ -38,6 +42,15 @@ export default async function ProSettingsPage({
             <dd className="font-medium">{locator?.companyName || 'Not set'}</dd>
           </div>
         </dl>
+      </div>
+
+      {/* Client Intake Form */}
+      <div className="mb-6">
+        <IntakeSettings
+          initialSlug={intakeSettings?.intakeSlug ?? null}
+          initialEnabled={intakeSettings?.intakeEnabled ?? true}
+          initialWelcomeMessage={intakeSettings?.intakeWelcomeMsg ?? null}
+        />
       </div>
 
       {/* Subscription */}
