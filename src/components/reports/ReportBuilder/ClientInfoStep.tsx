@@ -160,17 +160,18 @@ export default function ClientInfoStep({
       </div>
 
       {/* Priorities */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Client Priorities</label>
+      <fieldset>
+        <legend className="block text-sm font-medium mb-2">Client Priorities</legend>
         <p className="text-sm text-muted-foreground mb-3">
           Select what&apos;s most important to your client.
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" role="group">
           {PRIORITY_OPTIONS.map((priority) => (
             <button
               key={priority}
               type="button"
               onClick={() => togglePriority(priority)}
+              aria-pressed={formData.clientPriorities?.includes(priority)}
               className={cn(
                 'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
                 formData.clientPriorities?.includes(priority)
@@ -182,7 +183,7 @@ export default function ClientInfoStep({
             </button>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       {/* Next Button */}
       <div className="flex justify-end pt-4">

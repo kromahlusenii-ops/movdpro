@@ -12,9 +12,11 @@ type MoveInCostsStepProps = {
 
 function PropertyCostCard({
   property,
+  index,
   onUpdate,
 }: {
   property: ReportProperty
+  index: number
   onUpdate: (updates: Partial<ReportProperty>) => void
 }) {
   const total =
@@ -22,6 +24,8 @@ function PropertyCostCard({
     (property.deposit || 0) +
     (property.adminFee || 0) +
     (property.petDeposit || 0)
+
+  const idPrefix = `property-${index}`
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -40,8 +44,9 @@ function PropertyCostCard({
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Deposit</label>
+          <label htmlFor={`${idPrefix}-deposit`} className="block text-xs text-gray-500 mb-1">Deposit</label>
           <input
+            id={`${idPrefix}-deposit`}
             type="number"
             value={property.deposit || ''}
             onChange={(e) =>
@@ -52,8 +57,9 @@ function PropertyCostCard({
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Admin Fee</label>
+          <label htmlFor={`${idPrefix}-adminFee`} className="block text-xs text-gray-500 mb-1">Admin Fee</label>
           <input
+            id={`${idPrefix}-adminFee`}
             type="number"
             value={property.adminFee || ''}
             onChange={(e) =>
@@ -64,8 +70,9 @@ function PropertyCostCard({
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Pet Deposit</label>
+          <label htmlFor={`${idPrefix}-petDeposit`} className="block text-xs text-gray-500 mb-1">Pet Deposit</label>
           <input
+            id={`${idPrefix}-petDeposit`}
             type="number"
             value={property.petDeposit || ''}
             onChange={(e) =>
@@ -76,8 +83,9 @@ function PropertyCostCard({
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Pet Rent/mo</label>
+          <label htmlFor={`${idPrefix}-petRent`} className="block text-xs text-gray-500 mb-1">Pet Rent/mo</label>
           <input
+            id={`${idPrefix}-petRent`}
             type="number"
             value={property.petRent || ''}
             onChange={(e) =>
@@ -91,8 +99,9 @@ function PropertyCostCard({
 
       {/* Promos */}
       <div className="mt-3">
-        <label className="block text-xs text-gray-500 mb-1">Move-In Specials</label>
+        <label htmlFor={`${idPrefix}-promos`} className="block text-xs text-gray-500 mb-1">Move-In Specials</label>
         <input
+          id={`${idPrefix}-promos`}
           type="text"
           value={property.promos || ''}
           onChange={(e) => onUpdate({ promos: e.target.value || null })}
@@ -131,6 +140,7 @@ export default function MoveInCostsStep({
           <PropertyCostCard
             key={property.buildingId || index}
             property={property}
+            index={index}
             onUpdate={(updates) => updateProperty(index, updates)}
           />
         ))}

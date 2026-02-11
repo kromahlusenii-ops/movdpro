@@ -274,13 +274,15 @@ export default function NewClientPage() {
         </div>
 
         {/* Recommendations list */}
-        <div className="space-y-4 mb-8">
+        <div className="space-y-4 mb-8" role="group" aria-label="Recommended listings">
           {recommendations.map((rec) => (
-            <div
+            <button
               key={rec.id}
+              type="button"
               onClick={() => toggleListing(rec.id)}
+              aria-pressed={selectedListings.includes(rec.id)}
               className={cn(
-                'border rounded-lg p-4 cursor-pointer transition-all',
+                'w-full text-left border rounded-lg p-4 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
                 selectedListings.includes(rec.id)
                   ? 'border-foreground bg-foreground/5 ring-1 ring-foreground'
                   : 'border-border hover:border-foreground/30'
@@ -291,7 +293,7 @@ export default function NewClientPage() {
                 <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                   <BuildingImage
                     src={rec.building.primaryPhotoUrl}
-                    alt={rec.building.name}
+                    alt=""
                     fill
                     className="object-cover"
                     iconSize="sm"
@@ -302,17 +304,17 @@ export default function NewClientPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="font-semibold truncate">{rec.building.name}</h3>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <span className="font-semibold truncate block">{rec.building.name}</span>
+                      <span className="text-sm text-muted-foreground truncate block">
                         {rec.building.address}, {rec.building.city}
-                      </p>
+                      </span>
                     </div>
                     <div className={cn(
                       'w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0',
                       selectedListings.includes(rec.id)
                         ? 'bg-foreground border-foreground'
                         : 'border-muted-foreground/30'
-                    )}>
+                    )} aria-hidden="true">
                       {selectedListings.includes(rec.id) && (
                         <Check className="w-4 h-4 text-background" />
                       )}
@@ -333,7 +335,7 @@ export default function NewClientPage() {
 
                   {/* Match score */}
                   <div className="mt-2 flex items-center gap-2">
-                    <div className="h-1.5 flex-1 max-w-32 bg-muted rounded-full overflow-hidden">
+                    <div className="h-1.5 flex-1 max-w-32 bg-muted rounded-full overflow-hidden" aria-hidden="true">
                       <div
                         className="h-full bg-green-500 rounded-full"
                         style={{ width: `${rec.matchScore}%` }}
@@ -345,7 +347,7 @@ export default function NewClientPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
 
@@ -462,12 +464,14 @@ export default function NewClientPage() {
         </div>
 
         {/* Budget */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Budget</label>
+        <fieldset>
+          <legend className="block text-sm font-medium mb-2">Budget</legend>
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true">$</span>
+              <label htmlFor="budgetMin" className="sr-only">Minimum budget</label>
               <input
+                id="budgetMin"
                 type="number"
                 value={budgetMin}
                 onChange={e => setBudgetMin(e.target.value)}
@@ -475,10 +479,12 @@ export default function NewClientPage() {
                 className="w-full pl-8 pr-4 py-3 rounded-lg border bg-background"
               />
             </div>
-            <span className="text-muted-foreground">to</span>
+            <span className="text-muted-foreground" aria-hidden="true">to</span>
             <div className="relative flex-1">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true">$</span>
+              <label htmlFor="budgetMax" className="sr-only">Maximum budget</label>
               <input
+                id="budgetMax"
                 type="number"
                 value={budgetMax}
                 onChange={e => setBudgetMax(e.target.value)}
@@ -487,17 +493,18 @@ export default function NewClientPage() {
               />
             </div>
           </div>
-        </div>
+        </fieldset>
 
         {/* Bedrooms */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Bedrooms</label>
-          <div className="flex flex-wrap gap-2">
+        <fieldset>
+          <legend className="block text-sm font-medium mb-2">Bedrooms</legend>
+          <div className="flex flex-wrap gap-2" role="group">
             {BEDROOM_OPTIONS.map(bed => (
               <button
                 key={bed}
                 type="button"
                 onClick={() => toggleBedroom(bed)}
+                aria-pressed={bedrooms.includes(bed)}
                 className={cn(
                   'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                   bedrooms.includes(bed)
@@ -509,17 +516,18 @@ export default function NewClientPage() {
               </button>
             ))}
           </div>
-        </div>
+        </fieldset>
 
         {/* Neighborhoods */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Preferred Neighborhoods</label>
-          <div className="flex flex-wrap gap-2">
+        <fieldset>
+          <legend className="block text-sm font-medium mb-2">Preferred Neighborhoods</legend>
+          <div className="flex flex-wrap gap-2" role="group">
             {NEIGHBORHOODS.map(hood => (
               <button
                 key={hood}
                 type="button"
                 onClick={() => toggleNeighborhood(hood)}
+                aria-pressed={neighborhoods.includes(hood)}
                 className={cn(
                   'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
                   neighborhoods.includes(hood)
@@ -531,7 +539,7 @@ export default function NewClientPage() {
               </button>
             ))}
           </div>
-        </div>
+        </fieldset>
 
         {/* Lifestyle Accordion */}
         <div className="border rounded-lg overflow-hidden">
@@ -551,11 +559,11 @@ export default function NewClientPage() {
           {lifestyleOpen && (
             <div className="p-4 space-y-5 border-t">
               {/* Priorities */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
+              <fieldset>
+                <legend className="block text-sm font-medium mb-2">
                   What Matters Most <span className="text-muted-foreground text-xs">(pick up to 3)</span>
-                </label>
-                <div className="flex flex-wrap gap-2">
+                </legend>
+                <div className="flex flex-wrap gap-2" role="group">
                   {PRIORITIES.map(priority => {
                     const isSelected = priorities.includes(priority.id)
                     const isDisabled = !isSelected && priorities.length >= 3
@@ -565,6 +573,7 @@ export default function NewClientPage() {
                         type="button"
                         onClick={() => togglePriority(priority.id)}
                         disabled={isDisabled}
+                        aria-pressed={isSelected}
                         className={cn(
                           'px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5',
                           isSelected
@@ -573,28 +582,29 @@ export default function NewClientPage() {
                           isDisabled && 'opacity-40 cursor-not-allowed'
                         )}
                       >
-                        <span>{priority.icon}</span>
+                        <span aria-hidden="true">{priority.icon}</span>
                         {priority.label}
                       </button>
                     )
                   })}
                 </div>
                 {priorities.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-muted-foreground mt-2" aria-live="polite">
                     {priorities.length}/3 selected
                   </p>
                 )}
-              </div>
+              </fieldset>
 
               {/* Vibes */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Lifestyle Vibes</label>
-                <div className="flex flex-wrap gap-2">
+              <fieldset>
+                <legend className="block text-sm font-medium mb-2">Lifestyle Vibes</legend>
+                <div className="flex flex-wrap gap-2" role="group">
                   {VIBES.map(vibe => (
                     <button
                       key={vibe.value}
                       type="button"
                       onClick={() => toggleVibe(vibe.value)}
+                      aria-pressed={vibes.includes(vibe.value)}
                       className={cn(
                         'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
                         vibes.includes(vibe.value)
@@ -606,15 +616,16 @@ export default function NewClientPage() {
                     </button>
                   ))}
                 </div>
-              </div>
+              </fieldset>
 
               {/* Pets & Family */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Pets & Family</label>
-                <div className="flex flex-wrap gap-3">
+              <fieldset>
+                <legend className="block text-sm font-medium mb-2">Pets & Family</legend>
+                <div className="flex flex-wrap gap-3" role="group">
                   <button
                     type="button"
                     onClick={() => setHasDog(!hasDog)}
+                    aria-pressed={hasDog}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                       hasDog
@@ -622,12 +633,13 @@ export default function NewClientPage() {
                         : 'bg-muted text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <Dog className="w-4 h-4" />
+                    <Dog className="w-4 h-4" aria-hidden="true" />
                     Dog
                   </button>
                   <button
                     type="button"
                     onClick={() => setHasCat(!hasCat)}
+                    aria-pressed={hasCat}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                       hasCat
@@ -635,12 +647,13 @@ export default function NewClientPage() {
                         : 'bg-muted text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <Cat className="w-4 h-4" />
+                    <Cat className="w-4 h-4" aria-hidden="true" />
                     Cat
                   </button>
                   <button
                     type="button"
                     onClick={() => setHasKids(!hasKids)}
+                    aria-pressed={hasKids}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                       hasKids
@@ -648,19 +661,20 @@ export default function NewClientPage() {
                         : 'bg-muted text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <Baby className="w-4 h-4" />
+                    <Baby className="w-4 h-4" aria-hidden="true" />
                     Kids
                   </button>
                 </div>
-              </div>
+              </fieldset>
 
               {/* Work & Parking */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Work & Parking</label>
-                <div className="flex flex-wrap gap-3">
+              <fieldset>
+                <legend className="block text-sm font-medium mb-2">Work & Parking</legend>
+                <div className="flex flex-wrap gap-3" role="group">
                   <button
                     type="button"
                     onClick={() => setWorksFromHome(!worksFromHome)}
+                    aria-pressed={worksFromHome}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                       worksFromHome
@@ -668,12 +682,13 @@ export default function NewClientPage() {
                         : 'bg-muted text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <Home className="w-4 h-4" />
+                    <Home className="w-4 h-4" aria-hidden="true" />
                     Works from Home
                   </button>
                   <button
                     type="button"
                     onClick={() => setNeedsParking(!needsParking)}
+                    aria-pressed={needsParking}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                       needsParking
@@ -681,19 +696,21 @@ export default function NewClientPage() {
                         : 'bg-muted text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <Car className="w-4 h-4" />
+                    <Car className="w-4 h-4" aria-hidden="true" />
                     Needs Parking
                   </button>
                 </div>
-              </div>
+              </fieldset>
 
               {/* Commute */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Commute</label>
+              <fieldset>
+                <legend className="block text-sm font-medium mb-2">Commute</legend>
                 <div className="space-y-3">
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                    <label htmlFor="commuteAddress" className="sr-only">Work address for commute matching</label>
                     <input
+                      id="commuteAddress"
                       type="text"
                       value={commuteAddress}
                       onChange={e => setCommuteAddress(e.target.value)}
@@ -701,7 +718,7 @@ export default function NewClientPage() {
                       className="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-background text-sm"
                     />
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2" role="group" aria-label="Commute preference">
                     {COMMUTE_OPTIONS.map(option => (
                       <button
                         key={option.value}
@@ -709,6 +726,7 @@ export default function NewClientPage() {
                         onClick={() => setCommutePreference(
                           commutePreference === option.value ? '' : option.value
                         )}
+                        aria-pressed={commutePreference === option.value}
                         className={cn(
                           'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                           commutePreference === option.value
@@ -721,7 +739,7 @@ export default function NewClientPage() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </fieldset>
             </div>
           )}
         </div>

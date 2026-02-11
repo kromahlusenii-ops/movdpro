@@ -14,29 +14,35 @@ type NeighborhoodsStepProps = {
 
 function NeighborhoodCard({
   neighborhood,
+  index,
   onUpdate,
   onRemove,
 }: {
   neighborhood: ReportNeighborhood
+  index: number
   onUpdate: (updates: Partial<ReportNeighborhood>) => void
   onRemove: () => void
 }) {
+  const idPrefix = `neighborhood-${index}`
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">
       <div className="flex items-start justify-between mb-4">
         <h3 className="font-medium text-gray-900">{neighborhood.name}</h3>
         <button
           onClick={onRemove}
+          aria-label={`Remove ${neighborhood.name}`}
           className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Vibe / Character</label>
+          <label htmlFor={`${idPrefix}-vibe`} className="block text-xs text-gray-500 mb-1">Vibe / Character</label>
           <input
+            id={`${idPrefix}-vibe`}
             type="text"
             value={neighborhood.vibe || ''}
             onChange={(e) => onUpdate({ vibe: e.target.value || null })}
@@ -45,8 +51,9 @@ function NeighborhoodCard({
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Walkability</label>
+          <label htmlFor={`${idPrefix}-walkability`} className="block text-xs text-gray-500 mb-1">Walkability</label>
           <input
+            id={`${idPrefix}-walkability`}
             type="text"
             value={neighborhood.walkability || ''}
             onChange={(e) => onUpdate({ walkability: e.target.value || null })}
@@ -55,8 +62,9 @@ function NeighborhoodCard({
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Safety</label>
+          <label htmlFor={`${idPrefix}-safety`} className="block text-xs text-gray-500 mb-1">Safety</label>
           <input
+            id={`${idPrefix}-safety`}
             type="text"
             value={neighborhood.safety || ''}
             onChange={(e) => onUpdate({ safety: e.target.value || null })}
@@ -65,8 +73,9 @@ function NeighborhoodCard({
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Dog Friendly</label>
+          <label htmlFor={`${idPrefix}-dogFriendly`} className="block text-xs text-gray-500 mb-1">Dog Friendly</label>
           <input
+            id={`${idPrefix}-dogFriendly`}
             type="text"
             value={neighborhood.dogFriendly || ''}
             onChange={(e) => onUpdate({ dogFriendly: e.target.value || null })}
@@ -143,6 +152,7 @@ export default function NeighborhoodsStep({
           <NeighborhoodCard
             key={neighborhood.neighborhoodId || neighborhood.name}
             neighborhood={neighborhood}
+            index={index}
             onUpdate={(updates) => updateNeighborhood(index, updates)}
             onRemove={() => removeNeighborhood(index)}
           />

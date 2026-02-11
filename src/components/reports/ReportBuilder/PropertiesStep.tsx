@@ -42,7 +42,7 @@ function PropertyCard({
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-gray-100">
-        <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+        <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" aria-hidden="true" />
 
         {/* Thumbnail */}
         <div className="relative w-16 h-12 rounded-lg overflow-hidden flex-shrink-0">
@@ -76,28 +76,33 @@ function PropertyCard({
                 ? 'bg-amber-100 text-amber-600'
                 : 'hover:bg-gray-100 text-gray-400'
             )}
-            title={property.isRecommended ? 'Remove top pick' : 'Mark as top pick'}
+            aria-label={property.isRecommended ? 'Remove top pick' : 'Mark as top pick'}
+            aria-pressed={property.isRecommended}
           >
             <Star
               className="w-4 h-4"
               fill={property.isRecommended ? 'currentColor' : 'none'}
+              aria-hidden="true"
             />
           </button>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-2 rounded-lg hover:bg-gray-100 text-gray-400"
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
           >
             {isExpanded ? (
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
           <button
             onClick={onRemove}
             className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"
+            aria-label={`Remove ${property.name}`}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -108,8 +113,9 @@ function PropertyCard({
           {/* Basic Info Row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Rent</label>
+              <label htmlFor={`prop-${index}-rent`} className="block text-xs text-gray-500 mb-1">Rent</label>
               <input
+                id={`prop-${index}-rent`}
                 type="number"
                 value={property.rent}
                 onChange={(e) => onUpdate({ rent: parseInt(e.target.value) || 0 })}
@@ -117,8 +123,9 @@ function PropertyCard({
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Beds</label>
+              <label htmlFor={`prop-${index}-beds`} className="block text-xs text-gray-500 mb-1">Beds</label>
               <input
+                id={`prop-${index}-beds`}
                 type="number"
                 value={property.bedrooms}
                 onChange={(e) => onUpdate({ bedrooms: parseInt(e.target.value) || 0 })}
@@ -126,8 +133,9 @@ function PropertyCard({
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Baths</label>
+              <label htmlFor={`prop-${index}-baths`} className="block text-xs text-gray-500 mb-1">Baths</label>
               <input
+                id={`prop-${index}-baths`}
                 type="number"
                 step="0.5"
                 value={property.bathrooms}
@@ -138,8 +146,9 @@ function PropertyCard({
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Sqft</label>
+              <label htmlFor={`prop-${index}-sqft`} className="block text-xs text-gray-500 mb-1">Sqft</label>
               <input
+                id={`prop-${index}-sqft`}
                 type="number"
                 value={property.sqft || ''}
                 onChange={(e) =>
@@ -152,8 +161,9 @@ function PropertyCard({
 
           {/* Availability */}
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Available Date</label>
+            <label htmlFor={`prop-${index}-available`} className="block text-xs text-gray-500 mb-1">Available Date</label>
             <input
+              id={`prop-${index}-available`}
               type="text"
               value={property.availableDate || ''}
               onChange={(e) => onUpdate({ availableDate: e.target.value || null })}
@@ -164,8 +174,9 @@ function PropertyCard({
 
           {/* Locator Note */}
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Your Note (shown to client)</label>
+            <label htmlFor={`prop-${index}-note`} className="block text-xs text-gray-500 mb-1">Your Note (shown to client)</label>
             <textarea
+              id={`prop-${index}-note`}
               value={property.locatorNote || ''}
               onChange={(e) => onUpdate({ locatorNote: e.target.value || null })}
               placeholder="Great option for dog owners - has a dog park nearby!"

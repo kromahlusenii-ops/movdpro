@@ -6,7 +6,6 @@ import { useState } from 'react'
 import {
   LayoutDashboard,
   Search,
-  GitCompare,
   Users,
   Settings,
   LogOut,
@@ -15,6 +14,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ListingsPreloader } from './ListingsPreloader'
+import { SkipLink } from './ui/skip-link'
+import { useFocusOnRouteChange, useRouteAnnouncer } from '@/hooks/useFocusOnRouteChange'
 
 interface ProLayoutProps {
   children: React.ReactNode
@@ -28,7 +29,6 @@ interface ProLayoutProps {
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/search', label: 'Search', icon: Search },
-  // { href: '/compare', label: 'Compare', icon: GitCompare },
   { href: '/clients', label: 'Clients', icon: Users },
 ]
 
@@ -39,6 +39,10 @@ const BOTTOM_ITEMS = [
 export function ProLayout({ children, locator }: ProLayoutProps) {
   const pathname = usePathname()
   const [upgrading, setUpgrading] = useState(false)
+
+  // Manage focus and announce route changes for accessibility
+  useFocusOnRouteChange()
+  useRouteAnnouncer()
 
   const handleUpgrade = async () => {
     if (upgrading) return
@@ -61,11 +65,17 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
 
   return (
     <div className="min-h-screen bg-muted/30">
+      {/* Skip Link - first focusable element */}
+      <SkipLink href="#main-content" />
+
       {/* Preload listings in background */}
       <ListingsPreloader />
 
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-background border-r flex flex-col">
+      <aside
+        className="fixed left-0 top-0 h-full w-64 bg-background border-r flex flex-col"
+        aria-label="Main sidebar"
+      >
         {/* Logo */}
         <div className="p-6 border-b">
           <Link href="/dashboard" className="flex items-center gap-2">
@@ -82,7 +92,7 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4" aria-label="Main navigation">
           <ul className="space-y-1">
             {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
@@ -91,14 +101,16 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
                   <Link
                     href={item.href}
                     prefetch={true}
+                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
                       'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                      'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
                       isActive
                         ? 'bg-foreground text-background'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     )}
                   >
-                    <item.icon className="w-5 h-5" />
+                    <item.icon className="w-5 h-5" aria-hidden="true" />
                     {item.label}
                   </Link>
                 </li>
@@ -109,10 +121,10 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
 
         {/* Subscription Status */}
         {locator.subscriptionStatus === 'trialing' && trialDaysLeft > 0 && (
-          <div className="p-4 border-t">
+          <div className="p-4 border-t" role="region" aria-label="Subscription status">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-amber-600" />
+                <Sparkles className="w-4 h-4 text-amber-600" aria-hidden="true" />
                 <span className="text-sm font-medium text-amber-800">Free Trial</span>
               </div>
               <p className="text-xs text-amber-700">
@@ -120,20 +132,25 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
               </p>
               <button
                 onClick={handleUpgrade}
-                className="text-xs font-medium text-amber-800 hover:underline mt-2 inline-block"
+                disabled={upgrading}
+                className="text-xs font-medium text-amber-800 hover:underline mt-2 inline-block focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 rounded"
+                aria-describedby="trial-status"
               >
-                Upgrade now →
+                {upgrading ? 'Processing...' : 'Upgrade now →'}
               </button>
+              <span id="trial-status" className="sr-only">
+                You are currently on a free trial with {trialDaysLeft} days remaining
+              </span>
             </div>
           </div>
         )}
 
         {/* Trial Expired */}
         {locator.subscriptionStatus === 'trialing' && trialDaysLeft === 0 && (
-          <div className="p-4 border-t">
+          <div className="p-4 border-t" role="alert" aria-label="Trial expired">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <AlertTriangle className="w-4 h-4 text-red-600" aria-hidden="true" />
                 <span className="text-sm font-medium text-red-800">Trial Expired</span>
               </div>
               <p className="text-xs text-red-700">
@@ -141,9 +158,10 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
               </p>
               <button
                 onClick={handleUpgrade}
-                className="text-xs font-medium text-red-800 hover:underline mt-2 inline-block"
+                disabled={upgrading}
+                className="text-xs font-medium text-red-800 hover:underline mt-2 inline-block focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 rounded"
               >
-                Upgrade now →
+                {upgrading ? 'Processing...' : 'Upgrade now →'}
               </button>
             </div>
           </div>
@@ -151,10 +169,10 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
 
         {/* Past Due */}
         {locator.subscriptionStatus === 'past_due' && (
-          <div className="p-4 border-t">
+          <div className="p-4 border-t" role="alert" aria-label="Payment failed">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <AlertTriangle className="w-4 h-4 text-red-600" aria-hidden="true" />
                 <span className="text-sm font-medium text-red-800">Payment Failed</span>
               </div>
               <p className="text-xs text-red-700">
@@ -162,7 +180,7 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
               </p>
               <Link
                 href="/settings"
-                className="text-xs font-medium text-red-800 hover:underline mt-2 inline-block"
+                className="text-xs font-medium text-red-800 hover:underline mt-2 inline-block focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 rounded"
               >
                 Manage billing →
               </Link>
@@ -172,11 +190,14 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
 
         {/* Plan Badge for Active Subscribers */}
         {locator.subscriptionStatus === 'active' && (
-          <div className="p-4 border-t">
+          <div className="p-4 border-t" role="region" aria-label="Subscription status">
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-sm font-medium text-emerald-800">Unlimited Access</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                <span className="text-sm font-medium text-emerald-800">
+                  <span className="sr-only">Status: </span>
+                  Unlimited Access
+                </span>
               </div>
               <p className="text-xs text-emerald-600 mt-1">$60/month</p>
             </div>
@@ -185,44 +206,57 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
 
         {/* Bottom nav */}
         <div className="p-4 border-t">
-          <ul className="space-y-1">
-            {BOTTOM_ITEMS.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    prefetch={true}
-                    className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-foreground text-background'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    )}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {item.label}
-                  </Link>
-                </li>
-              )
-            })}
-            <li>
-              <button
-                onClick={() => {
-                  window.location.href = '/api/auth/logout?redirect=/pro'
-                }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted w-full"
-              >
-                <LogOut className="w-5 h-5" />
-                Sign out
-              </button>
-            </li>
-          </ul>
+          <nav aria-label="Secondary navigation">
+            <ul className="space-y-1">
+              {BOTTOM_ITEMS.map((item) => {
+                const isActive = pathname === item.href
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      prefetch={true}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                        'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+                        isActive
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      )}
+                    >
+                      <item.icon className="w-5 h-5" aria-hidden="true" />
+                      {item.label}
+                    </Link>
+                  </li>
+                )
+              })}
+              <li>
+                <button
+                  onClick={() => {
+                    window.location.href = '/api/auth/logout?redirect=/pro'
+                  }}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium w-full',
+                    'text-muted-foreground hover:text-foreground hover:bg-muted transition-colors',
+                    'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
+                  )}
+                >
+                  <LogOut className="w-5 h-5" aria-hidden="true" />
+                  Sign out
+                </button>
+              </li>
+            </ul>
+          </nav>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="ml-64 min-h-screen">
+      <main
+        id="main-content"
+        className="ml-64 min-h-screen"
+        tabIndex={-1}
+        style={{ outline: 'none' }}
+      >
         {children}
       </main>
     </div>

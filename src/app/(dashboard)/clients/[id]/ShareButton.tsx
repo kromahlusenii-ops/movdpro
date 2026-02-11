@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Share2, Copy, Check, Mail, Loader2, X, ExternalLink } from 'lucide-react'
 
 interface ShareButtonProps {
@@ -17,6 +17,30 @@ export function ShareButton({ clientId, clientEmail, hasListings }: ShareButtonP
   const [sending, setSending] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  // Handle escape key and focus trap
+  useEffect(() => {
+    if (!open) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open])
+
+  // Focus dialog when opened
+  useEffect(() => {
+    if (open && dialogRef.current) {
+      dialogRef.current.focus()
+    }
+  }, [open])
 
   const createShare = async () => {
     setLoading(true)
@@ -48,6 +72,11 @@ export function ShareButton({ clientId, clientEmail, hasListings }: ShareButtonP
     if (!shareUrl) {
       await createShare()
     }
+  }
+
+  const handleClose = () => {
+    setOpen(false)
+    triggerRef.current?.focus()
   }
 
   const copyToClipboard = async () => {
@@ -98,10 +127,13 @@ export function ShareButton({ clientId, clientEmail, hasListings }: ShareButtonP
       <button
         disabled
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-muted text-muted-foreground cursor-not-allowed text-sm font-medium"
-        title="Add listings to share"
+        aria-describedby="share-disabled-reason"
       >
-        <Share2 className="w-4 h-4" />
+        <Share2 className="w-4 h-4" aria-hidden="true" />
         Share
+        <span id="share-disabled-reason" className="sr-only">
+          Add listings to enable sharing
+        </span>
       </button>
     )
   }
@@ -109,47 +141,64 @@ export function ShareButton({ clientId, clientEmail, hasListings }: ShareButtonP
   return (
     <>
       <button
+        ref={triggerRef}
         onClick={handleOpen}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-colors text-sm font-medium"
+        aria-haspopup="dialog"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
       >
-        <Share2 className="w-4 h-4" />
+        <Share2 className="w-4 h-4" aria-hidden="true" />
         Share
       </button>
 
       {/* Modal */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="share-dialog-title"
+        >
           {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setOpen(false)}
+          <button
+            className="absolute inset-0 bg-black/50 cursor-default"
+            onClick={handleClose}
+            aria-label="Close dialog"
+            tabIndex={-1}
           />
 
           {/* Content */}
-          <div className="relative bg-background rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+          <div
+            ref={dialogRef}
+            className="relative bg-background rounded-xl shadow-xl max-w-md w-full mx-4 p-6"
+            tabIndex={-1}
+          >
             {/* Close button */}
             <button
-              onClick={() => setOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded hover:bg-muted transition-colors"
+              onClick={handleClose}
+              aria-label="Close dialog"
+              className="absolute top-4 right-4 p-1 rounded hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
 
-            <h2 className="text-lg font-semibold mb-2">Share Recommendations</h2>
+            <h2 id="share-dialog-title" className="text-lg font-semibold mb-2">
+              Share Recommendations
+            </h2>
             <p className="text-sm text-muted-foreground mb-6">
               Share a link to your client&apos;s personalized recommendations. They can view without logging in.
             </p>
 
             {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <div className="flex items-center justify-center py-8" role="status" aria-live="polite">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" aria-hidden="true" />
+                <span className="sr-only">Creating share link...</span>
               </div>
             ) : error ? (
-              <div className="p-4 rounded-lg bg-red-50 text-red-600 text-sm mb-4">
+              <div className="p-4 rounded-lg bg-red-50 text-red-600 text-sm mb-4" role="alert">
                 {error}
                 <button
                   onClick={createShare}
-                  className="ml-2 underline hover:no-underline"
+                  className="ml-2 underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
                 >
                   Try again
                 </button>
@@ -158,7 +207,11 @@ export function ShareButton({ clientId, clientEmail, hasListings }: ShareButtonP
               <div className="space-y-4">
                 {/* URL */}
                 <div className="flex items-center gap-2">
+                  <label htmlFor="share-url" className="sr-only">
+                    Share URL
+                  </label>
                   <input
+                    id="share-url"
                     type="text"
                     value={shareUrl}
                     readOnly
@@ -166,15 +219,21 @@ export function ShareButton({ clientId, clientEmail, hasListings }: ShareButtonP
                   />
                   <button
                     onClick={copyToClipboard}
-                    className="px-3 py-2 rounded-lg border hover:bg-muted transition-colors"
-                    title="Copy link"
+                    className="px-3 py-2 rounded-lg border hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                    aria-label={copied ? 'Link copied' : 'Copy link to clipboard'}
                   >
                     {copied ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
+                      <Check className="w-4 h-4 text-emerald-600" aria-hidden="true" />
                     ) : (
-                      <Copy className="w-4 h-4" />
+                      <Copy className="w-4 h-4" aria-hidden="true" />
                     )}
                   </button>
+                </div>
+
+                {/* Status announcement */}
+                <div className="sr-only" role="status" aria-live="polite">
+                  {copied && 'Link copied to clipboard'}
+                  {emailSent && 'Email sent successfully'}
                 </div>
 
                 {/* Actions */}
@@ -183,24 +242,25 @@ export function ShareButton({ clientId, clientEmail, hasListings }: ShareButtonP
                     href={shareUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border hover:bg-muted transition-colors text-sm font-medium"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border hover:bg-muted transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <ExternalLink className="w-4 h-4" aria-hidden="true" />
                     Preview Report
+                    <span className="sr-only">(opens in new tab)</span>
                   </a>
 
                   {clientEmail && (
                     <button
                       onClick={sendEmail}
                       disabled={sending || emailSent}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-colors text-sm font-medium disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-colors text-sm font-medium disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     >
                       {sending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                       ) : emailSent ? (
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4" aria-hidden="true" />
                       ) : (
-                        <Mail className="w-4 h-4" />
+                        <Mail className="w-4 h-4" aria-hidden="true" />
                       )}
                       {emailSent ? 'Email Sent!' : `Send to ${clientEmail}`}
                     </button>

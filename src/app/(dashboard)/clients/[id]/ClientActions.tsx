@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MoreHorizontal, CheckCircle, Archive, Trash2 } from 'lucide-react'
 
@@ -13,6 +13,17 @@ export function ClientActions({ clientId, status }: ClientActionsProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // Handle escape key to close dropdown
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [open])
 
   const updateStatus = async (newStatus: string) => {
     setLoading(true)
@@ -51,48 +62,64 @@ export function ClientActions({ clientId, status }: ClientActionsProps) {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="p-2 rounded-lg hover:bg-muted transition-colors"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Client actions menu"
+        className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         disabled={loading}
       >
-        <MoreHorizontal className="w-5 h-5" />
+        <MoreHorizontal className="w-5 h-5" aria-hidden="true" />
       </button>
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 w-48 bg-background rounded-lg border shadow-lg z-50">
+          <button
+            className="fixed inset-0 z-40 cursor-default"
+            onClick={() => setOpen(false)}
+            aria-label="Close menu"
+            tabIndex={-1}
+          />
+          <div
+            className="absolute right-0 top-full mt-1 w-48 bg-background rounded-lg border shadow-lg z-50"
+            role="menu"
+            aria-label="Client actions"
+          >
             {status === 'active' && (
               <button
                 onClick={() => updateStatus('placed')}
-                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                role="menuitem"
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors focus:outline-none focus:bg-muted"
               >
-                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                <CheckCircle className="w-4 h-4 text-emerald-600" aria-hidden="true" />
                 Mark as Placed
               </button>
             )}
             {status !== 'archived' && (
               <button
                 onClick={() => updateStatus('archived')}
-                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                role="menuitem"
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors focus:outline-none focus:bg-muted"
               >
-                <Archive className="w-4 h-4" />
+                <Archive className="w-4 h-4" aria-hidden="true" />
                 Archive
               </button>
             )}
             {status === 'archived' && (
               <button
                 onClick={() => updateStatus('active')}
-                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                role="menuitem"
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors focus:outline-none focus:bg-muted"
               >
-                <CheckCircle className="w-4 h-4" />
+                <CheckCircle className="w-4 h-4" aria-hidden="true" />
                 Restore
               </button>
             )}
             <button
               onClick={deleteClient}
-              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              role="menuitem"
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors focus:outline-none focus:bg-red-50"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
               Delete
             </button>
           </div>

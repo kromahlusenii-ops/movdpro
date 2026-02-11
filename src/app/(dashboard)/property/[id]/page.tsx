@@ -323,8 +323,13 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
             {saveDropdownOpen && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setSaveDropdownOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 w-64 bg-background rounded-lg border shadow-lg z-50">
+                <button
+                  className="fixed inset-0 z-40 cursor-default"
+                  onClick={() => setSaveDropdownOpen(false)}
+                  aria-label="Close menu"
+                  tabIndex={-1}
+                />
+                <div className="absolute right-0 top-full mt-2 w-64 bg-background rounded-lg border shadow-lg z-50" role="menu" aria-label="Save to client">
                   <div className="p-3 border-b">
                     <p className="text-sm font-medium">Save to client</p>
                   </div>

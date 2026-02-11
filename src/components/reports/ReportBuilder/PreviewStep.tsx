@@ -50,7 +50,7 @@ export default function PreviewStep({
       <div className="space-y-6">
         <div className="text-center py-8">
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-emerald-600" />
+            <Check className="w-8 h-8 text-emerald-600" aria-hidden="true" />
           </div>
           <h2 className="text-xl font-semibold mb-2">Report Published!</h2>
           <p className="text-muted-foreground">
@@ -60,9 +60,10 @@ export default function PreviewStep({
 
         {/* Share link */}
         <div className="bg-gray-50 rounded-xl p-4">
-          <label className="block text-sm font-medium mb-2">Shareable Link</label>
+          <label htmlFor="shareableLink" className="block text-sm font-medium mb-2">Shareable Link</label>
           <div className="flex gap-2">
             <input
+              id="shareableLink"
               type="text"
               value={publishedUrl}
               readOnly
@@ -74,12 +75,12 @@ export default function PreviewStep({
             >
               {copied ? (
                 <>
-                  <Check className="w-4 h-4" />
+                  <Check className="w-4 h-4" aria-hidden="true" />
                   Copied!
                 </>
               ) : (
                 <>
-                  <Copy className="w-4 h-4" />
+                  <Copy className="w-4 h-4" aria-hidden="true" />
                   Copy
                 </>
               )}
@@ -95,8 +96,9 @@ export default function PreviewStep({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-blue-600 hover:underline"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-4 h-4" aria-hidden="true" />
             Open Report
+            <span className="sr-only">(opens in new tab)</span>
           </a>
         </div>
       </div>
@@ -204,10 +206,11 @@ export default function PreviewStep({
 
       {/* Personal notes input */}
       <div>
-        <label className="block text-sm font-medium mb-2">
+        <label htmlFor="personalNotes" className="block text-sm font-medium mb-2">
           Add a Personal Note (optional)
         </label>
         <textarea
+          id="personalNotes"
           value={formData.customNotes}
           onChange={(e) => onUpdate({ customNotes: e.target.value })}
           placeholder="Any additional notes or recommendations for your client..."
@@ -232,9 +235,10 @@ export default function PreviewStep({
         <button
           onClick={handlePublish}
           disabled={isPublishing || formData.properties.length === 0}
+          aria-busy={isPublishing}
           className="px-6 py-3 rounded-lg font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
         >
-          {isPublishing && <Loader2 className="w-4 h-4 animate-spin" />}
+          {isPublishing && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
           Publish Report
         </button>
       </div>
