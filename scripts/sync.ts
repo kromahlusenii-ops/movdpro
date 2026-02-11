@@ -14,6 +14,7 @@ import { fullSyncAll } from '../src/lib/scrapers/full-sync'
 import { scrapeGreystarCharlotte } from '../src/lib/scrapers/greystar'
 import { scrapeMAACHarlotte } from '../src/lib/scrapers/maa'
 import { scrapeCortlandCharlotte } from '../src/lib/scrapers/cortland'
+import { scrapeCrescentCharlotte } from '../src/lib/scrapers/crescent'
 import {
   syncSpecialsFromBuildings,
   deactivateStaleSpecials,
@@ -59,6 +60,7 @@ async function main() {
     { name: 'Greystar', slug: 'greystar', fn: scrapeGreystarCharlotte },
     { name: 'MAA', slug: 'maa', fn: scrapeMAACHarlotte },
     { name: 'Cortland', slug: 'cortland', fn: scrapeCortlandCharlotte },
+    { name: 'Crescent Communities', slug: 'crescent', fn: scrapeCrescentCharlotte },
   ]
 
   let totalSpecialsCreated = 0
@@ -106,7 +108,8 @@ async function main() {
   const staleDeactivated =
     (await deactivateStaleSpecials('greystar')) +
     (await deactivateStaleSpecials('maa')) +
-    (await deactivateStaleSpecials('cortland'))
+    (await deactivateStaleSpecials('cortland')) +
+    (await deactivateStaleSpecials('crescent'))
   console.log(`  Deactivated ${staleDeactivated} stale specials (not scraped in 48h)`)
 
   const expiredDeactivated = await deactivateExpiredSpecials()

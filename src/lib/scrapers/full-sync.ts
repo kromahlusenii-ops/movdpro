@@ -4,18 +4,20 @@
  * Discovers all properties from management company portfolio pages,
  * creates new buildings, and scrapes floor plans/units.
  *
- * Supports: Greystar, MAA, Cortland
+ * Supports: Greystar, MAA, Cortland, Crescent Communities
  */
 
 import { chromium, Browser, Page } from 'playwright'
 import prisma from '@/lib/db'
 import { invalidateListingsCache } from '@/lib/listings-cache'
+import crescentOverrides from '@/config/crescent-overrides.json'
 
 // Portfolio page URLs
 const PORTFOLIO_URLS = {
   greystar: 'https://www.greystar.com/s/charlotte-nc',
   maa: 'https://www.maac.com/north-carolina/charlotte/',
   cortland: 'https://cortland.com/apartments/charlotte-metro/',
+  crescent: 'https://www.crescentcommunities.com/about-us/markets/charlotte-nc/',
 }
 
 interface DiscoveredProperty {
@@ -1065,10 +1067,403 @@ async function scrapeCortlandProperty(page: Page, url: string): Promise<{ units:
 }
 
 // ============================================================================
+// CRESCENT COMMUNITIES
+// ============================================================================
+
+interface CrescentOverride {
+  status: string
+  url?: string
+  platform?: string
+  floor_plans_path?: string
+  exclude_from_scrape?: boolean
+}
+
+interface CrescentKnown {
+  url: string
+  platform: string
+  floor_plans_path: string
+  status: string
+}
+
+function getCrescentOverride(slug: string): CrescentOverride | null {
+  const overrides = crescentOverrides.overrides as Record<string, CrescentOverride>
+  return overrides[slug] || null
+}
+
+function getCrescentKnown(slug: string): CrescentKnown | null {
+  const known = crescentOverrides.known_communities as Record<string, CrescentKnown>
+  return known[slug] || null
+}
+
+function slugifyCrescent(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/novel\s+/i, 'novel-')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+}
+
+async function discoverCrescent(): Promise<DiscoveredProperty[]> {
+  const properties: DiscoveredProperty[] = []
+  const seen = new Set<string>()
+
+  console.log('  Fetching Crescent Communities portfolio...')
+
+  let browser: Browser | null = null
+  try {
+    browser = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    })
+    const context = await browser.newContext({
+      userAgent: 'MOVD-PRO-Bot/1.0 (apartment-locator-tool)',
+    })
+    const page = await context.newPage()
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,woff,woff2,ttf,mp4,webm}', route => route.abort())
+
+    await page.goto(PORTFOLIO_URLS.crescent, { waitUntil: 'networkidle', timeout: 60000 })
+    await page.waitForTimeout(3000)
+
+    // Extract communities from the page
+    const communities = await page.evaluate(() => {
+      const results: Array<{
+        name: string
+        status: string
+        websiteUrl: string | null
+      }> = []
+
+      // Get all NOVEL links and community cards
+      const pageText = document.body.innerText
+      const allLinks = document.querySelectorAll('a[href*="novel"]')
+
+      // Build a map of URLs to help match with names
+      const urlMap: Record<string, string> = {}
+      for (const link of allLinks) {
+        const href = link.getAttribute('href') || ''
+        if (href.includes('novel') && href.includes('.com') && !href.includes('crescentcommunities')) {
+          // Extract name from URL like noveluniversityplace.com -> university place
+          const match = href.match(/novel([a-z]+)\.com/i)
+          if (match) {
+            urlMap[match[1].toLowerCase()] = href
+          }
+        }
+      }
+
+      // Look for NOVEL community names in the page text
+      // Pattern: "NOVEL Something" followed by status
+      const lines = pageText.split('\n').map(l => l.trim()).filter(l => l)
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        if (line.startsWith('NOVEL ') && line.length < 50) {
+          const name = line.trim()
+
+          // Skip duplicates
+          if (results.some(r => r.name === name)) continue
+
+          // Look ahead for status in next few lines
+          let status = 'unknown'
+          for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+            const nextLine = lines[j].toLowerCase()
+            if (nextLine === 'leasing') { status = 'leasing'; break }
+            if (nextLine === 'legacy') { status = 'legacy'; break }
+            if (nextLine.includes('coming soon')) { status = 'coming_soon'; break }
+          }
+
+          // Skip "Coming Soon" properties
+          if (status === 'coming_soon') continue
+
+          // Try to find matching URL
+          const nameKey = name.replace(/NOVEL\s+/i, '').toLowerCase().replace(/\s+/g, '')
+          const websiteUrl = urlMap[nameKey] || null
+
+          results.push({ name, status, websiteUrl })
+        }
+      }
+
+      return results
+    })
+
+    await context.close()
+
+    // Process discovered communities
+    for (const comm of communities) {
+      const slug = slugifyCrescent(comm.name)
+
+      // Check if excluded
+      const override = getCrescentOverride(slug)
+      if (override?.exclude_from_scrape) {
+        console.log(`    Skipping ${comm.name} (excluded)`)
+        continue
+      }
+
+      // Determine URL
+      let url = comm.websiteUrl
+      const known = getCrescentKnown(slug)
+
+      if (known) {
+        url = known.url
+      } else if (override?.url) {
+        url = override.url
+      } else if (!url) {
+        // Try to construct URL
+        const cleanName = comm.name.toLowerCase().replace(/novel\s+/i, '').replace(/\s+/g, '')
+        const testUrls = [`https://www.novel${cleanName}.com`, `https://novel${cleanName}.com`]
+        for (const testUrl of testUrls) {
+          try {
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 5000)
+            const response = await fetch(testUrl, { method: 'HEAD', signal: controller.signal })
+            clearTimeout(timeoutId)
+            if (response.ok) {
+              url = testUrl
+              console.log(`    Discovered URL for ${comm.name}: ${url}`)
+              break
+            }
+          } catch {
+            // Try next URL
+          }
+        }
+      }
+
+      if (!url) {
+        console.log(`    No URL found for ${comm.name}`)
+        continue
+      }
+
+      if (seen.has(url)) continue
+      seen.add(url)
+
+      properties.push({
+        name: comm.name,
+        address: '',
+        url,
+        city: 'Charlotte',
+        state: 'NC',
+      })
+    }
+
+    // Also add known communities that might not be on the market page
+    const knownCommunities = crescentOverrides.known_communities as Record<string, CrescentKnown>
+    for (const [slug, known] of Object.entries(knownCommunities)) {
+      if (seen.has(known.url)) continue
+      seen.add(known.url)
+
+      const name = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ').replace('Novel ', 'NOVEL ')
+
+      properties.push({
+        name,
+        address: '',
+        url: known.url,
+        city: 'Charlotte',
+        state: 'NC',
+      })
+    }
+
+  } catch (error) {
+    console.log(`    Discovery error: ${error instanceof Error ? error.message : error}`)
+  } finally {
+    if (browser) await browser.close()
+  }
+
+  console.log(`    Found ${properties.length} Crescent properties`)
+  return properties
+}
+
+async function scrapeCrescentProperty(page: Page, url: string): Promise<{ units: ScrapedUnit[]; buildingData: Record<string, unknown> }> {
+  const units: ScrapedUnit[] = []
+  const buildingData: Record<string, unknown> = { website: url }
+
+  try {
+    // Determine floor plans path based on platform
+    const knownPatterns = crescentOverrides.url_patterns as Record<string, { floor_plans: string }>
+    let floorPlansPath = '/floor-plans/'
+
+    // Check known communities for platform type
+    const knownCommunities = crescentOverrides.known_communities as Record<string, CrescentKnown>
+    for (const [, known] of Object.entries(knownCommunities)) {
+      if (url.includes(known.url.replace(/https?:\/\//, '').replace(/\/$/, ''))) {
+        floorPlansPath = known.floor_plans_path
+        break
+      }
+    }
+
+    // Detect platform from homepage
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    await page.waitForTimeout(2000)
+
+    const platformType = await page.evaluate(() => {
+      const html = document.documentElement.outerHTML
+      if (html.includes('/media/') || html.includes('knockDoorway')) {
+        return 'crescent_cms'
+      }
+      if (html.includes('/assets/images/') || document.querySelector('a[href*="/floorplans/"]')) {
+        return 'third_party'
+      }
+      return 'unknown'
+    })
+
+    if (platformType === 'third_party') {
+      floorPlansPath = '/floorplans/'
+    }
+
+    // Navigate to floor plans page
+    const floorplansUrl = url.replace(/\/$/, '') + floorPlansPath
+    await page.goto(floorplansUrl, { waitUntil: 'networkidle', timeout: 30000 })
+    await page.waitForTimeout(3000)
+
+    // Extract floor plans
+    const data = await page.evaluate(() => {
+      const results: Array<{
+        name: string | null
+        beds: string
+        baths: string
+        sqft: string
+        rent: string
+        available: number
+        image: string | null
+      }> = []
+
+      const cardSelectors = ['.floor-plan', '.floorplan', '[class*="floor-plan"]', '[class*="floorplan"]', 'article']
+      let cards: Element[] = []
+
+      for (const selector of cardSelectors) {
+        const found = document.querySelectorAll(selector)
+        if (found.length > 0) {
+          cards = Array.from(found)
+          break
+        }
+      }
+
+      // Fallback: find elements with pricing patterns
+      if (cards.length === 0) {
+        const allElements = document.querySelectorAll('div, article, section')
+        for (const el of allElements) {
+          const text = el.textContent || ''
+          if ((text.match(/\d+\s*bed/i) || text.match(/studio/i)) &&
+              text.match(/\$[\d,]+/) &&
+              text.length < 2000) {
+            const isParent = cards.some(c => el.contains(c))
+            if (!isParent) cards.push(el)
+          }
+        }
+      }
+
+      for (const card of cards) {
+        const text = card.textContent || ''
+        if (!text.match(/\$[\d,]+/)) continue
+
+        let beds = '1'
+        if (text.toLowerCase().includes('studio')) {
+          beds = '0'
+        } else {
+          const bedMatch = text.match(/(\d+)\s*(?:bed|br)/i)
+          if (bedMatch) beds = bedMatch[1]
+        }
+
+        const bathMatch = text.match(/(\d+\.?\d*)\s*(?:bath|ba)/i)
+        const baths = bathMatch ? bathMatch[1] : '1'
+
+        const sqftMatch = text.match(/(\d{3,4}(?:\s*[-–]\s*\d{3,4})?)\s*(?:sq|sf)/i)
+        const sqft = sqftMatch ? sqftMatch[1] : ''
+
+        const rentMatch = text.match(/(?:starting\s*at\s*)?\$[\d,]+(?:\s*[-–]\s*\$[\d,]+)?/i)
+        const rent = rentMatch ? rentMatch[0] : ''
+
+        const nameEl = card.querySelector('h2, h3, h4, .name, [class*="name"]')
+        let name = nameEl?.textContent?.trim() || null
+        if (!name) {
+          const codeMatch = text.match(/\b([A-Z]\d{1,2})\b/)
+          if (codeMatch) name = codeMatch[1]
+        }
+
+        const imgEl = card.querySelector('img')
+        const image = imgEl?.getAttribute('src') || imgEl?.getAttribute('data-src') || null
+
+        const availMatch = text.match(/(\d+)\s*(?:available|unit)/i)
+        const available = availMatch ? parseInt(availMatch[1], 10) : 1
+
+        if (rent) {
+          results.push({ name, beds, baths, sqft, rent, available, image })
+        }
+      }
+
+      return results
+    })
+
+    for (const fp of data) {
+      const { min: sqftMin, max: sqftMax } = parseSqft(fp.sqft)
+      const { min: rentMin, max: rentMax } = parseRent(fp.rent)
+
+      units.push({
+        name: fp.name,
+        bedrooms: parseInt(fp.beds, 10),
+        bathrooms: parseFloat(fp.baths),
+        sqftMin,
+        sqftMax,
+        rentMin,
+        rentMax,
+        availableCount: fp.available,
+        photoUrl: fp.image,
+      })
+    }
+
+    // Extract building metadata
+    const metadata = await page.evaluate(() => {
+      const result: Record<string, unknown> = {}
+
+      // Try JSON-LD
+      const scripts = document.querySelectorAll('script[type="application/ld+json"]')
+      for (const script of scripts) {
+        try {
+          const data = JSON.parse(script.textContent || '')
+          if (data.address) {
+            result.address = data.address.streetAddress
+            result.city = data.address.addressLocality
+            result.state = data.address.addressRegion
+            result.zipCode = data.address.postalCode
+          }
+          if (data.geo) {
+            result.lat = parseFloat(data.geo.latitude)
+            result.lng = parseFloat(data.geo.longitude)
+          }
+          if (data.telephone) result.phone = data.telephone
+          if (data.image) result.image = Array.isArray(data.image) ? data.image[0] : data.image
+        } catch { /* ignore */ }
+      }
+
+      // Fallback: look for address patterns
+      if (!result.address) {
+        const allText = document.body.innerText
+        const addrMatch = allText.match(/\d+\s+[\w\s]+(?:Drive|Street|Avenue|Road|Boulevard|Way),?\s*Charlotte,?\s*NC\s*\d{5}/i)
+        if (addrMatch) result.address = addrMatch[0]
+      }
+
+      // Look for phone
+      if (!result.phone) {
+        const phoneLink = document.querySelector('a[href^="tel:"]')
+        if (phoneLink) {
+          result.phone = phoneLink.getAttribute('href')?.replace('tel:', '') || phoneLink.textContent?.trim()
+        }
+      }
+
+      return result
+    })
+
+    Object.assign(buildingData, metadata)
+
+  } catch (error) {
+    console.log(`    Error scraping: ${error instanceof Error ? error.message : error}`)
+  }
+
+  return { units, buildingData }
+}
+
+// ============================================================================
 // MAIN SYNC FUNCTION
 // ============================================================================
 
-export async function fullSync(management: 'greystar' | 'maa' | 'cortland'): Promise<SyncResult> {
+export async function fullSync(management: 'greystar' | 'maa' | 'cortland' | 'crescent'): Promise<SyncResult> {
   const result: SyncResult = {
     management,
     discovered: 0,
@@ -1082,6 +1477,7 @@ export async function fullSync(management: 'greystar' | 'maa' | 'cortland'): Pro
     greystar: 'Greystar',
     maa: 'MAA',
     cortland: 'Cortland',
+    crescent: 'Crescent Communities',
   }
 
   console.log(`\n${'='.repeat(60)}`)
@@ -1100,6 +1496,8 @@ export async function fullSync(management: 'greystar' | 'maa' | 'cortland'): Pro
       properties = await discoverMAA()
     } else if (management === 'cortland') {
       properties = await discoverCortland()
+    } else if (management === 'crescent') {
+      properties = await discoverCrescent()
     }
   } catch (error) {
     result.errors.push(`Discovery failed: ${error instanceof Error ? error.message : error}`)
@@ -1138,8 +1536,10 @@ export async function fullSync(management: 'greystar' | 'maa' | 'cortland'): Pro
           scrapeResult = await scrapeGreystarProperty(page, prop.url)
         } else if (management === 'maa') {
           scrapeResult = await scrapeMAAProperty(page, prop.url)
-        } else {
+        } else if (management === 'cortland') {
           scrapeResult = await scrapeCortlandProperty(page, prop.url)
+        } else {
+          scrapeResult = await scrapeCrescentProperty(page, prop.url)
         }
       } catch (error) {
         result.errors.push(`Failed to scrape ${prop.name}: ${error instanceof Error ? error.message : error}`)
@@ -1288,7 +1688,7 @@ export async function fullSync(management: 'greystar' | 'maa' | 'cortland'): Pro
 export async function fullSyncAll(): Promise<SyncResult[]> {
   const results: SyncResult[] = []
 
-  for (const mgmt of ['greystar', 'maa', 'cortland'] as const) {
+  for (const mgmt of ['greystar', 'maa', 'cortland', 'crescent'] as const) {
     const result = await fullSync(mgmt)
     results.push(result)
   }

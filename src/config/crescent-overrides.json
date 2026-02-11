@@ -1,0 +1,58 @@
+{
+  "overrides": {
+    "novel-loso-station": {
+      "status": "sold",
+      "new_name": "MAA LoSo",
+      "new_url": "https://www.maac.com/north-carolina/charlotte/maa-loso/",
+      "operator": "Mid-America Apartments",
+      "exclude_from_scrape": true,
+      "notes": "Sold to MAA, now managed under their portfolio"
+    },
+    "novel-atherton": {
+      "status": "not_charlotte",
+      "exclude_from_scrape": true,
+      "notes": "Not a Charlotte property - different NOVEL Atherton in Cape Town, South Africa"
+    },
+    "novel-ballantyne": {
+      "status": "active",
+      "url": "https://novelballantyne.com/",
+      "platform": "third_party",
+      "floor_plans_path": "/floorplans/",
+      "notes": "Legacy property, still NOVEL-branded but different CMS"
+    }
+  },
+  "known_communities": {
+    "novel-university-place": {
+      "url": "https://www.noveluniversityplace.com/",
+      "platform": "crescent_cms",
+      "floor_plans_path": "/floor-plans/",
+      "status": "leasing"
+    },
+    "novel-mallard-creek": {
+      "url": "https://www.novelmallardcreek.com/",
+      "platform": "crescent_cms",
+      "floor_plans_path": "/floor-plans/",
+      "status": "leasing"
+    },
+    "novel-davidson": {
+      "url": "https://www.noveldavidson.com/",
+      "platform": "crescent_cms",
+      "floor_plans_path": "/floor-plans/",
+      "status": "leasing"
+    }
+  },
+  "url_patterns": {
+    "crescent_cms": {
+      "floor_plans": "/floor-plans/",
+      "virtual_tours": "/virtual-tours/",
+      "media_path": "/media/",
+      "scheduling_widget": "knockDoorway"
+    },
+    "third_party": {
+      "floor_plans": "/floorplans/",
+      "virtual_tours": "/virtual-tours/",
+      "media_path": "/assets/images/",
+      "scheduling_page": "/schedule-a-tour/"
+    }
+  }
+}
