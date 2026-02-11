@@ -119,54 +119,6 @@ export default async function Image() {
           </div>
         </div>
 
-        {/* Bottom stats */}
-        <div
-          style={{
-            display: 'flex',
-            gap: '48px',
-            marginTop: '20px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: '#2d5a42',
-              }}
-            />
-            <span style={{ fontSize: '18px', color: '#2d5a42', fontWeight: 500 }}>
-              600+ Apartments
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: '#2d5a42',
-              }}
-            />
-            <span style={{ fontSize: '18px', color: '#2d5a42', fontWeight: 500 }}>
-              40+ Neighborhoods
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: '#2d5a42',
-              }}
-            />
-            <span style={{ fontSize: '18px', color: '#2d5a42', fontWeight: 500 }}>
-              Client-Ready Reports
-            </span>
-          </div>
-        </div>
       </div>
     ),
     {
