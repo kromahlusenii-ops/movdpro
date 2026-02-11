@@ -66,7 +66,7 @@ export function SubscriptionActions({
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <>
-              Upgrade to Pro — $60/mo
+              Upgrade to Pro — $99/mo
               <ExternalLink className="w-4 h-4" />
             </>
           )}

@@ -199,7 +199,7 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
                   Unlimited Access
                 </span>
               </div>
-              <p className="text-xs text-emerald-600 mt-1">$60/month</p>
+              <p className="text-xs text-emerald-600 mt-1">$99/month</p>
             </div>
           </div>
         )}

@@ -61,7 +61,7 @@ export default function ProLandingPage() {
                   Start free trial
                 </Link>
                 <span className="text-sm text-muted-foreground">
-                  $60/mo after 7 days
+                  $99/mo after 7 days
                 </span>
               </div>
             </div>
