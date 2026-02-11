@@ -68,6 +68,7 @@ export default function ProLandingPage() {
             <Image src="/logos/greystar.svg" alt="Greystar" width={160} height={36} className="h-7 sm:h-8 w-auto" />
             <Image src="/logos/cortland.svg" alt="Cortland" width={150} height={36} className="h-6 sm:h-7 w-auto" />
             <Image src="/logos/maa.svg" alt="MAA" width={120} height={36} className="h-7 sm:h-8 w-auto" />
+            <Image src="/logos/crescent.png" alt="Crescent Communities" width={160} height={36} className="h-7 sm:h-8 w-auto" />
           </div>
         </div>
       </section>
