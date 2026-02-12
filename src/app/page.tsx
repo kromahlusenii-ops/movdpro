@@ -111,14 +111,6 @@ export default function ProLandingPage() {
                 </div>
 
                 <div className="grid sm:grid-cols-[140px_1fr] gap-2 sm:gap-6">
-                  <dt className="text-sm uppercase tracking-widest text-muted-foreground pt-1">Compare</dt>
-                  <dd className="text-lg leading-relaxed">
-                    Put three properties side by side. Rent, amenities, neighborhood grades.
-                    See the differences. Pick the winner.
-                  </dd>
-                </div>
-
-                <div className="grid sm:grid-cols-[140px_1fr] gap-2 sm:gap-6">
                   <dt className="text-sm uppercase tracking-widest text-muted-foreground pt-1">Report</dt>
                   <dd className="text-lg leading-relaxed">
                     Generate a client-ready report with your branding.
@@ -129,7 +121,7 @@ export default function ProLandingPage() {
                 <div className="grid sm:grid-cols-[140px_1fr] gap-2 sm:gap-6">
                   <dt className="text-sm uppercase tracking-widest text-muted-foreground pt-1">Track</dt>
                   <dd className="text-lg leading-relaxed">
-                    20 active clients. Their budget, their neighborhoods, their status.
+                    All your clients in one place. Their budget, their neighborhoods, their status.
                     Stop keeping it all in your head.
                   </dd>
                 </div>
