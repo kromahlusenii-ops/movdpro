@@ -19,6 +19,7 @@ interface SearchableDropdownProps {
   className?: string
   label?: string
   id?: string
+  onFocus?: () => void
 }
 
 export function SearchableDropdown({
@@ -31,6 +32,7 @@ export function SearchableDropdown({
   className,
   label,
   id: providedId,
+  onFocus,
 }: SearchableDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -198,7 +200,12 @@ export function SearchableDropdown({
         aria-controls={listboxId}
         aria-labelledby={label ? labelId : undefined}
         aria-activedescendant={activeOptionId}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!isOpen && onFocus) {
+            onFocus()
+          }
+          setIsOpen(!isOpen)
+        }}
         onKeyDown={handleKeyDown}
         className={cn(
           'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border bg-background text-sm transition-colors',

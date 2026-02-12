@@ -14,8 +14,6 @@ import prisma from './db'
 interface CachedSpecial {
   id: string
   title: string
-  description: string | null
-  endDate: Date | null
 }
 
 interface CachedListing {
@@ -138,8 +136,6 @@ async function loadListingsCache(): Promise<ListingsCache> {
             select: {
               id: true,
               title: true,
-              description: true,
-              endDate: true,
             },
           },
         },

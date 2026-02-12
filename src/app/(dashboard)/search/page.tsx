@@ -5,7 +5,9 @@ import { getCachedListings, setCachedListings, type CachedListing } from '@/lib/
 import Link from 'next/link'
 import { SearchableDropdown } from '@/components/SearchableDropdown'
 import { LiveRegion } from '@/components/ui/live-region'
-import { Search, MapPin, Bed, DollarSign, Star, X, UserPlus, Check, ExternalLink, Building2, Bath, Ruler, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
+import { ListingCard } from '@/components/search/ListingCard'
+import { SearchPagination } from '@/components/search/SearchPagination'
+import { DollarSign, X, Check, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   sectionAttr,
@@ -14,111 +16,18 @@ import {
   SECTION_TYPES,
   STATE_TYPES,
 } from '@/lib/ai-readability'
-
-interface Listing {
-  id: string
-  unitNumber: string | null
-  name: string | null
-  bedrooms: number
-  bathrooms: number
-  sqftMin: number | null
-  sqftMax: number | null
-  rentMin: number
-  rentMax: number
-  isAvailable: boolean
-  hasActiveDeals: boolean
-  building: {
-    id: string
-    name: string
-    address: string
-    city: string
-    state: string
-    lat: number
-    lng: number
-    primaryPhotoUrl: string | null
-    amenities: string[]
-    rating: number | null
-    reviewCount: number | null
-    listingUrl: string | null
-    floorplansUrl: string | null
-    specials?: { id: string; title: string }[]
-  }
-  neighborhood: {
-    id: string
-    name: string
-    slug: string
-    grade: string
-    walkScore: number | null
-    transitScore: number | null
-  }
-  management: {
-    id: string
-    name: string
-    slug: string
-    logoUrl: string | null
-  } | null
-}
-
-interface Client {
-  id: string
-  name: string
-  savedListings?: { listingId: string }[]
-}
-
-interface SearchFilters {
-  neighborhoods: string[]
-  budgetMin: number
-  budgetMax: number
-  bedrooms: string[]
-  buildings: string[]
-  hasDeals: boolean
-}
-
-const NEIGHBORHOOD_OPTIONS = [
-  { value: 'South End', label: 'South End' },
-  { value: 'NoDa', label: 'NoDa' },
-  { value: 'Plaza Midwood', label: 'Plaza Midwood' },
-  { value: 'Dilworth', label: 'Dilworth' },
-  { value: 'Uptown Charlotte', label: 'Uptown' },
-  { value: 'Elizabeth', label: 'Elizabeth' },
-  { value: 'Myers Park', label: 'Myers Park' },
-  { value: 'University City', label: 'University City' },
-  { value: 'Ballantyne', label: 'Ballantyne' },
-  { value: 'SouthPark', label: 'SouthPark' },
-  { value: 'Steele Creek', label: 'Steele Creek' },
-]
-
-const BEDROOM_OPTIONS = [
-  { value: 'studio', label: 'Studio' },
-  { value: '1br', label: '1 BR' },
-  { value: '2br', label: '2 BR' },
-  { value: '3br+', label: '3+ BR' },
-]
-
-const GRADE_LABELS: Record<string, string> = {
-  'A+': 'Excellent',
-  'A': 'Excellent',
-  'A-': 'Very Good',
-  'B+': 'Good',
-  'B': 'Good',
-  'B-': 'Above Average',
-  'C+': 'Average',
-  'C': 'Average',
-  'C-': 'Below Average',
-  'D': 'Poor',
-  'F': 'Very Poor',
-}
-
-function formatBedrooms(bedrooms: number): string {
-  if (bedrooms === 0) return 'Studio'
-  if (bedrooms === 1) return '1 BR'
-  if (bedrooms === 2) return '2 BR'
-  return `${bedrooms} BR`
-}
+import {
+  Listing,
+  ClientSummary,
+  SearchFilters,
+  NEIGHBORHOOD_OPTIONS,
+  BEDROOM_OPTIONS,
+} from '@/types'
 
 export default function ProSearchPage() {
-  const [clients, setClients] = useState<Client[]>([])
+  const [clients, setClients] = useState<ClientSummary[]>([])
   const [buildingOptions, setBuildingOptions] = useState<{ value: string; label: string }[]>([])
+  const [buildingsLoaded, setBuildingsLoaded] = useState(false)
   const [filters, setFilters] = useState<SearchFilters>({
     neighborhoods: [],
     budgetMin: 1000,
@@ -140,18 +49,23 @@ export default function ProSearchPage() {
   const pageSize = 20
   const saveDropdownRef = useRef<HTMLDivElement>(null)
 
-  // Fetch clients and buildings on mount
+  // Fetch clients on mount
   useEffect(() => {
     fetch('/api/clients')
       .then(res => res.json())
       .then(data => {
         if (data.clients) {
-          setClients(data.clients.filter((c: Client & { status: string }) => c.status === 'active'))
+          setClients(data.clients.filter((c: ClientSummary & { status: string }) => c.status === 'active'))
         }
       })
       .catch(console.error)
+  }, [])
 
-    // Fetch buildings for the dropdown (API max is 100)
+  // Lazy load buildings when dropdown is focused
+  const loadBuildings = useCallback(() => {
+    if (buildingsLoaded) return
+
+    setBuildingsLoaded(true)
     fetch('/api/buildings?limit=100')
       .then(res => res.json())
       .then(data => {
@@ -165,7 +79,7 @@ export default function ProSearchPage() {
         }
       })
       .catch(console.error)
-  }, [])
+  }, [buildingsLoaded])
 
   // Load listings on mount with shared cache
   useEffect(() => {
@@ -484,6 +398,7 @@ export default function ProSearchPage() {
               multiple={true}
               label="Building"
               id="buildings-filter"
+              onFocus={loadBuildings}
             />
           </div>
 
@@ -704,235 +619,19 @@ export default function ProSearchPage() {
             <ul className="grid gap-3" aria-label="Listings">
               {listings.map(listing => (
                 <li key={listing.id}>
-                  <article
-                    className="bg-background rounded-lg border p-3 flex gap-3 hover:border-foreground/20 transition-colors"
-                    aria-labelledby={`listing-title-${listing.id}`}
-                    data-entity="property"
-                    data-entity-id={listing.id}
-                    data-building-id={listing.building.id}
-                    data-neighborhood={listing.neighborhood.slug}
-                    data-bedrooms={listing.bedrooms}
-                    data-bathrooms={listing.bathrooms}
-                    data-rent-min={listing.rentMin}
-                    data-rent-max={listing.rentMax}
-                    data-available={listing.isAvailable}
-                    data-has-deals={listing.hasActiveDeals}
-                  >
-                    {/* Clickable area */}
-                    <Link href={`/listing/${listing.id}`} className="flex-1 min-w-0">
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            {/* Unit + Building Name */}
-                            <h2 id={`listing-title-${listing.id}`} className="flex items-center gap-2 flex-wrap">
-                              <span className="font-bold text-lg">
-                                {listing.unitNumber || formatBedrooms(listing.bedrooms)}
-                              </span>
-                              <span className="text-muted-foreground">at</span>
-                              <span className="font-semibold truncate">
-                                {listing.building.name}
-                              </span>
-                              {listing.hasActiveDeals && (
-                                <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-medium flex-shrink-0 flex items-center gap-0.5">
-                                  <Tag className="w-2.5 h-2.5" aria-hidden="true" />
-                                  <span>Special</span>
-                                </span>
-                              )}
-                              {listing.management && (
-                                <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-medium flex-shrink-0">
-                                  {listing.management.name}
-                                </span>
-                              )}
-                            </h2>
-                            {/* Address + Neighborhood */}
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                              <MapPin className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
-                              <span className="truncate">{listing.building.address}</span>
-                              <span className="text-muted-foreground/50" aria-hidden="true">·</span>
-                              <span className="flex-shrink-0">{listing.neighborhood.name}</span>
-                              <span
-                                className="px-1 py-0.5 rounded bg-muted text-[10px] font-medium flex-shrink-0"
-                                title={`Neighborhood grade: ${listing.neighborhood.grade} - ${GRADE_LABELS[listing.neighborhood.grade] || 'Unrated'}`}
-                              >
-                                <span className="sr-only">Neighborhood grade: </span>
-                                {listing.neighborhood.grade}
-                                <span className="sr-only"> - {GRADE_LABELS[listing.neighborhood.grade] || 'Unrated'}</span>
-                              </span>
-                            </div>
-                          </div>
-                          {/* Price */}
-                          <div className="text-right flex-shrink-0">
-                            <p className="font-bold text-xl">
-                              <span className="sr-only">Monthly rent: </span>
-                              ${listing.rentMin.toLocaleString()}
-                            </p>
-                            <p className="text-xs text-muted-foreground">/month</p>
-                          </div>
-                        </div>
-
-                        {/* Unit Details */}
-                        <dl className="flex items-center gap-4 mt-2 text-sm">
-                          <div className="flex items-center gap-1.5">
-                            <Bed className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                            <dt className="sr-only">Bedrooms:</dt>
-                            <dd>{formatBedrooms(listing.bedrooms)}</dd>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Bath className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                            <dt className="sr-only">Bathrooms:</dt>
-                            <dd>{listing.bathrooms} Bath</dd>
-                          </div>
-                          {listing.sqftMin && (
-                            <div className="flex items-center gap-1.5">
-                              <Ruler className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                              <dt className="sr-only">Square feet:</dt>
-                              <dd>{listing.sqftMin.toLocaleString()} sqft</dd>
-                            </div>
-                          )}
-                          {listing.building.rating && (
-                            <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 text-amber-500 fill-amber-500" aria-hidden="true" />
-                              <dt className="sr-only">Rating:</dt>
-                              <dd>
-                                {listing.building.rating.toFixed(1)}
-                                {listing.building.reviewCount && (
-                                  <span className="text-muted-foreground"> ({listing.building.reviewCount} reviews)</span>
-                                )}
-                              </dd>
-                            </div>
-                          )}
-                        </dl>
-
-                        {/* Amenities */}
-                        {listing.building.amenities.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {listing.building.amenities.slice(0, 4).map(amenity => (
-                              <span
-                                key={amenity}
-                                className="px-1.5 py-0.5 rounded bg-muted text-[10px]"
-                              >
-                                {amenity}
-                              </span>
-                            ))}
-                            {listing.building.amenities.length > 4 && (
-                              <span className="text-[10px] text-muted-foreground">
-                                +{listing.building.amenities.length - 4} more
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-
-                    {/* Actions */}
-                    <div className="flex flex-col gap-1.5 flex-shrink-0">
-                      {/* View Floorplans Button */}
-                      {(listing.building.floorplansUrl || listing.building.listingUrl) && (
-                        <a
-                          href={listing.building.floorplansUrl || `${listing.building.listingUrl?.replace(/\/$/, '')}/floorplans`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                          aria-label={`View floorplans for ${listing.building.name} (opens in new tab)`}
-                        >
-                          <ExternalLink className="w-3 h-3" aria-hidden="true" />
-                          Floorplans
-                        </a>
-                      )}
-
-                      <button
-                        onClick={() => toggleCompare(listing.building.id)}
-                        disabled={!compareList.includes(listing.building.id) && compareList.length >= 3}
-                        aria-pressed={compareList.includes(listing.building.id)}
-                        className={cn(
-                          'px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors',
-                          'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                          compareList.includes(listing.building.id)
-                            ? 'bg-foreground text-background'
-                            : 'bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50'
-                        )}
-                        aria-label={compareList.includes(listing.building.id)
-                          ? `Remove ${listing.building.name} from comparison`
-                          : `Add ${listing.building.name} to comparison`
-                        }
-                      >
-                        {compareList.includes(listing.building.id) ? 'Selected' : 'Compare'}
-                      </button>
-
-                      {/* Save to Client Dropdown */}
-                      <div className="relative" ref={saveDropdownId === listing.id ? saveDropdownRef : null}>
-                        <button
-                          onClick={() => setSaveDropdownId(saveDropdownId === listing.id ? null : listing.id)}
-                          aria-expanded={saveDropdownId === listing.id}
-                          aria-haspopup="menu"
-                          aria-label={`Save ${listing.building.name} to client`}
-                          className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-muted text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                        >
-                          <UserPlus className="w-3 h-3" aria-hidden="true" />
-                          Save
-                        </button>
-
-                        {saveDropdownId === listing.id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-40"
-                              onClick={() => setSaveDropdownId(null)}
-                              aria-hidden="true"
-                            />
-                            <div
-                              className="absolute right-0 top-full mt-1 w-56 bg-background rounded-lg border shadow-lg z-50"
-                              role="menu"
-                              aria-label="Save to client"
-                            >
-                              <div className="p-2 border-b">
-                                <p className="text-xs font-medium text-muted-foreground">Save to client</p>
-                              </div>
-                              {clients.length > 0 ? (
-                                <div className="max-h-48 overflow-y-auto" role="group">
-                                  {clients.map(client => {
-                                    const isSaved = isListingSavedToClient(client.id, listing.id)
-                                    return (
-                                      <button
-                                        key={client.id}
-                                        role="menuitem"
-                                        onClick={() =>
-                                          isSaved
-                                            ? removeFromClient(client.id, listing.id)
-                                            : saveToClient(client.id, listing.id)
-                                        }
-                                        disabled={savingTo === client.id}
-                                        className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-muted transition-colors disabled:opacity-50 focus:outline-none focus:bg-muted"
-                                      >
-                                        <span>{client.name}</span>
-                                        {isSaved && (
-                                          <>
-                                            <Check className="w-4 h-4 text-emerald-600" aria-hidden="true" />
-                                            <span className="sr-only">(saved)</span>
-                                          </>
-                                        )}
-                                      </button>
-                                    )
-                                  })}
-                                </div>
-                              ) : (
-                                <div className="p-3 text-center">
-                                  <p className="text-sm text-muted-foreground mb-2">No clients yet</p>
-                                  <Link
-                                    href="/clients/new"
-                                    className="text-sm font-medium text-foreground hover:underline focus:outline-none focus:ring-2 focus:ring-ring rounded"
-                                    role="menuitem"
-                                  >
-                                    Add a client
-                                  </Link>
-                                </div>
-                              )}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </article>
+                  <ListingCard
+                    listing={listing}
+                    clients={clients}
+                    compareList={compareList}
+                    saveDropdownId={saveDropdownId}
+                    savingTo={savingTo}
+                    saveDropdownRef={saveDropdownRef}
+                    onToggleCompare={toggleCompare}
+                    onSaveDropdownToggle={setSaveDropdownId}
+                    onSaveToClient={saveToClient}
+                    onRemoveFromClient={removeFromClient}
+                    isListingSavedToClient={isListingSavedToClient}
+                  />
                 </li>
               ))}
             </ul>
@@ -945,70 +644,12 @@ export default function ProSearchPage() {
 
           {/* Pagination */}
           {total > pageSize && (
-            <nav
-              className="flex items-center justify-center mt-6 pt-4 border-t"
-              aria-label="Pagination"
-              {...sectionAttr(SECTION_TYPES.PAGINATION)}
-              data-current-page={page}
-              data-total-pages={totalPages}
-            >
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handlePageChange(page - 1)}
-                  disabled={page === 1 || loading}
-                  aria-label="Go to previous page"
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-                  Previous
-                </button>
-                <div className="flex items-center gap-1" role="group" aria-label="Page numbers">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum: number
-
-                    if (totalPages <= 5) {
-                      pageNum = i + 1
-                    } else if (page <= 3) {
-                      pageNum = i + 1
-                    } else if (page >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i
-                    } else {
-                      pageNum = page - 2 + i
-                    }
-
-                    const isCurrent = page === pageNum
-
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        disabled={loading}
-                        aria-label={`Page ${pageNum}${isCurrent ? ', current page' : ''}`}
-                        aria-current={isCurrent ? 'page' : undefined}
-                        className={cn(
-                          'w-8 h-8 rounded-lg text-sm font-medium transition-colors disabled:opacity-50',
-                          'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                          isCurrent
-                            ? 'bg-foreground text-background'
-                            : 'bg-muted text-muted-foreground hover:text-foreground'
-                        )}
-                      >
-                        {pageNum}
-                      </button>
-                    )
-                  })}
-                </div>
-                <button
-                  onClick={() => handlePageChange(page + 1)}
-                  disabled={page >= totalPages || loading}
-                  aria-label="Go to next page"
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4" aria-hidden="true" />
-                </button>
-              </div>
-            </nav>
+            <SearchPagination
+              page={page}
+              totalPages={totalPages}
+              loading={loading}
+              onPageChange={handlePageChange}
+            />
           )}
         </section>
       )}

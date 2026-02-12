@@ -9,13 +9,12 @@ import {
   Users,
   Settings,
   LogOut,
-  Sparkles,
-  AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ListingsPreloader } from './ListingsPreloader'
 import { SkipLink } from './ui/skip-link'
 import { useFocusOnRouteChange, useRouteAnnouncer } from '@/hooks/useFocusOnRouteChange'
+import { SubscriptionBanner } from './SubscriptionBanner'
 
 interface ProLayoutProps {
   children: React.ReactNode
@@ -57,11 +56,6 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
       setUpgrading(false)
     }
   }
-
-  // Calculate days left in trial
-  const trialDaysLeft = locator.trialEndsAt
-    ? Math.max(0, Math.ceil((new Date(locator.trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : 0
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -120,89 +114,12 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
         </nav>
 
         {/* Subscription Status */}
-        {locator.subscriptionStatus === 'trialing' && trialDaysLeft > 0 && (
-          <div className="p-4 border-t" role="region" aria-label="Subscription status">
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-amber-600" aria-hidden="true" />
-                <span className="text-sm font-medium text-amber-800">Free Trial</span>
-              </div>
-              <p className="text-xs text-amber-700">
-                {trialDaysLeft} day{trialDaysLeft === 1 ? '' : 's'} remaining
-              </p>
-              <button
-                onClick={handleUpgrade}
-                disabled={upgrading}
-                className="text-xs font-medium text-amber-800 hover:underline mt-2 inline-block focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 rounded"
-                aria-describedby="trial-status"
-              >
-                {upgrading ? 'Processing...' : 'Upgrade now →'}
-              </button>
-              <span id="trial-status" className="sr-only">
-                You are currently on a free trial with {trialDaysLeft} days remaining
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Trial Expired */}
-        {locator.subscriptionStatus === 'trialing' && trialDaysLeft === 0 && (
-          <div className="p-4 border-t" role="alert" aria-label="Trial expired">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="w-4 h-4 text-red-600" aria-hidden="true" />
-                <span className="text-sm font-medium text-red-800">Trial Expired</span>
-              </div>
-              <p className="text-xs text-red-700">
-                Upgrade to keep using MOVD Pro
-              </p>
-              <button
-                onClick={handleUpgrade}
-                disabled={upgrading}
-                className="text-xs font-medium text-red-800 hover:underline mt-2 inline-block focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 rounded"
-              >
-                {upgrading ? 'Processing...' : 'Upgrade now →'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Past Due */}
-        {locator.subscriptionStatus === 'past_due' && (
-          <div className="p-4 border-t" role="alert" aria-label="Payment failed">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="w-4 h-4 text-red-600" aria-hidden="true" />
-                <span className="text-sm font-medium text-red-800">Payment Failed</span>
-              </div>
-              <p className="text-xs text-red-700">
-                Please update your payment method
-              </p>
-              <Link
-                href="/settings"
-                className="text-xs font-medium text-red-800 hover:underline mt-2 inline-block focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 rounded"
-              >
-                Manage billing →
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Plan Badge for Active Subscribers */}
-        {locator.subscriptionStatus === 'active' && (
-          <div className="p-4 border-t" role="region" aria-label="Subscription status">
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
-                <span className="text-sm font-medium text-emerald-800">
-                  <span className="sr-only">Status: </span>
-                  Unlimited Access
-                </span>
-              </div>
-              <p className="text-xs text-emerald-600 mt-1">$99/month</p>
-            </div>
-          </div>
-        )}
+        <SubscriptionBanner
+          subscriptionStatus={locator.subscriptionStatus}
+          trialEndsAt={locator.trialEndsAt}
+          onUpgrade={handleUpgrade}
+          upgrading={upgrading}
+        />
 
         {/* Bottom nav */}
         <div className="p-4 border-t">

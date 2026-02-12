@@ -1,150 +1,197 @@
-import type { PriorityId, VibeId, AgeBracketId, BedroomId, BathroomId, LeaseLengthId, MoveStatusId, TransportationId } from '@/lib/constants'
+// Shared types for the MOVD Pro application
 
-export interface QuizAnswers {
-  budgetMin: number
-  budgetMax: number
-  priorities: PriorityId[]
-  vibes: VibeId[]  // Changed from single vibe to array
-  workAddress?: string
-  maxCommute?: number
-  // Demographic fields
-  ageBracket?: AgeBracketId
-  bedrooms?: BedroomId
-  bathrooms?: BathroomId
-  leaseLength?: LeaseLengthId
-  hasKids?: boolean
-  hasDog?: boolean
-  // New fields
-  moveStatus?: MoveStatusId
-  transportation?: TransportationId
-  // Optional free-form context for better AI personalization
-  additionalNotes?: string
-  // Traffic source tracking (auto-captured from UTM parameters)
-  utmSource?: string
-  utmMedium?: string
-  utmCampaign?: string
-  utmTerm?: string
-  utmContent?: string
-  referrer?: string
-}
+// =============================================================================
+// Building & Listing Types
+// =============================================================================
 
-export interface NeighborhoodResult {
-  id: string
-  name: string
-  slug: string
-  matchScore: number
-  rank: number
-  grade: string
-  infrastructureScore: number
-  safetyScore: number
-  livabilityScore: number
-  trajectoryScore: number
-  sentimentScore: number
-  compositeScore: number
-  walkScore: number | null
-  transitScore: number | null
-  bikeScore: number | null
-  medianRent: number | null
-  rentMin: number | null
-  rentMax: number | null
-  description: string | null
-  warnings: string[]
-  highlights: string[]
-  centerLat: number
-  centerLng: number
-}
-
-export interface QuizSession {
-  id: string
-  budgetMin: number
-  budgetMax: number
-  priorities: string[]
-  vibe: string
-  workAddress: string | null
-  maxCommute: number | null
-  paid: boolean
-  email: string | null
-  createdAt: Date
-  expiresAt: Date | null
-  results: NeighborhoodResult[]
-}
-
-export interface SentimentQuoteData {
-  id: string
-  source: 'reddit' | 'tiktok'
-  content: string
-  sentiment: 'positive' | 'negative' | 'neutral'
-  theme: string | null
-  postUrl: string | null
-  postId: string | null
-  author: string | null
-  subreddit: string | null
-  upvotes: number | null
-  postDate: Date | null
-}
-
-// API Response types
-export interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  error?: string
-}
-
-export interface QuizSubmitResponse {
-  sessionId: string
-  results: NeighborhoodResult[]
-}
-
-export interface CheckoutResponse {
-  url: string
-}
-
-export type VenueCategory = 'restaurant' | 'bar' | 'cafe' | 'park' | 'gym' | 'grocery' | 'nightlife'
-
-export interface LifestyleVenueData {
-  id: string
-  name: string
-  category: VenueCategory
-  subcategory: string | null
-  address: string | null
-  rating: number | null
-  priceLevel: number | null
-  description: string | null
-  lat: number | null
-  lng: number | null
-  isHighlight: boolean
-  tags: string[]
-  photoUrl: string | null
-  googlePlaceId: string | null
-}
-
-// Apartment listing types
-export interface ApartmentListingData {
+export interface Building {
   id: string
   name: string
   address: string
-  description: string | null
-  rentMin: number
-  rentMax: number
-  bedrooms: string[]
-  bathrooms: number | null
-  sqftMin: number | null
-  sqftMax: number | null
-  amenities: string[]
-  petPolicy: string | null
-  parkingType: string | null
-  rating: number | null
-  reviewCount: number | null
-  walkScore: number | null
-  transitScore: number | null
+  city: string
+  state: string
   lat: number
   lng: number
-  photoUrl: string | null
-  photos: string[]
+  primaryPhotoUrl: string | null
+  amenities: string[]
+  rating: number | null
+  reviewCount: number | null
   listingUrl: string | null
+  floorplansUrl: string | null
+  specials?: { id: string; title: string }[]
+}
+
+export interface Neighborhood {
+  id: string
+  name: string
+  slug: string
+  grade: string
+  walkScore: number | null
+  transitScore: number | null
+}
+
+export interface Management {
+  id: string
+  name: string
+  slug: string
+  logoUrl: string | null
+}
+
+export interface Listing {
+  id: string
+  unitNumber: string | null
+  name: string | null
+  bedrooms: number
+  bathrooms: number
+  sqftMin: number | null
+  sqftMax: number | null
+  rentMin: number
+  rentMax: number
   isAvailable: boolean
-  tags: string[]
-  // Match scoring (when personalized)
-  matchScore?: number
-  matchReasons?: string[]
+  hasActiveDeals: boolean
+  building: Building
+  neighborhood: Neighborhood
+  management: Management | null
+}
+
+// =============================================================================
+// Client Types
+// =============================================================================
+
+export interface Client {
+  id: string
+  name: string
+  email: string | null
+  phone: string | null
+  status: string
+  budgetMin: number | null
+  budgetMax: number | null
+  bedrooms: string[]
+  neighborhoods: string[]
+  vibes: string[]
+  priorities: string[]
+  moveInDate: Date | null
+  hasDog: boolean
+  hasCat: boolean
+  hasKids: boolean
+  worksFromHome: boolean
+  needsParking: boolean
+  notes: string | null
+  source: string | null
+  contactPreference: string | null
+  savedListings?: { listingId: string }[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ClientSummary {
+  id: string
+  name: string
+  savedListings?: { listingId: string }[]
+}
+
+// =============================================================================
+// Search & Filter Types
+// =============================================================================
+
+export interface SearchFilters {
+  neighborhoods: string[]
+  budgetMin: number
+  budgetMax: number
+  bedrooms: string[]
+  buildings: string[]
+  hasDeals: boolean
+}
+
+export interface SelectOption {
+  value: string
+  label: string
+}
+
+// =============================================================================
+// API Response Types
+// =============================================================================
+
+export interface ListingsResponse {
+  listings: Listing[]
+  total: number
+}
+
+export interface ClientsResponse {
+  clients: Client[]
+}
+
+export interface BuildingsResponse {
+  buildings: Building[]
+  total: number
+}
+
+// =============================================================================
+// Locator Types
+// =============================================================================
+
+export interface LocatorProfile {
+  id: string
+  companyName: string | null
+  companyLogo: string | null
+  subscriptionStatus: string
+  trialEndsAt: Date | null
+  creditsRemaining: number
+  intakeSlug: string | null
+  intakeEnabled: boolean
+}
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+export const NEIGHBORHOOD_OPTIONS: SelectOption[] = [
+  { value: 'South End', label: 'South End' },
+  { value: 'NoDa', label: 'NoDa' },
+  { value: 'Plaza Midwood', label: 'Plaza Midwood' },
+  { value: 'Dilworth', label: 'Dilworth' },
+  { value: 'Uptown Charlotte', label: 'Uptown' },
+  { value: 'Elizabeth', label: 'Elizabeth' },
+  { value: 'Myers Park', label: 'Myers Park' },
+  { value: 'University City', label: 'University City' },
+  { value: 'Ballantyne', label: 'Ballantyne' },
+  { value: 'SouthPark', label: 'SouthPark' },
+  { value: 'Steele Creek', label: 'Steele Creek' },
+]
+
+export const BEDROOM_OPTIONS: SelectOption[] = [
+  { value: 'studio', label: 'Studio' },
+  { value: '1br', label: '1 BR' },
+  { value: '2br', label: '2 BR' },
+  { value: '3br+', label: '3+ BR' },
+]
+
+export const GRADE_LABELS: Record<string, string> = {
+  'A+': 'Excellent',
+  'A': 'Excellent',
+  'A-': 'Very Good',
+  'B+': 'Good',
+  'B': 'Good',
+  'B-': 'Above Average',
+  'C+': 'Average',
+  'C': 'Average',
+  'C-': 'Below Average',
+  'D': 'Poor',
+  'F': 'Very Poor',
+}
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+export function formatBedrooms(bedrooms: number): string {
+  if (bedrooms === 0) return 'Studio'
+  if (bedrooms === 1) return '1 BR'
+  if (bedrooms === 2) return '2 BR'
+  return `${bedrooms} BR`
+}
+
+export function formatRent(min: number, max?: number): string {
+  if (!max || min === max) return `$${min.toLocaleString()}`
+  return `$${min.toLocaleString()} - $${max.toLocaleString()}`
 }
