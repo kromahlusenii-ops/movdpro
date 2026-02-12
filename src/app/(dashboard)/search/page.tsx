@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { getCachedListings, setCachedListings, type CachedListing } from '@/lib/listings-client-cache'
 import Link from 'next/link'
 import { SearchableDropdown } from '@/components/SearchableDropdown'
-import { BuildingImage } from '@/components/BuildingImage'
 import { LiveRegion } from '@/components/ui/live-region'
 import { Search, MapPin, Bed, DollarSign, Star, X, UserPlus, Check, ExternalLink, Building2, Bath, Ruler, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -719,19 +718,8 @@ export default function ProSearchPage() {
                     data-available={listing.isAvailable}
                     data-has-deals={listing.hasActiveDeals}
                   >
-                    {/* Clickable area - Photo + Info */}
+                    {/* Clickable area - Info only (images hidden for now) */}
                     <Link href={`/listing/${listing.id}`} className="flex gap-3 flex-1 min-w-0">
-                      {/* Photo */}
-                      <div className="w-36 h-24 rounded-md bg-muted flex-shrink-0 overflow-hidden">
-                        <BuildingImage
-                          src={listing.building.primaryPhotoUrl}
-                          alt={`Exterior photo of ${listing.building.name}`}
-                          width={144}
-                          height={96}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
