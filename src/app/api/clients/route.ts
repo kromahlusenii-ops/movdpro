@@ -104,7 +104,6 @@ export async function POST(request: NextRequest) {
         neighborhoods: neighborhoods || [],
         notes: notes || null,
         amenities: [],
-        savedApartmentIds: [],
         // Lifestyle preferences
         vibes: vibes || [],
         priorities: priorities || [],

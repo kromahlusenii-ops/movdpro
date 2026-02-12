@@ -130,7 +130,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         neighborhoods: [],
         amenities: [],
         priorities: [],
-        savedApartmentIds: [],
       },
     })
 

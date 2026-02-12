@@ -617,9 +617,6 @@ model LocatorClient {
   commuteAddress    String?  // Work address for commute calculations
   commutePreference String?  // walkable, transit, driving
 
-  // Saved apartments (legacy - kept for migration)
-  savedApartmentIds String[]
-
   // Saved buildings (v3)
   savedBuildings ClientSavedBuilding[]
 
