@@ -146,7 +146,7 @@ export default function ProLandingPage() {
                     Pricing
                   </h2>
                   <p className="text-5xl font-bold">
-                    $60
+                    $99
                     <span className="text-xl font-normal text-muted-foreground">/mo</span>
                   </p>
                 </div>
