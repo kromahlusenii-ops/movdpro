@@ -71,9 +71,9 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
       {/* Preload listings in background */}
       <ListingsPreloader />
 
-      {/* Sidebar */}
+      {/* Sidebar - hidden on mobile */}
       <aside
-        className="fixed left-0 top-0 h-full w-64 bg-background border-r flex flex-col"
+        className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-background border-r flex-col"
         aria-label="Main sidebar"
       >
         {/* Logo */}
@@ -253,12 +253,59 @@ export function ProLayout({ children, locator }: ProLayoutProps) {
       {/* Main content */}
       <main
         id="main-content"
-        className="ml-64 min-h-screen"
+        className="md:ml-64 min-h-screen pb-20 md:pb-0"
         tabIndex={-1}
         style={{ outline: 'none' }}
       >
+        {/* Mobile header */}
+        <header className="md:hidden sticky top-0 z-40 bg-background border-b px-4 py-3 flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <span className="font-bold text-lg">movd away</span>
+            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold uppercase tracking-wider">
+              PRO
+            </span>
+          </Link>
+          <Link
+            href="/settings"
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </Link>
+        </header>
         {children}
       </main>
+
+      {/* Mobile bottom nav */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t safe-area-inset-bottom"
+        aria-label="Mobile navigation"
+      >
+        <ul className="flex items-center justify-around py-2 pb-safe">
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  prefetch={true}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={cn(
+                    'flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors',
+                    'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+                    isActive
+                      ? 'text-foreground'
+                      : 'text-muted-foreground'
+                  )}
+                >
+                  <item.icon className="w-6 h-6" aria-hidden="true" />
+                  <span className="text-xs font-medium">{item.label}</span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      </nav>
     </div>
   )
 }
