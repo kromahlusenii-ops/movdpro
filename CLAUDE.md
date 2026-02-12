@@ -114,11 +114,22 @@ __tests__/                  # Jest tests
 - Use TypeScript strictly (no `any` unless necessary)
 - Validate inputs with Zod at API boundaries
 
-### Testing
-- Unit tests in `__tests__/unit/`
-- UI tests in `__tests__/ui/`
-- Integration tests in `__tests__/integration/`
-- Test fixtures in `__tests__/fixtures/`
+### Testing (Required)
+
+**All new code must include tests.** When writing a feature:
+
+1. **Unit tests** (`__tests__/unit/`) - Test utility functions and business logic in `lib/`
+2. **UI tests** (`__tests__/ui/`) - Test React components with React Testing Library
+3. **Integration tests** (`__tests__/integration/`) - Test full flows (API + utilities together)
+
+Test file naming:
+- `__tests__/unit/lib/{filename}.test.ts` for lib utilities
+- `__tests__/ui/{component-name}.test.tsx` for components
+- `__tests__/integration/{feature-name}.test.ts` for flows
+
+Test fixtures go in `__tests__/fixtures/`
+
+Run `npm test` before committing to ensure all tests pass.
 
 ## Environment Variables
 
