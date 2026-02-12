@@ -1,0 +1,5 @@
+Name,Email,Phone,Notes
+New Client 1,new1@test.com,555-1111,Brand new client
+Duplicate Client,existing@test.com,555-2222,This email already exists
+New Client 2,new2@test.com,555-3333,Another new one
+Another Duplicate,existing2@test.com,555-4444,This also exists

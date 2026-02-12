@@ -1,0 +1,6 @@
+CUSTOMER FULL NAME,PRIMARY EMAIL,CELL #,STATUS CODE,$$$ MIN,$$$MAX,WHERE THEY WANT TO LIVE,TARGET MOVE,EXTRA INFO
+Weird Col Test 1,weird1@test.com,704-555-6001,A,1600,2400,South End,April 2024,Testing weird column names
+Weird Col Test 2,weird2@test.com,980-555-6002,B,1800,2600,NoDa,May 2024,Should still map correctly
+Weird Col Test 3,weird3@test.com,704-555-6003,A,2000,2900,Dilworth,June 2024,Column matching test
+Weird Col Test 4,weird4@test.com,980-555-6004,C,1500,2100,Plaza Midwood,March 2024,Fuzzy matching needed
+Weird Col Test 5,weird5@test.com,704-555-6005,B,2200,3200,Uptown,April 2024,Manual mapping may be required

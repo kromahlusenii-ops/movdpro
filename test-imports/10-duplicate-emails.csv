@@ -1,0 +1,9 @@
+Name,Email,Phone,Budget Min,Budget Max,Bedrooms,Notes
+John Smith Original,johnsmith@gmail.com,704-555-8001,1500,2200,1br,Original entry for John
+Jane Doe Original,janedoe@outlook.com,980-555-8002,1800,2600,1br,Original entry for Jane
+Bob Wilson Unique,bobwilson@email.com,704-555-8003,2000,2900,2br,No duplicate
+John Smith Updated,johnsmith@gmail.com,704-555-8004,1800,2500,2br,Updated info for John - same email
+Alice Brown Unique,alicebrown@email.com,980-555-8005,1600,2300,1br,No duplicate
+Jane Doe Different Name,janedoe@outlook.com,980-555-8006,2200,3200,2br,Same email as Jane above
+Charlie Davis Unique,charliedavis@email.com,704-555-8007,1900,2700,1br,No duplicate
+New Person,newperson@email.com,980-555-8008,1700,2400,1br,Completely new

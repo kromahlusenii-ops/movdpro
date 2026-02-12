@@ -58,14 +58,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No locator profile' }, { status: 404 })
     }
 
-    // Check max clients (locator.clients from cache only includes active clients)
-    if (locator.clients.length >= 20) {
-      return NextResponse.json(
-        { error: 'Maximum 20 active clients allowed' },
-        { status: 400 }
-      )
-    }
-
     const body = await request.json()
     const {
       name,

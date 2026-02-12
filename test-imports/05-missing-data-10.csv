@@ -1,0 +1,11 @@
+Name,Email,Phone,Budget Min,Budget Max,Bedrooms,Neighborhoods,Move Date,Notes
+Complete Record,complete@test.com,704-555-3001,1800,2500,1br,South End,2024-04-01,All fields filled
+Missing Email,,(980) 555-3002,1500,2200,1br,NoDa,2024-03-15,No email provided
+Missing Phone,nophone@test.com,,2000,2800,2br,Dilworth,2024-05-01,Contact via email only
+Missing Budget,nobudget@test.com,704-555-3004,,,1br,Plaza Midwood,2024-04-15,Budget TBD
+Missing Bedrooms,nobeds@test.com,980-555-3005,1600,2400,,South End,2024-03-01,Flexible on size
+Missing Neighborhood,nohood@test.com,704-555-3006,1900,2700,2br,,2024-06-01,Open to suggestions
+Missing Move Date,nodate@test.com,980-555-3007,1700,2300,1br,Elizabeth,,Flexible timeline
+Missing Notes,nonotes@test.com,704-555-3008,2100,3000,2br,Uptown,2024-04-01,
+Minimal Data,minimal@test.com,,,,,,,Just a name and email
+Only Name,,,,,,,,,

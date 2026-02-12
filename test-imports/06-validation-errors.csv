@@ -1,0 +1,11 @@
+Name,Email,Phone,Budget Min,Budget Max,Bedrooms,Notes
+Valid Person,valid@email.com,704-555-4001,1500,2500,1br,This row is valid
+,missing.name@email.com,704-555-4002,1600,2400,1br,Missing name - should error
+Bad Email Person,not-an-email-address,704-555-4003,1700,2500,2br,Invalid email format
+Bad Phone Person,badphone@email.com,call me maybe,1800,2600,1br,Invalid phone format
+Budget Reversed,reversed@email.com,704-555-4005,3000,1500,1br,Min higher than max
+Another Valid,valid2@email.com,704-555-4006,2000,3000,2br,This is also valid
+Empty Name Again,,704-555-4007,1500,2200,studio,Another missing name
+Weird Email,weird@@double.com,704-555-4008,1600,2300,1br,Double @ in email
+Valid Three,valid3@company.org,980-555-4009,1900,2800,2br,Third valid record
+Super Long Name That Exceeds Any Reasonable Limit And Should Probably Be Flagged As An Error Because Nobody Has A Name This Long In Real Life,toolong@email.com,704-555-4010,1700,2400,1br,Name too long

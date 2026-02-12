@@ -1,0 +1,13 @@
+Client,Contact Email,Cell Phone,Stage,Minimum Rent,Maximum Rent,Preferred Neighborhoods,When Moving,Notes,Dog Owner,Cat Owner,Remote Worker,Kids,Parking Needed
+Alex Rivera,arivera@tech.io,704-555-2001,Active,1800,2600,"South End, NoDa",April 2024,Software engineer relocating,FALSE,FALSE,TRUE,FALSE,TRUE
+Brianna Scott,bscott@design.co,980-555-2002,Active,1500,2100,Plaza Midwood,March 2024,Graphic designer,FALSE,TRUE,TRUE,FALSE,FALSE
+Carlos Mendez,cmendez@sales.biz,704-555-2003,Prospect,2200,3200,Dilworth,May 2024,Sales director with family,TRUE,FALSE,FALSE,TRUE,TRUE
+Diana Walsh,dwalsh@marketing.net,980-555-2004,Active,1600,2300,NoDa,April 2024,Marketing manager,FALSE,FALSE,FALSE,FALSE,FALSE
+Ethan Brooks,ebrooks@finance.com,704-555-2005,Prospect,2800,4000,Myers Park,June 2024,Investment banker,FALSE,FALSE,FALSE,FALSE,TRUE
+Fiona Chen,fchen@startup.io,980-555-2006,Active,1400,1900,University City,March 2024,Startup founder bootstrapping,FALSE,FALSE,TRUE,FALSE,FALSE
+George Martin,gmartin@writing.pub,704-555-2007,Prospect,1700,2400,"Camp North End, NoDa",April 2024,Author needs quiet space,FALSE,TRUE,TRUE,FALSE,FALSE
+Hannah Lee,hlee@nursing.care,980-555-2008,Active,1500,2200,Elizabeth,May 2024,ER nurse night shifts,FALSE,FALSE,FALSE,FALSE,TRUE
+Isaac Johnson,ijohnson@law.legal,704-555-2009,Prospect,2400,3400,Uptown,June 2024,Corporate attorney,FALSE,FALSE,FALSE,FALSE,TRUE
+Julia Roberts,jroberts@acting.film,980-555-2010,Active,2000,2800,South End,April 2024,Actress between projects,TRUE,FALSE,FALSE,FALSE,FALSE
+Kevin Hart,khart@comedy.stand,704-555-2011,Prospect,1600,2200,Plaza Midwood,July 2024,Stand-up comedian touring,FALSE,FALSE,FALSE,FALSE,FALSE
+Laura Kim,lkim@research.edu,980-555-2012,Active,1300,1800,University City,March 2024,PhD student on stipend,FALSE,FALSE,FALSE,FALSE,FALSE

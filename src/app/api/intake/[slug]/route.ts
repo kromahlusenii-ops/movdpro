@@ -78,14 +78,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Intake form is disabled' }, { status: 403 })
     }
 
-    // Check max clients
-    if (locator.clients.length >= 20) {
-      return NextResponse.json(
-        { error: 'This locator has reached their client limit' },
-        { status: 400 }
-      )
-    }
-
     const body = await request.json()
     const {
       name,

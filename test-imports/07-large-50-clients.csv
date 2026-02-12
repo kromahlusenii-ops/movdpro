@@ -1,0 +1,51 @@
+Full Name,Email Address,Phone,Min Budget,Max Budget,Bedrooms,Preferred Neighborhoods,Move In Date,Has Dog,Has Cat,Has Kids,Works From Home,Needs Parking,Notes
+Abigail Adams,aadams@email.com,704-555-5001,1500,2200,1br,South End,2024-04-01,FALSE,FALSE,FALSE,TRUE,TRUE,Marketing professional
+Benjamin Baker,bbaker@email.com,980-555-5002,1800,2600,1br,NoDa,2024-03-15,TRUE,FALSE,FALSE,FALSE,FALSE,Dog owner freelancer
+Catherine Clark,cclark@email.com,704-555-5003,2200,3200,2br,Dilworth,2024-05-01,FALSE,TRUE,FALSE,TRUE,TRUE,Remote tech worker
+Daniel Davis,ddavis@email.com,980-555-5004,1600,2300,1br,Plaza Midwood,2024-04-15,FALSE,FALSE,FALSE,FALSE,FALSE,Restaurant manager
+Emma Evans,eevans@email.com,704-555-5005,2500,3500,2br,Myers Park,2024-06-01,TRUE,FALSE,TRUE,FALSE,TRUE,Family relocating
+Frank Foster,ffoster@email.com,980-555-5006,1400,1900,studio,University City,2024-03-01,FALSE,FALSE,FALSE,FALSE,FALSE,Recent grad
+Grace Garcia,ggarcia@email.com,704-555-5007,1900,2700,1br,Elizabeth,2024-04-01,FALSE,FALSE,FALSE,TRUE,TRUE,Healthcare admin
+Henry Harris,hharris@email.com,980-555-5008,2100,3000,2br,Uptown,2024-05-15,FALSE,FALSE,FALSE,FALSE,TRUE,Finance professional
+Isabella Inez,iinez@email.com,704-555-5009,1700,2400,1br,South End,2024-03-15,FALSE,TRUE,FALSE,TRUE,FALSE,Content creator
+Jacob Johnson,jjohnson@email.com,980-555-5010,2000,2800,1br,NoDa,2024-04-01,TRUE,FALSE,FALSE,FALSE,FALSE,Musician
+Katherine King,kking@email.com,704-555-5011,2300,3300,2br,Dilworth,2024-06-15,FALSE,FALSE,TRUE,TRUE,TRUE,Attorney WFH
+Liam Lopez,llopez@email.com,980-555-5012,1500,2100,1br,Plaza Midwood,2024-04-15,FALSE,FALSE,FALSE,FALSE,FALSE,Teacher
+Mia Martinez,mmartinez@email.com,704-555-5013,1800,2500,1br,Camp North End,2024-05-01,TRUE,FALSE,FALSE,FALSE,TRUE,Artist
+Noah Nelson,nnelson@email.com,980-555-5014,2400,3400,2br,SouthPark,2024-03-01,FALSE,FALSE,TRUE,FALSE,TRUE,Sales executive
+Olivia Ortiz,oortiz@email.com,704-555-5015,1600,2200,1br,Wesley Heights,2024-04-01,FALSE,TRUE,FALSE,TRUE,FALSE,Writer
+Peter Parker,pparker@email.com,980-555-5016,1400,1800,studio,FreeMoreWest,2024-06-01,FALSE,FALSE,FALSE,FALSE,FALSE,Photographer
+Quinn Quincy,qquincy@email.com,704-555-5017,2000,2900,1br,South End,2024-04-15,FALSE,FALSE,FALSE,TRUE,TRUE,Consultant
+Rachel Roberts,rroberts@email.com,980-555-5018,1700,2400,1br,NoDa,2024-05-01,TRUE,FALSE,FALSE,FALSE,FALSE,Veterinarian
+Samuel Smith,ssmith@email.com,704-555-5019,2200,3100,2br,Dilworth,2024-03-15,FALSE,FALSE,FALSE,TRUE,TRUE,Engineer
+Tara Thompson,tthompson@email.com,980-555-5020,1900,2700,1br,Elizabeth,2024-04-01,FALSE,TRUE,FALSE,FALSE,TRUE,Nurse
+Ulysses Underwood,uunderwood@email.com,704-555-5021,1500,2000,studio,University City,2024-06-15,FALSE,FALSE,FALSE,FALSE,FALSE,Student
+Victoria Vincent,vvincent@email.com,980-555-5022,2600,3600,2br,Myers Park,2024-05-01,TRUE,FALSE,TRUE,FALSE,TRUE,Doctor
+William Wilson,wwilson@email.com,704-555-5023,1800,2500,1br,Uptown,2024-04-01,FALSE,FALSE,FALSE,TRUE,TRUE,Banker
+Xena Xavier,xxavier@email.com,980-555-5024,1600,2300,1br,Plaza Midwood,2024-03-01,FALSE,FALSE,FALSE,FALSE,FALSE,Bartender
+Yolanda Young,yyoung@email.com,704-555-5025,2100,3000,2br,South End,2024-04-15,FALSE,TRUE,FALSE,TRUE,FALSE,Designer
+Zachary Zimmerman,zzimmerman@email.com,980-555-5026,1400,1900,1br,NoDa,2024-05-15,TRUE,FALSE,FALSE,FALSE,FALSE,Chef
+Alice Anderson,aanderson2@email.com,704-555-5027,2000,2800,1br,Dilworth,2024-06-01,FALSE,FALSE,FALSE,TRUE,TRUE,Accountant
+Bob Brown,bbrown2@email.com,980-555-5028,1700,2400,1br,Camp North End,2024-04-01,FALSE,FALSE,FALSE,FALSE,FALSE,Brewer
+Carol Carter,ccarter2@email.com,704-555-5029,2300,3200,2br,SouthPark,2024-03-15,TRUE,FALSE,TRUE,FALSE,TRUE,HR Director
+Dave Daniels,ddaniels2@email.com,980-555-5030,1500,2100,1br,Wesley Heights,2024-04-15,FALSE,TRUE,FALSE,FALSE,FALSE,Therapist
+Eve Edwards,eedwards2@email.com,704-555-5031,1900,2700,1br,Elizabeth,2024-05-01,FALSE,FALSE,FALSE,TRUE,TRUE,Researcher
+Fred Franklin,ffranklin2@email.com,980-555-5032,2200,3100,2br,Uptown,2024-06-15,FALSE,FALSE,FALSE,FALSE,TRUE,Architect
+Gina Green,ggreen2@email.com,704-555-5033,1600,2300,1br,South End,2024-04-01,TRUE,FALSE,FALSE,FALSE,FALSE,Trainer
+Hank Hill,hhill2@email.com,980-555-5034,1800,2500,1br,NoDa,2024-03-01,FALSE,FALSE,FALSE,TRUE,TRUE,Propane sales
+Iris Irving,iirving2@email.com,704-555-5035,2500,3500,2br,Myers Park,2024-04-15,FALSE,TRUE,TRUE,FALSE,TRUE,Executive
+Jack Jones,jjones2@email.com,980-555-5036,1400,1900,studio,University City,2024-05-01,FALSE,FALSE,FALSE,FALSE,FALSE,Grad student
+Kelly Kennedy,kkennedy2@email.com,704-555-5037,2000,2900,1br,Plaza Midwood,2024-06-01,FALSE,FALSE,FALSE,TRUE,FALSE,Journalist
+Larry Lewis,llewis2@email.com,980-555-5038,1700,2400,1br,Dilworth,2024-04-01,TRUE,FALSE,FALSE,FALSE,TRUE,Plumber
+Mary Moore,mmoore2@email.com,704-555-5039,2100,3000,2br,South End,2024-03-15,FALSE,FALSE,FALSE,TRUE,TRUE,Project manager
+Ned Newton,nnewton2@email.com,980-555-5040,1500,2100,1br,Camp North End,2024-04-15,FALSE,TRUE,FALSE,FALSE,FALSE,Musician
+Ophelia Owen,oowen2@email.com,704-555-5041,1800,2600,1br,Wesley Heights,2024-05-15,FALSE,FALSE,FALSE,FALSE,TRUE,Social worker
+Paul Peterson,ppeterson2@email.com,980-555-5042,2400,3400,2br,SouthPark,2024-06-01,TRUE,FALSE,TRUE,FALSE,TRUE,Surgeon
+Quincy Quinn,qquinn2@email.com,704-555-5043,1600,2200,1br,Elizabeth,2024-04-01,FALSE,FALSE,FALSE,TRUE,FALSE,Analyst
+Rosa Rodriguez,rrodriguez2@email.com,980-555-5044,1900,2700,1br,NoDa,2024-03-01,FALSE,FALSE,FALSE,FALSE,FALSE,Event planner
+Steve Stevens,sstevens2@email.com,704-555-5045,2200,3200,2br,Uptown,2024-04-15,FALSE,TRUE,FALSE,TRUE,TRUE,Software dev
+Tina Turner,tturner2@email.com,980-555-5046,1400,1800,studio,FreeMoreWest,2024-05-01,FALSE,FALSE,FALSE,FALSE,FALSE,Singer
+Uma Upton,uupton2@email.com,704-555-5047,2000,2800,1br,South End,2024-06-15,TRUE,FALSE,FALSE,FALSE,TRUE,Yoga instructor
+Victor Valdez,vvaldez2@email.com,980-555-5048,1700,2400,1br,Plaza Midwood,2024-04-01,FALSE,FALSE,FALSE,TRUE,FALSE,Electrician
+Wendy Williams,wwilliams2@email.com,704-555-5049,2600,3600,2br,Dilworth,2024-03-15,FALSE,FALSE,TRUE,FALSE,TRUE,VP Marketing
+Xavier Xu,xxu2@email.com,980-555-5050,1500,2100,1br,University City,2024-04-15,FALSE,TRUE,FALSE,FALSE,FALSE,Data scientist

@@ -575,6 +575,7 @@ model LocatorProfile {
   savedSearches ProSavedSearch[]
   comparisons   ProComparison[]
   creditLedger  CreditLedger[]
+  // importLogs    ImportLog[]  // Uncomment after running migration
 
   @@index([stripeCustomerId])
   @@index([subscriptionStatus])
@@ -616,6 +617,9 @@ model LocatorClient {
   needsParking      Boolean  @default(false)
   commuteAddress    String?  // Work address for commute calculations
   commutePreference String?  // walkable, transit, driving
+
+  // Import tracking - uncomment after running migration:
+  // importBatchId String? // Links to ImportLog for batch tracking
 
   // Saved buildings (v3)
   savedBuildings ClientSavedBuilding[]
@@ -804,3 +808,24 @@ model ReportNeighborhood {
 
   @@index([reportId])
 }
+
+// Import log for bulk client imports - uncomment after running migration:
+// model ImportLog {
+//   id        String         @id @default(cuid())
+//   locatorId String
+//   locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
+//
+//   fileName      String
+//   fileSize      Int    // bytes
+//   totalRows     Int
+//   importedRows  Int
+//   skippedRows   Int
+//   failedRows    Int
+//   duplicateRows Int
+//   columnMapping Json   // saved mapping for reference
+//   status        String @default("completed") // processing, completed, failed
+//
+//   createdAt DateTime @default(now())
+//
+//   @@index([locatorId])
+// }
