@@ -36,7 +36,7 @@ export function ListingCard({
 
   return (
     <article
-      className="bg-background rounded-lg border p-3 flex gap-3 hover:border-foreground/20 transition-colors"
+      className="bg-background rounded-lg border p-3 hover:border-foreground/20 transition-colors"
       aria-labelledby={`listing-title-${listing.id}`}
       data-entity="property"
       data-entity-id={listing.id}
@@ -50,114 +50,96 @@ export function ListingCard({
       data-has-deals={listing.hasActiveDeals}
     >
       {/* Clickable area */}
-      <Link href={`/listing/${listing.id}`} className="flex-1 min-w-0">
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              {/* Unit + Building Name */}
-              <h2 id={`listing-title-${listing.id}`} className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-lg">
-                  {listing.unitNumber || formatBedrooms(listing.bedrooms)}
-                </span>
-                <span className="text-muted-foreground">at</span>
-                <span className="font-semibold truncate">
-                  {listing.building.name}
-                </span>
-                {listing.hasActiveDeals && (
-                  <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-medium flex-shrink-0 flex items-center gap-0.5">
-                    <Tag className="w-2.5 h-2.5" aria-hidden="true" />
-                    <span>Special</span>
-                  </span>
-                )}
-                {listing.management && (
-                  <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-medium flex-shrink-0">
-                    {listing.management.name}
-                  </span>
-                )}
-              </h2>
-              {/* Address + Neighborhood */}
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                <MapPin className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
-                <span className="truncate">{listing.building.address}</span>
-                <span className="text-muted-foreground/50" aria-hidden="true">·</span>
-                <span className="flex-shrink-0">{listing.neighborhood.name}</span>
-                <span
-                  className="px-1 py-0.5 rounded bg-muted text-[10px] font-medium flex-shrink-0"
-                  title={`Neighborhood grade: ${listing.neighborhood.grade} - ${GRADE_LABELS[listing.neighborhood.grade] || 'Unrated'}`}
-                >
-                  <span className="sr-only">Neighborhood grade: </span>
-                  {listing.neighborhood.grade}
-                  <span className="sr-only"> - {GRADE_LABELS[listing.neighborhood.grade] || 'Unrated'}</span>
-                </span>
-              </div>
-            </div>
-            {/* Price */}
-            <div className="text-right flex-shrink-0">
-              <p className="font-bold text-xl">
-                <span className="sr-only">Monthly rent: </span>
-                ${listing.rentMin.toLocaleString()}
-              </p>
-              <p className="text-xs text-muted-foreground">/month</p>
-            </div>
-          </div>
-
-          {/* Unit Details */}
-          <dl className="flex items-center gap-4 mt-2 text-sm">
-            <div className="flex items-center gap-1.5">
-              <Bed className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <dt className="sr-only">Bedrooms:</dt>
-              <dd>{formatBedrooms(listing.bedrooms)}</dd>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Bath className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <dt className="sr-only">Bathrooms:</dt>
-              <dd>{listing.bathrooms} Bath</dd>
-            </div>
-            {listing.sqftMin && (
-              <div className="flex items-center gap-1.5">
-                <Ruler className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                <dt className="sr-only">Square feet:</dt>
-                <dd>{listing.sqftMin.toLocaleString()} sqft</dd>
-              </div>
-            )}
-            {listing.building.rating && (
-              <div className="flex items-center gap-1">
-                <Star className="w-4 h-4 text-amber-500 fill-amber-500" aria-hidden="true" />
-                <dt className="sr-only">Rating:</dt>
-                <dd>
-                  {listing.building.rating.toFixed(1)}
-                  {listing.building.reviewCount && (
-                    <span className="text-muted-foreground"> ({listing.building.reviewCount} reviews)</span>
-                  )}
-                </dd>
-              </div>
-            )}
-          </dl>
-
-          {/* Amenities */}
-          {listing.building.amenities.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {listing.building.amenities.slice(0, 4).map(amenity => (
-                <span
-                  key={amenity}
-                  className="px-1.5 py-0.5 rounded bg-muted text-[10px]"
-                >
-                  {amenity}
-                </span>
-              ))}
-              {listing.building.amenities.length > 4 && (
-                <span className="text-[10px] text-muted-foreground">
-                  +{listing.building.amenities.length - 4} more
+      <Link href={`/listing/${listing.id}`} className="block">
+        {/* Header: Title + Price */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            {/* Unit + Building Name */}
+            <h2 id={`listing-title-${listing.id}`} className="font-semibold text-sm sm:text-base truncate">
+              <span className="font-bold">
+                {listing.unitNumber || formatBedrooms(listing.bedrooms)}
+              </span>
+              <span className="text-muted-foreground"> at </span>
+              <span>{listing.building.name}</span>
+            </h2>
+            {/* Address + Neighborhood */}
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+              <MapPin className="w-3 h-3 flex-shrink-0 hidden sm:block" aria-hidden="true" />
+              <span className="truncate">{listing.neighborhood.name}</span>
+              <span
+                className="px-1 py-0.5 rounded bg-muted text-[10px] font-medium flex-shrink-0"
+                title={`Neighborhood grade: ${listing.neighborhood.grade} - ${GRADE_LABELS[listing.neighborhood.grade] || 'Unrated'}`}
+              >
+                {listing.neighborhood.grade}
+              </span>
+              {listing.hasActiveDeals && (
+                <span className="px-1 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-medium flex-shrink-0 flex items-center gap-0.5">
+                  <Tag className="w-2.5 h-2.5" aria-hidden="true" />
+                  <span className="hidden sm:inline">Special</span>
                 </span>
               )}
             </div>
-          )}
+          </div>
+          {/* Price */}
+          <div className="text-right flex-shrink-0">
+            <p className="font-bold text-base sm:text-xl">
+              <span className="sr-only">Monthly rent: </span>
+              ${listing.rentMin.toLocaleString()}
+            </p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">/mo</p>
+          </div>
         </div>
+
+        {/* Unit Details */}
+        <dl className="flex items-center gap-3 sm:gap-4 mt-2 text-xs sm:text-sm">
+          <div className="flex items-center gap-1">
+            <Bed className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+            <dt className="sr-only">Bedrooms:</dt>
+            <dd>{formatBedrooms(listing.bedrooms)}</dd>
+          </div>
+          <div className="flex items-center gap-1">
+            <Bath className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+            <dt className="sr-only">Bathrooms:</dt>
+            <dd>{listing.bathrooms}ba</dd>
+          </div>
+          {listing.sqftMin && (
+            <div className="hidden sm:flex items-center gap-1">
+              <Ruler className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+              <dt className="sr-only">Square feet:</dt>
+              <dd>{listing.sqftMin.toLocaleString()} sqft</dd>
+            </div>
+          )}
+          {listing.building.rating && (
+            <div className="flex items-center gap-0.5">
+              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" aria-hidden="true" />
+              <dt className="sr-only">Rating:</dt>
+              <dd>{listing.building.rating.toFixed(1)}</dd>
+            </div>
+          )}
+        </dl>
+
+        {/* Amenities - hidden on mobile */}
+        {listing.building.amenities.length > 0 && (
+          <div className="hidden sm:flex flex-wrap gap-1 mt-2">
+            {listing.building.amenities.slice(0, 4).map(amenity => (
+              <span
+                key={amenity}
+                className="px-1.5 py-0.5 rounded bg-muted text-[10px]"
+              >
+                {amenity}
+              </span>
+            ))}
+            {listing.building.amenities.length > 4 && (
+              <span className="text-[10px] text-muted-foreground">
+                +{listing.building.amenities.length - 4} more
+              </span>
+            )}
+          </div>
+        )}
       </Link>
 
-      {/* Actions */}
-      <div className="flex flex-col gap-1.5 flex-shrink-0">
+      {/* Actions - horizontal row on mobile */}
+      <div className="flex items-center gap-2 mt-2 pt-2 border-t">
         {/* View Floorplans Button */}
         {(listing.building.floorplansUrl || listing.building.listingUrl) && (
           <a
