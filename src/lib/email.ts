@@ -7,7 +7,7 @@ if (SENDGRID_API_KEY) {
 }
 
 // Remove trailing slash if present to avoid double slashes in URLs
-const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://movdpro.vercel.app').replace(/\/$/, '')
+const APP_URL = (process.env.NEXT_PUBLIC_MOVD_URL || 'https://movdpro.vercel.app').replace(/\/$/, '')
 const FROM_EMAIL = process.env.FROM_EMAIL || 'lou@civicvoices.ai'
 
 interface SendMagicLinkParams {

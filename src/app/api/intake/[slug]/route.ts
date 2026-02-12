@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 import { sendIntakeConfirmationEmail, sendLocatorNotificationEmail } from '@/lib/email'
+import { getAppUrl } from '@/lib/utils'
 
 type RouteParams = {
   params: Promise<{ slug: string }>
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Send notification email to locator
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://movdpro.vercel.app'}/clients/${client.id}`
+    const dashboardUrl = `${getAppUrl()}/clients/${client.id}`
     await sendLocatorNotificationEmail({
       to: locator.user.email,
       clientName: name,
