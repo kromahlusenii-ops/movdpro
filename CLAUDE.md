@@ -1,5 +1,9 @@
 # CLAUDE.md - MOVD Pro
 
+> **Important:** This project uses a memory protocol. See `AGENT.md` for the full protocol.
+> Before working in any directory, read its `session-log.md` and `decisions.md` files.
+> After completing work, update those files with what you changed.
+
 ## Project Overview
 
 MOVD Pro is a SaaS platform for apartment locators in Charlotte, NC. It helps locators manage clients, search listings, create reports, and match clients with apartments based on preferences.
