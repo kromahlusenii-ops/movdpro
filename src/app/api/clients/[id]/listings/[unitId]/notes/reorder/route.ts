@@ -74,7 +74,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       )
     )
 
-    revalidateTag(`clients-${user.id}`)
+    revalidateTag(`clients-${user.id}`, 'max')
 
     return NextResponse.json({ success: true })
   } catch (error) {

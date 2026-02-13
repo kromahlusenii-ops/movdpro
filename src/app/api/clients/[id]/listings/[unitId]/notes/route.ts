@@ -123,7 +123,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     })
 
-    revalidateTag(`clients-${user.id}`)
+    revalidateTag(`clients-${user.id}`, 'max')
 
     return NextResponse.json({ note })
   } catch (error) {
@@ -177,7 +177,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       },
     })
 
-    revalidateTag(`clients-${user.id}`)
+    revalidateTag(`clients-${user.id}`, 'max')
 
     return NextResponse.json({ note })
   } catch (error) {
@@ -226,7 +226,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       where: { id },
     })
 
-    revalidateTag(`clients-${user.id}`)
+    revalidateTag(`clients-${user.id}`, 'max')
 
     return NextResponse.json({ success: true })
   } catch (error) {
