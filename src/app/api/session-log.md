@@ -19,3 +19,8 @@
 **What changed:** Hide buildings with 0 units from building dropdown to prevent showing empty results. Added filter: `units: { some: { isAvailable: true } }`.
 **Files touched:** buildings/route.ts
 **Next steps:** Fix MAA scraper to handle their SPA/modal-based floor plans page.
+
+## 2026-02-13
+**What changed:** Alexan Loso building now has 34 floor plan types (92 available units) after running sync-alexan.ts. Building will now show listings when selected in the UI.
+**Files touched:** Database (Unit records)
+**Next steps:** None for Alexan. MAA scraper still needs work for 5 remaining empty buildings.
