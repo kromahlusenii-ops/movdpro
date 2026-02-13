@@ -83,18 +83,6 @@ export default async function ProSettingsPage({
               </span>
             </dd>
           </div>
-          {locator?.trialEndsAt && locator?.subscriptionStatus === 'trialing' && !trialExpired && (
-            <div>
-              <dt className="text-sm text-muted-foreground">Trial ends</dt>
-              <dd className="font-medium">
-                {new Date(locator.trialEndsAt).toLocaleDateString()}
-              </dd>
-            </div>
-          )}
-          <div>
-            <dt className="text-sm text-muted-foreground">Credits remaining</dt>
-            <dd className="font-medium">{locator?.creditsRemaining} / 50</dd>
-          </div>
         </dl>
 
         <div className="mt-6">
