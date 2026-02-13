@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { EditableField } from '@/components/listings'
 import {
   ArrowLeft,
   MapPin,
@@ -21,6 +22,7 @@ import {
   PawPrint,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { FieldEditRecord } from '@/types/field-edits'
 
 interface Unit {
   id: string
@@ -114,6 +116,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const [saveDropdownOpen, setSaveDropdownOpen] = useState(false)
   const [savingTo, setSavingTo] = useState<string | null>(null)
   const [selectedPhoto, setSelectedPhoto] = useState(0)
+  const [fieldEdits, setFieldEdits] = useState<Record<string, FieldEditRecord>>({})
 
   // Unit filters
   const [bedroomFilter, setBedroomFilter] = useState<number | null>(null)
@@ -149,6 +152,15 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
       .then((data) => {
         if (data.building) {
           setBuilding(data.building)
+          // Fetch field edits for this building
+          fetch(`/api/field-edits/entity?targetType=building&targetId=${data.building.id}`)
+            .then((res) => res.json())
+            .then((editData) => {
+              if (editData.edits) {
+                setFieldEdits(editData.edits)
+              }
+            })
+            .catch(console.error)
         } else if (data.error) {
           setError(data.error)
         } else {
@@ -624,6 +636,45 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   <ExternalLink className="w-3 h-3 text-muted-foreground" />
                 </a>
               )}
+            </div>
+          </div>
+
+          {/* Fees & Specials (Editable) */}
+          <div className="bg-background rounded-xl border p-4">
+            <h2 className="font-semibold mb-4">Fees & Specials</h2>
+            <div className="space-y-4">
+              <EditableField
+                targetType="building"
+                targetId={building.id}
+                fieldName="deposit"
+                label="Security Deposit"
+                type="number"
+                currentValue={fieldEdits.deposit?.newValue as number ?? null}
+                lastEdit={fieldEdits.deposit ?? null}
+                prefix="$"
+                placeholder="e.g., 500"
+              />
+              <EditableField
+                targetType="building"
+                targetId={building.id}
+                fieldName="adminFee"
+                label="Application Fee"
+                type="number"
+                currentValue={fieldEdits.adminFee?.newValue as number ?? null}
+                lastEdit={fieldEdits.adminFee ?? null}
+                prefix="$"
+                placeholder="e.g., 75"
+              />
+              <EditableField
+                targetType="building"
+                targetId={building.id}
+                fieldName="specials"
+                label="Current Specials"
+                type="text"
+                currentValue={fieldEdits.specials?.newValue as string ?? null}
+                lastEdit={fieldEdits.specials ?? null}
+                placeholder="e.g., 1 month free on 12+ lease"
+              />
             </div>
           </div>
 

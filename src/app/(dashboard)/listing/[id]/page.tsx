@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { BuildingImage } from '@/components/BuildingImage'
+import { EditableField } from '@/components/listings'
 import {
   ArrowLeft,
   MapPin,
@@ -19,6 +20,7 @@ import {
   Calendar,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { FieldEditRecord } from '@/types/field-edits'
 
 interface Listing {
   id: string
@@ -88,6 +90,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
   const [clients, setClients] = useState<Client[]>([])
   const [saveDropdownOpen, setSaveDropdownOpen] = useState(false)
   const [savingTo, setSavingTo] = useState<string | null>(null)
+  const [fieldEdits, setFieldEdits] = useState<Record<string, FieldEditRecord>>({})
 
   useEffect(() => {
     // Fetch listing data
@@ -96,6 +99,15 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
       .then((data) => {
         if (data.listing) {
           setListing(data.listing)
+          // Fetch field edits for this unit
+          fetch(`/api/field-edits/entity?targetType=unit&targetId=${data.listing.id}`)
+            .then((res) => res.json())
+            .then((editData) => {
+              if (editData.edits) {
+                setFieldEdits(editData.edits)
+              }
+            })
+            .catch(console.error)
         }
       })
       .catch(console.error)
@@ -338,20 +350,36 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {/* Editable Rent Min */}
             <div className="bg-background rounded-xl border p-4">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <DollarSign className="w-4 h-4" />
-                <span className="text-xs">Rent</span>
-              </div>
-              <p className="font-bold text-xl">
-                ${listing.rentMin.toLocaleString()}
-                {listing.rentMin !== listing.rentMax && (
-                  <span className="text-muted-foreground text-sm font-normal">
-                    {' '}- ${listing.rentMax.toLocaleString()}
-                  </span>
-                )}
-              </p>
-              <p className="text-xs text-muted-foreground">/month</p>
+              <EditableField
+                targetType="unit"
+                targetId={listing.id}
+                fieldName="rentMin"
+                label="Rent (Min)"
+                type="number"
+                currentValue={fieldEdits.rentMin?.newValue as number ?? listing.rentMin}
+                lastEdit={fieldEdits.rentMin ?? null}
+                prefix="$"
+                suffix="/mo"
+                placeholder="e.g., 1500"
+              />
+            </div>
+
+            {/* Editable Rent Max */}
+            <div className="bg-background rounded-xl border p-4">
+              <EditableField
+                targetType="unit"
+                targetId={listing.id}
+                fieldName="rentMax"
+                label="Rent (Max)"
+                type="number"
+                currentValue={fieldEdits.rentMax?.newValue as number ?? listing.rentMax}
+                lastEdit={fieldEdits.rentMax ?? null}
+                prefix="$"
+                suffix="/mo"
+                placeholder="e.g., 2000"
+              />
             </div>
 
             <div className="bg-background rounded-xl border p-4">

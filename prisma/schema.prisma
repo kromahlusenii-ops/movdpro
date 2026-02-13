@@ -401,6 +401,9 @@ model Building {
   specials       Special[]
   savedToClients ClientSavedBuilding[]
 
+  // Field edits (locator corrections)
+  fieldEdits FieldEdit[]
+
   @@unique([managementId, address])
   @@index([neighborhoodId])
   @@index([lat, lng])
@@ -485,6 +488,12 @@ model Unit {
 
   // Unit-specific specials
   specials Special[]
+
+  // Field edits (locator corrections)
+  fieldEdits FieldEdit[]
+
+  // Client-specific notes (pros/cons/notes)
+  clientNotes ClientListingNote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -575,6 +584,8 @@ model LocatorProfile {
   savedSearches ProSavedSearch[]
   comparisons   ProComparison[]
   creditLedger  CreditLedger[]
+  fieldEdits    FieldEdit[]
+  listingNotes  ClientListingNote[]
   // importLogs    ImportLog[]  // Uncomment after running migration
 
   @@index([stripeCustomerId])
@@ -626,6 +637,9 @@ model LocatorClient {
 
   // Saved listings (individual units)
   savedListings ClientSavedListing[]
+
+  // Listing notes (pros/cons/notes)
+  listingNotes ClientListingNote[]
 
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
@@ -785,6 +799,9 @@ model ReportProperty {
   petRent    Int?
   promos     String?
 
+  // Structured notes (pros/cons/notes)
+  notes ReportPropertyNote[]
+
   createdAt DateTime @default(now())
 
   @@index([reportId])
@@ -829,3 +846,79 @@ model ReportNeighborhood {
 //
 //   @@index([locatorId])
 // }
+
+// ============================================================================
+// CLIENT LISTING NOTES - Pros/Cons/Notes for listings per client
+// ============================================================================
+
+// Structured notes that locators can attach to listings for specific clients
+model ClientListingNote {
+  id        String         @id @default(cuid())
+  clientId  String
+  client    LocatorClient  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  unitId    String
+  unit      Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  locatorId String
+  locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
+
+  type            String   // 'pro' | 'con' | 'note'
+  content         String
+  visibleToClient Boolean  @default(true)
+  sortOrder       Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId, unitId])
+  @@index([locatorId])
+}
+
+// Snapshot of notes for published reports
+model ReportPropertyNote {
+  id         String         @id @default(cuid())
+  propertyId String
+  property   ReportProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  type      String  // 'pro' | 'con' | 'note'
+  content   String
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+// ============================================================================
+// FIELD EDITS - Crowdsourced corrections to listing data
+// ============================================================================
+
+// Audit trail for field edits (locator corrections to scraped data)
+model FieldEdit {
+  id String @id @default(cuid())
+
+  // Polymorphic reference - one must be null
+  unitId     String?
+  unit       Unit?     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  buildingId String?
+  building   Building? @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+
+  fieldName     String // e.g., "rentMin", "deposit", "specials"
+  previousValue Json?  // null for first edit
+  newValue      Json   // the corrected value
+
+  source String @default("locator") // "scraper" | "locator" | "admin"
+
+  // Who made the edit
+  editedById String?
+  editedBy   LocatorProfile? @relation(fields: [editedById], references: [id])
+
+  // Conflict tracking
+  hasConflict   Boolean @default(false)
+  conflictValue Json?   // scraped value that differs from locator edit
+
+  createdAt DateTime @default(now())
+
+  @@index([unitId, fieldName, createdAt(sort: Desc)])
+  @@index([buildingId, fieldName, createdAt(sort: Desc)])
+  @@index([hasConflict])
+}
