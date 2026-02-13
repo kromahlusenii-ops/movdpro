@@ -278,12 +278,14 @@ export async function searchListingsCached(options: FilterOptions): Promise<{
     filtered = filtered.filter(l => neighborhoods.includes(l.neighborhood.name))
   }
 
-  // Budget filter
-  if (budgetMin) {
-    filtered = filtered.filter(l => l.rentMin >= budgetMin)
-  }
-  if (budgetMax) {
-    filtered = filtered.filter(l => l.rentMax <= budgetMax)
+  // Budget filter - show listings that overlap with the user's budget range
+  // A listing matches if: rentMin <= budgetMax AND rentMax >= budgetMin
+  if (budgetMin || budgetMax) {
+    filtered = filtered.filter(l => {
+      const minOk = !budgetMax || l.rentMin <= budgetMax
+      const maxOk = !budgetMin || l.rentMax >= budgetMin
+      return minOk && maxOk
+    })
   }
 
   // Bedrooms filter

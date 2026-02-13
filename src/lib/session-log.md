@@ -9,3 +9,8 @@
 **What changed:** Added import utilities for CSV/XLSX parsing, column matching, row validation, and duplicate detection.
 **Files touched:** import/parse-file.ts, import/column-matcher.ts, import/validate-row.ts, import/duplicate-detector.ts
 **Next steps:** None immediate.
+
+## 2026-02-13
+**What changed:** Fixed budget filter logic in listings cache - was too restrictive (required entire rent range within budget). Now shows listings with any overlap in budget range.
+**Files touched:** listings-cache.ts
+**Next steps:** None immediate.
