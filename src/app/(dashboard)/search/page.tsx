@@ -6,9 +6,10 @@ import Link from 'next/link'
 import { SearchableDropdown } from '@/components/SearchableDropdown'
 import { LiveRegion } from '@/components/ui/live-region'
 import { ListingCard } from '@/components/search/ListingCard'
+import { BuildingSearchCard } from '@/components/search/BuildingSearchCard'
 import { SearchPagination } from '@/components/search/SearchPagination'
 import { QuickAddNotesModal } from '@/components/features/listing-notes/QuickAddNotesModal'
-import { DollarSign, X, Check, Tag } from 'lucide-react'
+import { DollarSign, X, Check, Tag, Search, Building2, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   sectionAttr,
@@ -25,7 +26,44 @@ import {
   BEDROOM_OPTIONS,
 } from '@/types'
 
+type SearchMode = 'listings' | 'buildings'
+
+interface BuildingResult {
+  id: string
+  name: string
+  address: string
+  city: string
+  state: string
+  primaryPhotoUrl: string | null
+  rating: number | null
+  reviewCount: number | null
+  unitCount: number
+  rentMin: number | null
+  rentMax: number | null
+  bedrooms: string[]
+  neighborhood: {
+    name: string
+    grade: string
+  }
+  management: {
+    name: string
+    logoUrl: string | null
+  } | null
+}
+
 export default function ProSearchPage() {
+  // Search mode
+  const [searchMode, setSearchMode] = useState<SearchMode>('listings')
+
+  // Building search state
+  const [buildingSearchQuery, setBuildingSearchQuery] = useState('')
+  const [buildingResults, setBuildingResults] = useState<BuildingResult[]>([])
+  const [buildingSearchLoading, setBuildingSearchLoading] = useState(false)
+  const [buildingTotal, setBuildingTotal] = useState(0)
+  const [buildingPage, setBuildingPage] = useState(1)
+  const [hasBuildingSearched, setHasBuildingSearched] = useState(false)
+  const buildingSearchTimer = useRef<NodeJS.Timeout | null>(null)
+
   const [clients, setClients] = useState<ClientSummary[]>([])
   const [buildingOptions, setBuildingOptions] = useState<{ value: string; label: string; searchTerms?: string }[]>([])
   const [buildingsLoaded, setBuildingsLoaded] = useState(false)
@@ -347,6 +385,71 @@ export default function ProSearchPage() {
   }, [saveDropdownId])
 
   const totalPages = Math.ceil(total / pageSize)
+  const buildingTotalPages = Math.ceil(buildingTotal / pageSize)
+
+  // Building search function
+  const searchBuildings = useCallback(async (query: string, pageNum: number = 1) => {
+    setBuildingSearchLoading(true)
+    setHasBuildingSearched(true)
+    setStatusMessage('Searching buildings...')
+
+    try {
+      const params = new URLSearchParams()
+      if (query.trim()) {
+        params.set('q', query.trim())
+      }
+      params.set('limit', String(pageSize))
+      params.set('offset', String((pageNum - 1) * pageSize))
+
+      const res = await fetch(`/api/buildings?${params.toString()}`)
+      const data = await res.json()
+
+      if (res.ok) {
+        setBuildingResults(data.buildings)
+        setBuildingTotal(data.total)
+        setStatusMessage(`${data.total} buildings found`)
+      }
+    } catch (error) {
+      console.error('Building search error:', error)
+      setStatusMessage('Building search failed')
+    } finally {
+      setBuildingSearchLoading(false)
+    }
+  }, [])
+
+  // Debounced building search on query change
+  useEffect(() => {
+    if (searchMode !== 'buildings') return
+
+    if (buildingSearchTimer.current) {
+      clearTimeout(buildingSearchTimer.current)
+    }
+
+    buildingSearchTimer.current = setTimeout(() => {
+      setBuildingPage(1)
+      searchBuildings(buildingSearchQuery, 1)
+    }, 300)
+
+    return () => {
+      if (buildingSearchTimer.current) {
+        clearTimeout(buildingSearchTimer.current)
+      }
+    }
+  }, [buildingSearchQuery, searchMode, searchBuildings])
+
+  // Load initial buildings when switching to building mode
+  useEffect(() => {
+    if (searchMode === 'buildings' && !hasBuildingSearched) {
+      searchBuildings('', 1)
+    }
+  }, [searchMode, hasBuildingSearched, searchBuildings])
+
+  const handleBuildingPageChange = useCallback((newPage: number) => {
+    setBuildingPage(newPage)
+    searchBuildings(buildingSearchQuery, newPage)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setStatusMessage(`Showing page ${newPage}`)
+  }, [buildingSearchQuery, searchBuildings])
 
   return (
     <div className="p-6">
@@ -357,27 +460,98 @@ export default function ProSearchPage() {
 
       {/* Header */}
       <header className="mb-4">
-        <h1 className="text-xl font-bold">Search Listings</h1>
-        <p className="text-sm text-muted-foreground">Find available units to share with your clients</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold">Search</h1>
+            <p className="text-sm text-muted-foreground">
+              {searchMode === 'listings'
+                ? 'Find available units to share with your clients'
+                : 'Search buildings by name, address, or neighborhood'}
+            </p>
+          </div>
+        </div>
+
+        {/* Search Mode Toggle */}
+        <div className="flex mt-4 border-b">
+          <button
+            onClick={() => setSearchMode('listings')}
+            className={cn(
+              'flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+              searchMode === 'listings'
+                ? 'border-foreground text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Home className="w-4 h-4" />
+            Listings
+          </button>
+          <button
+            onClick={() => setSearchMode('buildings')}
+            className={cn(
+              'flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+              searchMode === 'buildings'
+                ? 'border-foreground text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Building2 className="w-4 h-4" />
+            Buildings
+          </button>
+        </div>
       </header>
 
-      {/* Filters */}
-      <section
-        aria-label="Search filters"
-        className="bg-background rounded-xl border p-4 mb-6"
-        {...sectionAttr(SECTION_TYPES.SEARCH_FILTERS)}
-        {...(hasSearched ? filterStateAttr({
-          neighborhoods: filters.neighborhoods,
-          budgetMin: filters.budgetMin,
-          budgetMax: filters.budgetMax,
-          bedrooms: filters.bedrooms,
-          buildings: filters.buildings,
-          hasDeals: filters.hasDeals,
-        }) : {})}
-      >
-        <div className="flex flex-wrap items-end gap-3">
-          {/* Neighborhoods Dropdown */}
-          <div className="w-52">
+      {/* Building Search */}
+      {searchMode === 'buildings' && (
+        <section
+          aria-label="Building search"
+          className="bg-background rounded-xl border p-4 mb-6"
+        >
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="text"
+              value={buildingSearchQuery}
+              onChange={(e) => setBuildingSearchQuery(e.target.value)}
+              placeholder="Search by building name, address, or neighborhood..."
+              className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              autoFocus
+            />
+            {buildingSearchQuery && (
+              <button
+                onClick={() => setBuildingSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+          {buildingSearchLoading && (
+            <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+              <div className="w-4 h-4 border-2 border-muted border-t-foreground rounded-full animate-spin" />
+              <span>Searching...</span>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Listing Filters */}
+      {searchMode === 'listings' && (
+        <section
+          aria-label="Search filters"
+          className="bg-background rounded-xl border p-4 mb-6"
+          {...sectionAttr(SECTION_TYPES.SEARCH_FILTERS)}
+          {...(hasSearched ? filterStateAttr({
+            neighborhoods: filters.neighborhoods,
+            budgetMin: filters.budgetMin,
+            budgetMax: filters.budgetMax,
+            bedrooms: filters.bedrooms,
+            buildings: filters.buildings,
+            hasDeals: filters.hasDeals,
+          }) : {})}
+        >
+          <div className="flex flex-wrap items-end gap-3">
+            {/* Neighborhoods Dropdown */}
+            <div className="w-52">
             <SearchableDropdown
               options={NEIGHBORHOOD_OPTIONS}
               selected={filters.neighborhoods}
@@ -576,7 +750,8 @@ export default function ProSearchPage() {
             </button>
           </div>
         )}
-      </section>
+        </section>
+      )}
 
       {/* Compare Bar */}
       {compareList.length > 0 && (
@@ -616,8 +791,8 @@ export default function ProSearchPage() {
         </div>
       )}
 
-      {/* Results */}
-      {hasSearched && (
+      {/* Listing Results */}
+      {searchMode === 'listings' && hasSearched && (
         <section
           aria-label="Search results"
           {...sectionAttr(SECTION_TYPES.RESULTS_LIST)}
@@ -671,8 +846,43 @@ export default function ProSearchPage() {
         </section>
       )}
 
+      {/* Building Results */}
+      {searchMode === 'buildings' && hasBuildingSearched && (
+        <section aria-label="Building search results">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm text-muted-foreground" aria-live="polite" aria-atomic="true">
+              {buildingTotal} {buildingTotal === 1 ? 'building' : 'buildings'} found
+            </p>
+          </div>
+
+          {buildingResults.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {buildingResults.map(building => (
+                <BuildingSearchCard key={building.id} building={building} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-background rounded-lg border" role="status">
+              <Building2 className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+              <p className="text-muted-foreground text-sm">No buildings match your search.</p>
+              <p className="text-xs text-muted-foreground mt-1">Try a different name, address, or neighborhood.</p>
+            </div>
+          )}
+
+          {/* Building Pagination */}
+          {buildingTotal > pageSize && (
+            <SearchPagination
+              page={buildingPage}
+              totalPages={buildingTotalPages}
+              loading={buildingSearchLoading}
+              onPageChange={handleBuildingPageChange}
+            />
+          )}
+        </section>
+      )}
+
       {/* Initial Loading State */}
-      {!hasSearched && loading && (
+      {searchMode === 'listings' && !hasSearched && loading && (
         <div className="text-center py-12 bg-background rounded-lg border" role="status" aria-live="polite">
           <div
             className="w-10 h-10 mx-auto mb-3 border-2 border-muted border-t-foreground rounded-full animate-spin"

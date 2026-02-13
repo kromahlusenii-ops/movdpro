@@ -17,6 +17,7 @@ const CACHE_TTL = 300
 // Cached query function for buildings search
 const getCachedBuildings = unstable_cache(
   async (
+    searchQuery: string | undefined,
     neighborhoods: string[],
     budgetMin: number | undefined,
     budgetMax: number | undefined,
@@ -35,9 +36,20 @@ const getCachedBuildings = unstable_cache(
       units: { some: { isAvailable: true } },
     }
 
+    // Text search filter (name, address, or neighborhood)
+    if (searchQuery && searchQuery.trim().length > 0) {
+      const query = searchQuery.trim()
+      buildingWhere.OR = [
+        { name: { contains: query, mode: 'insensitive' } },
+        { address: { contains: query, mode: 'insensitive' } },
+        { neighborhood: { name: { contains: query, mode: 'insensitive' } } },
+      ]
+    }
+
     // Neighborhoods filter
     if (neighborhoods.length > 0) {
       buildingWhere.neighborhood = {
+        ...buildingWhere.neighborhood,
         name: { in: neighborhoods },
       }
     }
@@ -193,6 +205,7 @@ export async function GET(request: NextRequest) {
 
     // Parse query params
     const searchParams = request.nextUrl.searchParams
+    const searchQuery = searchParams.get('q') || undefined
     const neighborhoods = searchParams.get('neighborhoods')?.split(',').filter(Boolean) || []
     const budgetMin = searchParams.get('budgetMin') ? parseInt(searchParams.get('budgetMin')!) : undefined
     const budgetMax = searchParams.get('budgetMax') ? parseInt(searchParams.get('budgetMax')!) : undefined
@@ -205,6 +218,7 @@ export async function GET(request: NextRequest) {
 
     // Use cached query
     const { buildings, total } = await getCachedBuildings(
+      searchQuery,
       neighborhoods,
       budgetMin,
       budgetMax,
