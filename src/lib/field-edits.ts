@@ -97,21 +97,26 @@ export async function createFieldEdit(
   if (existingEdit) {
     previousValue = existingEdit.newValue as Prisma.InputJsonValue
   } else {
-    // Get from scraped data
-    if (targetType === 'unit') {
-      const unit = await prisma.unit.findUnique({
-        where: { id: targetId },
-        select: { [fieldName]: true },
-      })
-      const val = unit?.[fieldName as keyof typeof unit]
-      previousValue = val !== undefined ? (val as Prisma.InputJsonValue) : null
-    } else {
-      const building = await prisma.building.findUnique({
-        where: { id: targetId },
-        select: { [fieldName]: true },
-      })
-      const val = building?.[fieldName as keyof typeof building]
-      previousValue = val !== undefined ? (val as Prisma.InputJsonValue) : null
+    // Try to get from scraped data, but don't fail if field doesn't exist on model
+    try {
+      if (targetType === 'unit') {
+        const unit = await prisma.unit.findUnique({
+          where: { id: targetId },
+          select: { [fieldName]: true },
+        })
+        const val = unit?.[fieldName as keyof typeof unit]
+        previousValue = val !== undefined ? (val as Prisma.InputJsonValue) : null
+      } else {
+        const building = await prisma.building.findUnique({
+          where: { id: targetId },
+          select: { [fieldName]: true },
+        })
+        const val = building?.[fieldName as keyof typeof building]
+        previousValue = val !== undefined ? (val as Prisma.InputJsonValue) : null
+      }
+    } catch {
+      // Field doesn't exist on the model - that's OK, we'll treat it as null
+      previousValue = null
     }
   }
 
