@@ -9,6 +9,44 @@ import type {
 } from '@/types/field-edits'
 
 /**
+ * Check if a field has a locator edit (for "sticky" edits feature)
+ * When a locator has edited a field, scrapers should not overwrite it
+ */
+export async function hasLocatorEdit(
+  targetType: EditTargetType,
+  targetId: string,
+  fieldName: EditableFieldName
+): Promise<boolean> {
+  const edit = await prisma.fieldEdit.findFirst({
+    where: {
+      ...(targetType === 'unit' ? { unitId: targetId } : { buildingId: targetId }),
+      fieldName,
+      source: 'locator',
+    },
+  })
+  return !!edit
+}
+
+/**
+ * Get all field names that have locator edits for an entity
+ * Useful for scrapers to know which fields to skip
+ */
+export async function getLocatorEditedFields(
+  targetType: EditTargetType,
+  targetId: string
+): Promise<Set<string>> {
+  const edits = await prisma.fieldEdit.findMany({
+    where: {
+      ...(targetType === 'unit' ? { unitId: targetId } : { buildingId: targetId }),
+      source: 'locator',
+    },
+    select: { fieldName: true },
+    distinct: ['fieldName'],
+  })
+  return new Set(edits.map(e => e.fieldName))
+}
+
+/**
  * Parse user name, falling back to email prefix if name is not set
  */
 function parseEditorName(user: { name: string | null; email: string } | null | undefined): { firstName: string; lastName: string } {

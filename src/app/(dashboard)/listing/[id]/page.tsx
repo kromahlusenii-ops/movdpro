@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { BuildingImage } from '@/components/BuildingImage'
 import { EditableField } from '@/components/listings'
+import { CommunityVerificationBanner } from '@/components/CommunityVerificationBanner'
 import {
   ArrowLeft,
   MapPin,
@@ -347,6 +348,9 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               />
             </div>
           </div>
+
+          {/* Community Verification Banner */}
+          <CommunityVerificationBanner />
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

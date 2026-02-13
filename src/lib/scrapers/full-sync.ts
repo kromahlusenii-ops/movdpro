@@ -10,6 +10,7 @@
 import { chromium, Browser, Page } from 'playwright'
 import prisma from '@/lib/db'
 import { invalidateListingsCache } from '@/lib/listings-cache'
+import { getLocatorEditedFields } from '@/lib/field-edits'
 import crescentOverrides from '@/config/crescent-overrides.json'
 
 // Portfolio page URLs
@@ -372,7 +373,8 @@ async function scrapeGreystarProperty(page: Page, url: string): Promise<{ units:
         const imgEl = card.querySelector('img')
         const image = imgEl?.getAttribute('src') || null
 
-        const availMatch = text.match(/(\d+)\s*(?:available|unit)/i)
+        // Match "X available" or "X units available", but not "Unit X"
+        const availMatch = text.match(/(\d+)\s*(?:units?\s+)?available/i)
         const available = availMatch ? parseInt(availMatch[1], 10) : 1
 
         if (rent) {
@@ -1380,7 +1382,8 @@ async function scrapeCrescentProperty(page: Page, url: string): Promise<{ units:
         const imgEl = card.querySelector('img')
         const image = imgEl?.getAttribute('src') || imgEl?.getAttribute('data-src') || null
 
-        const availMatch = text.match(/(\d+)\s*(?:available|unit)/i)
+        // Match "X available" or "X units available", but not "Unit X"
+        const availMatch = text.match(/(\d+)\s*(?:units?\s+)?available/i)
         const available = availMatch ? parseInt(availMatch[1], 10) : 1
 
         if (rent) {
@@ -1630,30 +1633,91 @@ export async function fullSync(management: 'greystar' | 'maa' | 'cortland' | 'cr
         }
       }
 
-      // Delete existing units and create new ones
+      // Smart unit sync: update existing units to preserve locator edits
       if (units.length > 0) {
-        await prisma.unit.deleteMany({ where: { buildingId: building.id } })
+        // Get existing units for this building
+        const existingUnits = await prisma.unit.findMany({
+          where: { buildingId: building.id },
+        })
+
+        const matchedUnitIds = new Set<string>()
+        let updatedCount = 0
+        let createdCount = 0
 
         for (const unit of units) {
-          await prisma.unit.create({
-            data: {
-              buildingId: building.id,
-              name: unit.name,
-              bedrooms: unit.bedrooms,
-              bathrooms: unit.bathrooms,
+          // Try to match existing unit by bedrooms + bathrooms + name
+          const existingUnit = existingUnits.find(
+            eu => eu.bedrooms === unit.bedrooms &&
+                  eu.bathrooms === unit.bathrooms &&
+                  (eu.name === unit.name || (!eu.name && !unit.name))
+          )
+
+          if (existingUnit) {
+            matchedUnitIds.add(existingUnit.id)
+
+            // Check for locator edits on this unit
+            const locatorEditedFields = await getLocatorEditedFields('unit', existingUnit.id)
+
+            // Build update data, skipping fields with locator edits
+            const updateData: Record<string, unknown> = {
               sqftMin: unit.sqftMin,
               sqftMax: unit.sqftMax,
-              rentMin: unit.rentMin,
-              rentMax: unit.rentMax,
               availableCount: unit.availableCount,
               photoUrl: unit.photoUrl,
               isAvailable: true,
               lastSyncedAt: new Date(),
-            },
-          })
-          result.unitsCreated++
+            }
+
+            // Only update rent fields if no locator edits
+            if (!locatorEditedFields.has('rentMin')) {
+              updateData.rentMin = unit.rentMin
+            }
+            if (!locatorEditedFields.has('rentMax')) {
+              updateData.rentMax = unit.rentMax
+            }
+
+            await prisma.unit.update({
+              where: { id: existingUnit.id },
+              data: updateData,
+            })
+            updatedCount++
+          } else {
+            // Create new unit
+            await prisma.unit.create({
+              data: {
+                buildingId: building.id,
+                name: unit.name,
+                bedrooms: unit.bedrooms,
+                bathrooms: unit.bathrooms,
+                sqftMin: unit.sqftMin,
+                sqftMax: unit.sqftMax,
+                rentMin: unit.rentMin,
+                rentMax: unit.rentMax,
+                availableCount: unit.availableCount,
+                photoUrl: unit.photoUrl,
+                isAvailable: true,
+                lastSyncedAt: new Date(),
+              },
+            })
+            createdCount++
+          }
         }
-        console.log(`    Created ${units.length} units`)
+
+        // Mark unmatched existing units as unavailable (instead of deleting)
+        // This preserves any locator edits on those units
+        const unmatchedIds = existingUnits
+          .filter(eu => !matchedUnitIds.has(eu.id))
+          .map(eu => eu.id)
+
+        if (unmatchedIds.length > 0) {
+          await prisma.unit.updateMany({
+            where: { id: { in: unmatchedIds } },
+            data: { isAvailable: false, lastSyncedAt: new Date() },
+          })
+        }
+
+        result.unitsCreated += createdCount
+        console.log(`    Units: ${updatedCount} updated, ${createdCount} created, ${unmatchedIds.length} marked unavailable`)
       } else {
         console.log(`    No units found`)
       }

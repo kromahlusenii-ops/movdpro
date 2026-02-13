@@ -4,6 +4,7 @@ import { useState, useEffect, use, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { EditableField } from '@/components/listings'
+import { CommunityVerificationBanner } from '@/components/CommunityVerificationBanner'
 import {
   ArrowLeft,
   MapPin,
@@ -611,6 +612,9 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Community Verification Banner */}
+          <CommunityVerificationBanner />
+
           {/* Contact */}
           <div className="bg-background rounded-xl border p-4">
             <h2 className="font-semibold mb-4">Contact</h2>
