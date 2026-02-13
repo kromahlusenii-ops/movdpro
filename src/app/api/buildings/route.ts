@@ -136,6 +136,7 @@ const getCachedBuildings = unstable_cache(
       return {
         id: b.id,
         name: b.name,
+        website: b.website,
         address: b.address,
         city: b.city,
         state: b.state,

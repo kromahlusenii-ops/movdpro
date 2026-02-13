@@ -26,7 +26,7 @@ import {
 
 export default function ProSearchPage() {
   const [clients, setClients] = useState<ClientSummary[]>([])
-  const [buildingOptions, setBuildingOptions] = useState<{ value: string; label: string }[]>([])
+  const [buildingOptions, setBuildingOptions] = useState<{ value: string; label: string; searchTerms?: string }[]>([])
   const [buildingsLoaded, setBuildingsLoaded] = useState(false)
   const [filters, setFilters] = useState<SearchFilters>({
     neighborhoods: [],
@@ -71,9 +71,10 @@ export default function ProSearchPage() {
       .then(data => {
         if (data.buildings) {
           setBuildingOptions(
-            data.buildings.map((b: { id: string; name: string }) => ({
+            data.buildings.map((b: { id: string; name: string; website?: string }) => ({
               value: b.id,
               label: b.name,
+              searchTerms: b.website || undefined,
             }))
           )
         }

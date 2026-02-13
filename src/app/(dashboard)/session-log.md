@@ -14,3 +14,8 @@
 **What changed:** Removed trial/credits section from settings page (trial ends date and credits remaining display).
 **Files touched:** settings/page.tsx
 **Next steps:** None immediate.
+
+## 2026-02-13
+**What changed:** Added website search to building dropdown - can now search buildings by domain (e.g., "alexan.com").
+**Files touched:** search/page.tsx
+**Next steps:** None immediate.

@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 interface Option {
   value: string
   label: string
+  searchTerms?: string // Additional terms to search (e.g., website, aliases)
 }
 
 interface SearchableDropdownProps {
@@ -48,9 +49,13 @@ export function SearchableDropdown({
   const labelId = `${baseId}-label`
   const searchId = `${baseId}-search`
 
-  const filteredOptions = options.filter(opt =>
-    opt.label.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredOptions = options.filter(opt => {
+    const searchLower = search.toLowerCase()
+    return (
+      opt.label.toLowerCase().includes(searchLower) ||
+      (opt.searchTerms && opt.searchTerms.toLowerCase().includes(searchLower))
+    )
+  })
 
   // Close on click outside
   useEffect(() => {
