@@ -14,3 +14,8 @@
 **What changed:** Removed 20-client limit from clients/route.ts and intake/[slug]/route.ts.
 **Files touched:** clients/route.ts, intake/[slug]/route.ts
 **Next steps:** Monitor for performance issues with large client lists.
+
+## 2026-02-13
+**What changed:** Hide buildings with 0 units from building dropdown to prevent showing empty results. Added filter: `units: { some: { isAvailable: true } }`.
+**Files touched:** buildings/route.ts
+**Next steps:** Fix MAA scraper to handle their SPA/modal-based floor plans page.

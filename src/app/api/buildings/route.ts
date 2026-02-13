@@ -31,6 +31,8 @@ const getCachedBuildings = unstable_cache(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const buildingWhere: any = {
       isAvailable: true,
+      // Only show buildings that have available units
+      units: { some: { isAvailable: true } },
     }
 
     // Neighborhoods filter
