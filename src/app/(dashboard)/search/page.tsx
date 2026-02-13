@@ -7,6 +7,7 @@ import { SearchableDropdown } from '@/components/SearchableDropdown'
 import { LiveRegion } from '@/components/ui/live-region'
 import { ListingCard } from '@/components/search/ListingCard'
 import { SearchPagination } from '@/components/search/SearchPagination'
+import { QuickAddNotesModal } from '@/components/features/listing-notes/QuickAddNotesModal'
 import { DollarSign, X, Check, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -46,6 +47,11 @@ export default function ProSearchPage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [statusMessage, setStatusMessage] = useState('')
+  const [quickAddModal, setQuickAddModal] = useState<{
+    clientId: string
+    unitId: string
+    buildingName: string
+  } | null>(null)
   const pageSize = 20
   const saveDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -275,6 +281,16 @@ export default function ProSearchPage() {
         )
         const client = clients.find(c => c.id === clientId)
         setStatusMessage(`Saved to ${client?.name || 'client'}`)
+
+        // Show quick add notes modal
+        const listing = listings.find(l => l.id === listingId)
+        if (listing) {
+          setQuickAddModal({
+            clientId,
+            unitId: listingId,
+            buildingName: listing.building.name,
+          })
+        }
       }
     } catch (error) {
       console.error('Save error:', error)
@@ -671,6 +687,17 @@ export default function ProSearchPage() {
 
       {/* Spacer for compare bar */}
       {compareList.length > 0 && <div className="h-16" aria-hidden="true" />}
+
+      {/* Quick Add Notes Modal */}
+      {quickAddModal && (
+        <QuickAddNotesModal
+          isOpen={true}
+          onClose={() => setQuickAddModal(null)}
+          clientId={quickAddModal.clientId}
+          unitId={quickAddModal.unitId}
+          buildingName={quickAddModal.buildingName}
+        />
+      )}
     </div>
   )
 }

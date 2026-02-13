@@ -7,6 +7,8 @@ import { ArrowLeft, Mail, Phone, FileText, MapPin, Building2, Star, Dog, Cat, Ba
 import { ClientActions } from './ClientActions'
 import { RemoveListingButton } from './RemoveListingButton'
 import { ShareButton } from './ShareButton'
+import { ListingNotesPanel } from '@/components/features/listing-notes/ListingNotesPanel'
+import type { ClientListingNote } from '@/components/features/listing-notes/types'
 
 async function getClientData(userId: string, clientId: string) {
   const locator = await prisma.locatorProfile.findUnique({
@@ -31,6 +33,10 @@ async function getClientData(userId: string, clientId: string) {
                         select: { name: true, slug: true },
                       },
                     },
+                  },
+                  clientNotes: {
+                    where: { clientId },
+                    orderBy: [{ type: 'asc' }, { sortOrder: 'asc' }],
                   },
                 },
               },
@@ -331,6 +337,24 @@ export default async function ClientDetailPage({
                       {saved.notes && (
                         <p className="mt-2 text-sm text-muted-foreground italic">&quot;{saved.notes}&quot;</p>
                       )}
+
+                      {/* Listing Notes Panel */}
+                      <ListingNotesPanel
+                        clientId={client.id}
+                        unitId={listing.id}
+                        initialNotes={(listing.clientNotes || []).map((note): ClientListingNote => ({
+                          id: note.id,
+                          clientId: note.clientId,
+                          unitId: note.unitId,
+                          locatorId: note.locatorId,
+                          type: note.type as 'pro' | 'con' | 'note',
+                          content: note.content,
+                          visibleToClient: note.visibleToClient,
+                          sortOrder: note.sortOrder,
+                          createdAt: note.createdAt.toISOString(),
+                          updatedAt: note.updatedAt.toISOString(),
+                        }))}
+                      />
                     </div>
                   </div>
                 </div>

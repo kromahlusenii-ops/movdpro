@@ -1,6 +1,8 @@
 'use client'
 
 import { formatCurrency } from '@/lib/utils'
+import { LocatorTakeSection } from './LocatorTakeSection'
+import type { ReportPropertyNote } from '@/components/features/listing-notes/types'
 
 type Property = {
   id: string
@@ -18,6 +20,7 @@ type Property = {
   isRecommended: boolean
   locatorNote: string | null
   sortOrder: number
+  notes?: ReportPropertyNote[]
 }
 
 type PropertiesTabProps = {
@@ -191,6 +194,11 @@ function PropertyCard({
             </p>
             <p className="text-sm text-gray-700 italic">&ldquo;{property.locatorNote}&rdquo;</p>
           </div>
+        )}
+
+        {/* Structured notes (pros/cons/notes) */}
+        {property.notes && property.notes.length > 0 && (
+          <LocatorTakeSection notes={property.notes} />
         )}
       </div>
     </div>

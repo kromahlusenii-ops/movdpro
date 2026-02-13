@@ -8,191 +8,148 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// User account for authentication and data management
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  sessions       QuizSession[]
-  magicLinks     MagicLink[]
-  shareLinks     ShareLink[]
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   locatorProfile LocatorProfile?
+  magicLinks     MagicLink[]
+  sessions       QuizSession[]
+  shareLinks     ShareLink[]
 
   @@index([email])
 }
 
-// Magic link tokens for passwordless authentication
 model MagicLink {
   id        String    @id @default(cuid())
   token     String    @unique
   email     String
   userId    String?
-  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([email])
 }
 
-// Share links for public report access
 model ShareLink {
   id        String      @id @default(cuid())
   shareId   String      @unique @default(cuid())
   sessionId String
-  session   QuizSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   userId    String
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   showTopN  Int         @default(3)
   isActive  Boolean     @default(true)
   createdAt DateTime    @default(now())
+  session   QuizSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([shareId])
   @@index([sessionId])
 }
 
 model Neighborhood {
-  id   String @id @default(cuid())
-  name String @unique
-  slug String @unique
-  tier Int    // 1, 2, or 3
-
-  // Scores (0-100)
-  infrastructureScore Float @default(0)
-  safetyScore         Float @default(0)
-  livabilityScore     Float @default(0)
-  trajectoryScore     Float @default(0)
-  sentimentScore      Float @default(0)
-  compositeScore      Float @default(0)
-  nightlifeScore      Float @default(0)
-  priceScore          Float @default(0)
-
-  // Letter grade (A+, A, A-, B+, etc.)
-  grade String @default("B")
-
-  // Raw data
-  walkScore    Int?
-  transitScore Int?
-  bikeScore    Int?
-  medianRent   Int?
-  rentMin      Int?
-  rentMax      Int?
-
-  // GeoJSON boundary for map
-  boundary  Json?
-  centerLat Float
-  centerLng Float
-
-  // Demographics & transit
-  ageDemoLow       Int?     // Target age range low
-  ageDemoHigh      Int?     // Target age range high
-  transitAccess    String?  // e.g., "Light Rail", "Bus", "Car Only"
-  commuteUptownMin Int?     // Minutes to Uptown Charlotte
-
-  // Archetypes
-  bestArchetypes  String[] // Ideal renter profiles (e.g., "Young Professional", "Foodie")
-  avoidArchetypes String[] // Poor-fit profiles (e.g., "Quiet Seeker", "Budget Starter")
-
-  // Metadata
-  description String?
-  warnings    String[] // Array of warning strings
-  highlights  String[] // Array of positive highlights
-
-  // Neighborhood character (e.g., "HISTORIC", "WALKABLE", "TRENDY")
-  characterTags String[] // Short descriptor tags for the neighborhood vibe
-  tagline       String?  // One-line character summary (e.g., "Where historic charm meets modern dining")
-
-  // 311 data insights (informational, not heavily scored)
-  civicInsights String?  // AI-analyzed 311 data insights (noise, infrastructure issues, etc.)
-
-  // Imagery
-  heroImage   String?  // Main lifestyle image for the neighborhood
-  thumbImage  String?  // Thumbnail for cards
-
-  // AI-generated content
-  sentimentSummary String?  // AI summary of what residents say
-  lifestyleSummary String?  // AI summary of lifestyle/venues
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  sentimentQuotes     SentimentQuote[]
-  quizResults         QuizResult[]
-  lifestyleVenues     LifestyleVenue[]
+  id                  String             @id @default(cuid())
+  name                String             @unique
+  slug                String             @unique
+  tier                Int
+  infrastructureScore Float              @default(0)
+  safetyScore         Float              @default(0)
+  livabilityScore     Float              @default(0)
+  trajectoryScore     Float              @default(0)
+  sentimentScore      Float              @default(0)
+  compositeScore      Float              @default(0)
+  grade               String             @default("B")
+  walkScore           Int?
+  transitScore        Int?
+  bikeScore           Int?
+  medianRent          Int?
+  rentMin             Int?
+  rentMax             Int?
+  boundary            Json?
+  centerLat           Float
+  centerLng           Float
+  description         String?
+  warnings            String[]
+  highlights          String[]
+  characterTags       String[]
+  tagline             String?
+  civicInsights       String?
+  heroImage           String?
+  thumbImage          String?
+  sentimentSummary    String?
+  lifestyleSummary    String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  ageDemoHigh         Int?
+  ageDemoLow          Int?
+  avoidArchetypes     String[]
+  bestArchetypes      String[]
+  commuteUptownMin    Int?
+  nightlifeScore      Float              @default(0)
+  priceScore          Float              @default(0)
+  transitAccess       String?
   apartmentListings   ApartmentListing[]
   buildings           Building[]
+  lifestyleVenues     LifestyleVenue[]
+  quizResults         QuizResult[]
+  sentimentQuotes     SentimentQuote[]
 }
 
 model SentimentQuote {
   id             String       @id @default(cuid())
   neighborhoodId String
-  neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
-  source         String       // "reddit" or "tiktok"
+  source         String
   content        String
-  sentiment      String       // "positive", "negative", "neutral"
-  theme          String?      // "noise", "safety", "walkability", etc.
-  postUrl        String?      // URL to original post
-  postId         String?      // Reddit post ID or TikTok video ID
-  author         String?      // Username/handle
-  subreddit      String?      // For Reddit: subreddit name
-  upvotes        Int?         // For Reddit: upvote count
-  postDate       DateTime?    // When the original post was made
+  sentiment      String
+  theme          String?
+  postUrl        String?
+  postId         String?
+  author         String?
+  subreddit      String?
+  upvotes        Int?
+  postDate       DateTime?
   createdAt      DateTime     @default(now())
+  neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
 
   @@index([neighborhoodId])
 }
 
 model QuizSession {
-  id String @id @default(cuid())
-
-  // Quiz inputs
-  budgetMin   Int
-  budgetMax   Int
-  priorities  String[] // ["quiet", "walkable", "safe"]
-  vibes       String[] // ["young-professional", "foodie"] - multiple vibes now
-  workAddress String?
-  maxCommute  Int?     // minutes
-
-  // New demographic inputs
-  ageBracket      String?  // "18-24", "25-34", "35-44", "45-54", "55+"
-  bedrooms        String?  // "studio", "1br", "2br", "3br+"
-  bathrooms       String?  // "1ba", "1.5ba", "2ba", "2.5ba+"
-  hasKids         Boolean  @default(false)
-  hasDog          Boolean  @default(false)
-  moveStatus      String?  // "moving" (relocating to Charlotte) or "local" (already living here)
-  transportation  String?  // "has-car" or "no-car"
-  additionalNotes String?  // Optional free-form context for better AI personalization
-
-  // Traffic source tracking (captured from UTM parameters)
-  utmSource   String?  // e.g., "reddit", "instagram", "facebook", "google"
-  utmMedium   String?  // e.g., "social", "cpc", "organic", "email"
-  utmCampaign String?  // e.g., "summer_promo", "charlotte_launch"
-  utmTerm     String?  // e.g., "relocation", "apartment_hunting" - ad keyword/targeting
-  utmContent  String?  // e.g., "move_before_listings" - ad variation/creative
-  referrer    String?  // Document referrer if no UTM params
-
-  // Results
-  results QuizResult[]
-
-  // User relation
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  // Share links
-  shareLinks ShareLink[]
-
-  // Payment
-  paid            Boolean  @default(false)
-  stripeSessionId String?  @unique
+  id              String       @id @default(cuid())
+  budgetMin       Int
+  budgetMax       Int
+  priorities      String[]
+  vibes           String[]
+  workAddress     String?
+  maxCommute      Int?
+  ageBracket      String?
+  bedrooms        String?
+  bathrooms       String?
+  hasKids         Boolean      @default(false)
+  hasDog          Boolean      @default(false)
+  moveStatus      String?
+  transportation  String?
+  additionalNotes String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmTerm         String?
+  utmContent      String?
+  referrer        String?
+  userId          String?
+  paid            Boolean      @default(false)
+  stripeSessionId String?      @unique
   stripePaymentId String?
   email           String?
-
-  createdAt DateTime  @default(now())
-  expiresAt DateTime?
+  createdAt       DateTime     @default(now())
+  expiresAt       DateTime?
+  results         QuizResult[]
+  user            User?        @relation(fields: [userId], references: [id])
+  shareLinks      ShareLink[]
 
   @@index([stripeSessionId])
   @@index([userId])
@@ -202,14 +159,12 @@ model QuizSession {
 model QuizResult {
   id             String       @id @default(cuid())
   sessionId      String
-  session        QuizSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   neighborhoodId String
+  matchScore     Float
+  rank           Int
+  createdAt      DateTime     @default(now())
   neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
-
-  matchScore Float // Weighted match percentage
-  rank       Int
-
-  createdAt DateTime @default(now())
+  session        QuizSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
   @@index([neighborhoodId])
@@ -227,182 +182,125 @@ model Waitlist {
 model LifestyleVenue {
   id             String       @id @default(cuid())
   neighborhoodId String
+  name           String
+  category       String
+  subcategory    String?
+  address        String?
+  rating         Float?
+  priceLevel     Int?
+  description    String?
+  googlePlaceId  String?
+  yelpId         String?
+  lat            Float?
+  lng            Float?
+  photoUrl       String?
+  photoRef       String?
+  isHighlight    Boolean      @default(false)
+  tags           String[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
-
-  name        String
-  category    String // "restaurant", "bar", "cafe", "park", "gym", "grocery", "nightlife"
-  subcategory String? // "brunch", "fine_dining", "dive_bar", "dog_park", etc.
-  address     String?
-  rating      Float? // 0-5 stars
-  priceLevel  Int? // 1-4 ($-$$$$)
-  description String?
-  googlePlaceId String?
-  yelpId      String?
-
-  // Coordinates for map
-  lat Float?
-  lng Float?
-
-  // Imagery
-  photoUrl    String?  // Google Places photo URL
-  photoRef    String?  // Google Places photo reference (for fetching)
-
-  // Metadata
-  isHighlight Boolean @default(false) // Featured venue for neighborhood
-  tags        String[] // ["outdoor_seating", "dog_friendly", "live_music"]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@index([neighborhoodId])
   @@index([category])
 }
 
 model ApartmentListing {
-  id             String       @id @default(cuid())
-  neighborhoodId String
-  neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
-
-  // Core listing info
-  name        String
-  address     String
-  description String?
-
-  // Rent & units
-  rentMin   Int
-  rentMax   Int
-  bedrooms  String[] // ["studio", "1br", "2br", "3br+"]
-  bathrooms Float?
-  sqftMin   Int?
-  sqftMax   Int?
-
-  // Amenities & features
-  amenities   String[] // ["pool", "gym", "parking", "pet-friendly", "in-unit-laundry"]
-  petPolicy   String?  // "cats-only", "dogs-allowed", "no-pets"
-  parkingType String?  // "garage", "surface", "street", "none"
-
-  // Ratings & scores
-  rating      Float? // 0-5 stars from Google Places
-  reviewCount Int?
-  walkScore   Int?
-  transitScore Int?
-
-  // Coordinates
-  lat Float
-  lng Float
-
-  // Media
-  photoUrl String?  // Primary photo URL
-  photos   String[] // Array of photo URLs
-
-  // External IDs
-  rentCastId    String?  @unique // RentCast property ID
-  googlePlaceId String?  // Google Places ID for enrichment
-  listingUrl    String?  // External listing URL
-
-  // Property Management
-  managementCompany     String?  // "greystar", etc.
-  isGreystar            Boolean  @default(false)
-  greystarConfidence    String?  // "high", "medium", "none"
-  floorplansUrl         String?  // Deep link to floorplans with filters
-  greystarDetectedAt    DateTime? // When Greystar detection was last run
-
-  // Metadata
-  source      String   @default("rentcast") // "rentcast", "manual"
-  isAvailable Boolean  @default(true)
-  isHighlight Boolean  @default(false)
-  tags        String[]
-
-  // Sync tracking
-  lastSyncedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String       @id @default(cuid())
+  neighborhoodId     String
+  name               String
+  address            String
+  description        String?
+  rentMin            Int
+  rentMax            Int
+  bedrooms           String[]
+  bathrooms          Float?
+  sqftMin            Int?
+  sqftMax            Int?
+  amenities          String[]
+  petPolicy          String?
+  parkingType        String?
+  rating             Float?
+  reviewCount        Int?
+  walkScore          Int?
+  transitScore       Int?
+  lat                Float
+  lng                Float
+  photoUrl           String?
+  photos             String[]
+  rentCastId         String?      @unique
+  googlePlaceId      String?
+  listingUrl         String?
+  managementCompany  String?
+  isGreystar         Boolean      @default(false)
+  greystarConfidence String?
+  floorplansUrl      String?
+  greystarDetectedAt DateTime?
+  source             String       @default("rentcast")
+  isAvailable        Boolean      @default(true)
+  isHighlight        Boolean      @default(false)
+  tags               String[]
+  lastSyncedAt       DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  neighborhood       Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
 
   @@index([neighborhoodId])
   @@index([rentMin, rentMax])
   @@index([isAvailable])
 }
 
-// ============================================================================
-// MOVD PRO v3 - Building-Centric Data Model
-// ============================================================================
-
-// Management company (Greystar, MAA, Cortland, etc.)
 model ManagementCompany {
-  id       String  @id @default(cuid())
-  name     String  @unique
-  slug     String  @unique
-  website  String?
-  logoUrl  String?
-
-  // Scraping metadata
-  scrapeStrategy String? // "greystar", "maa-api", "cortland", etc.
+  id             String     @id @default(cuid())
+  name           String     @unique
+  slug           String     @unique
+  website        String?
+  logoUrl        String?
+  scrapeStrategy String?
   lastScrapedAt  DateTime?
-  scrapeStatus   String    @default("active") // active, paused, error
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  buildings Building[]
+  scrapeStatus   String     @default("active")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  buildings      Building[]
 
   @@index([slug])
 }
 
-// Physical building/property
 model Building {
-  id             String             @id @default(cuid())
-  managementId   String?
-  management     ManagementCompany? @relation(fields: [managementId], references: [id], onDelete: SetNull)
-  neighborhoodId String
-  neighborhood   Neighborhood       @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
-
-  // Core info
-  name    String
-  address String
-  city    String @default("Charlotte")
-  state   String @default("NC")
-  zipCode String?
-
-  // Location
-  lat Float
-  lng Float
-
-  // Google Places enrichment
-  googlePlaceId String?
-  rating        Float? // 0-5
-  reviewCount   Int?
-  website       String?
-  phone         String?
-
-  // Media
+  id              String                @id @default(cuid())
+  managementId    String?
+  neighborhoodId  String
+  name            String
+  address         String
+  city            String                @default("Charlotte")
+  state           String                @default("NC")
+  zipCode         String?
+  lat             Float
+  lng             Float
+  googlePlaceId   String?
+  rating          Float?
+  reviewCount     Int?
+  website         String?
+  phone           String?
   primaryPhotoUrl String?
   photos          String[]
-
-  // Building amenities (shared across units)
-  amenities   String[] // ["pool", "gym", "parking", "pet-friendly"]
-  petPolicy   String? // "cats-only", "dogs-allowed", "no-pets"
-  parkingType String? // "garage", "covered", "surface"
-
-  // Deep link to management company
-  listingUrl    String? // Direct link to property page
-  floorplansUrl String? // Deep link to floor plans
-
-  // Metadata
-  yearBuilt    Int?
-  totalUnits   Int?
-  isAvailable  Boolean   @default(true)
-  lastSyncedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  units          Unit[]
-  specials       Special[]
-  savedToClients ClientSavedBuilding[]
-
-  // Field edits (locator corrections)
-  fieldEdits FieldEdit[]
+  amenities       String[]
+  petPolicy       String?
+  parkingType     String?
+  listingUrl      String?
+  floorplansUrl   String?
+  yearBuilt       Int?
+  totalUnits      Int?
+  isAvailable     Boolean               @default(true)
+  lastSyncedAt    DateTime?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  management      ManagementCompany?    @relation(fields: [managementId], references: [id])
+  neighborhood    Neighborhood          @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
+  savedToClients  ClientSavedBuilding[]
+  fieldEdits      FieldEdit[]
+  specials        Special[]
+  units           Unit[]
 
   @@unique([managementId, address])
   @@index([neighborhoodId])
@@ -410,38 +308,26 @@ model Building {
   @@index([isAvailable])
 }
 
-// Move-in specials and promotions
 model Special {
-  id         String   @id @default(cuid())
-  buildingId String
-  building   Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
-  unitId     String?  // Null if building-wide, set if unit/floorplan-specific
-  unit       Unit?    @relation(fields: [unitId], references: [id], onDelete: Cascade)
-
-  // Provider info
-  provider String // "greystar", "maa", "cortland"
-
-  // Special details
-  title         String  // Short name (e.g. "1 Month Free")
-  description   String  // Full text of the special
-  discountType  String? // months_free, reduced_rent, waived_fees, gift_card, other
-  discountValue Float?  // Dollar amount or number of months
-  conditions    String? // Move-in date requirements, lease length, etc.
-
-  // Validity dates
-  startDate DateTime?
-  endDate   DateTime?
-
-  // Source tracking
-  sourceUrl String  // URL the special was scraped from
-  rawHtml   String? // Raw HTML for debugging/reprocessing
-
-  // Metadata
-  scrapedAt DateTime @default(now())
-  isActive  Boolean  @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  buildingId    String
+  unitId        String?
+  provider      String
+  title         String
+  description   String
+  discountType  String?
+  discountValue Float?
+  conditions    String?
+  startDate     DateTime?
+  endDate       DateTime?
+  sourceUrl     String
+  rawHtml       String?
+  scrapedAt     DateTime  @default(now())
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  building      Building  @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  unit          Unit?     @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
   @@index([buildingId])
   @@index([unitId])
@@ -450,53 +336,31 @@ model Special {
   @@index([endDate])
 }
 
-// Unit/floor plan within a building
 model Unit {
-  id         String   @id @default(cuid())
-  buildingId String
-  building   Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
-
-  // Unit/listing info
-  unitNumber String? // "Apt 552", "Unit 301", etc. (from RentCast listing)
-  name       String? // Floor plan name like "The Graham", "A1", etc.
-  bedrooms   Int // 0 for studio
-  bathrooms  Float
-  sqftMin    Int?
-  sqftMax    Int?
-
-  // Pricing
-  rentMin Int
-  rentMax Int
-
-  // Availability
-  availableCount Int       @default(0) // How many of this floor plan available
+  id             String               @id @default(cuid())
+  buildingId     String
+  unitNumber     String?
+  name           String?
+  bedrooms       Int
+  bathrooms      Float
+  sqftMin        Int?
+  sqftMax        Int?
+  rentMin        Int
+  rentMax        Int
+  availableCount Int                  @default(0)
   availableDate  DateTime?
-
-  // Floor plan specific photos
-  photoUrl String?
-
-  // RentCast integration
-  rentCastId   String? @unique // Link to RentCast listing
-  rentCastData Json?   // Raw RentCast response for reference
-
-  // Metadata
-  isAvailable  Boolean   @default(true)
-  lastSyncedAt DateTime?
-
-  // Clients who saved this listing
+  photoUrl       String?
+  rentCastId     String?              @unique
+  rentCastData   Json?
+  isAvailable    Boolean              @default(true)
+  lastSyncedAt   DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  clientNotes    ClientListingNote[]
   savedByClients ClientSavedListing[]
-
-  // Unit-specific specials
-  specials Special[]
-
-  // Field edits (locator corrections)
-  fieldEdits FieldEdit[]
-
-  // Client-specific notes (pros/cons/notes)
-  clientNotes ClientListingNote[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  fieldEdits     FieldEdit[]
+  specials       Special[]
+  building       Building             @relation(fields: [buildingId], references: [id], onDelete: Cascade)
 
   @@index([buildingId])
   @@index([bedrooms])
@@ -506,275 +370,201 @@ model Unit {
   @@index([isAvailable, rentMin, rentMax])
 }
 
-// Join table for clients saving buildings with AI match scores
 model ClientSavedBuilding {
-  id         String        @id @default(cuid())
-  clientId   String
-  client     LocatorClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  buildingId String
-  building   Building      @relation(fields: [buildingId], references: [id], onDelete: Cascade)
-
+  id          String        @id @default(cuid())
+  clientId    String
+  buildingId  String
   notes       String?
-  matchScore  Float? // AI-calculated match score (0-100)
-  matchReason String? // AI-generated explanation
-
-  createdAt DateTime @default(now())
+  matchScore  Float?
+  matchReason String?
+  createdAt   DateTime      @default(now())
+  building    Building      @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  client      LocatorClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@unique([clientId, buildingId])
   @@index([clientId])
   @@index([buildingId])
 }
 
-// Join table for clients saving individual listings (units)
 model ClientSavedListing {
-  id       String        @id @default(cuid())
-  clientId String
-  client   LocatorClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  unitId   String
-  unit     Unit          @relation(fields: [unitId], references: [id], onDelete: Cascade)
-
-  notes String?
-
-  createdAt DateTime @default(now())
+  id        String        @id @default(cuid())
+  clientId  String
+  unitId    String
+  notes     String?
+  createdAt DateTime      @default(now())
+  client    LocatorClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  unit      Unit          @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
   @@unique([clientId, unitId])
   @@index([clientId])
   @@index([unitId])
 }
 
-// ============================================================================
-// MOVD PRO - B2B Platform for Apartment Locators
-// ============================================================================
-
-// Locator professional profile
 model LocatorProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Auth (password-based for Pro)
-  passwordHash String
-
-  // Business info
-  companyName String?
-  companyLogo String?
-  phone       String?
-
-  // Public intake form settings
-  intakeSlug       String?  @unique
-  intakeEnabled    Boolean  @default(true)
-  intakeWelcomeMsg String?
-
-  // Subscription (Stripe)
-  stripeCustomerId     String?   @unique
-  stripeSubscriptionId String?   @unique
-  subscriptionStatus   String    @default("trialing") // trialing, active, past_due, canceled
+  id                   String              @id @default(cuid())
+  userId               String              @unique
+  passwordHash         String
+  companyName          String?
+  companyLogo          String?
+  phone                String?
+  stripeCustomerId     String?             @unique
+  stripeSubscriptionId String?             @unique
+  subscriptionStatus   String              @default("trialing")
   trialEndsAt          DateTime?
   currentPeriodEnd     DateTime?
-
-  // Credits
-  creditsRemaining Int       @default(50)
-  creditsResetAt   DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  clients       LocatorClient[]
-  reports       ProReport[]
-  savedSearches ProSavedSearch[]
-  comparisons   ProComparison[]
-  creditLedger  CreditLedger[]
-  fieldEdits    FieldEdit[]
-  listingNotes  ClientListingNote[]
-  // importLogs    ImportLog[]  // Uncomment after running migration
+  creditsRemaining     Int                 @default(50)
+  creditsResetAt       DateTime?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  intakeSlug           String?             @unique
+  intakeEnabled        Boolean             @default(true)
+  intakeWelcomeMsg     String?
+  listingNotes         ClientListingNote[]
+  creditLedger         CreditLedger[]
+  fieldEdits           FieldEdit[]
+  clients              LocatorClient[]
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comparisons          ProComparison[]
+  reports              ProReport[]
+  savedSearches        ProSavedSearch[]
 
   @@index([stripeCustomerId])
   @@index([subscriptionStatus])
   @@index([intakeSlug])
 }
 
-// Locator's clients (max 20 active)
 model LocatorClient {
-  id        String         @id @default(cuid())
-  locatorId String
-  locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
-
-  name   String
-  email  String?
-  phone  String?
-  notes  String?
-  status String  @default("active") // active, placed, archived
-
-  // Intake form source tracking
-  source            String?  // "intake_form", "manual"
-  intakeRef         String?  // UTM tracking param
-  contactPreference String?  // "text", "email", "call"
-
-  // Requirements
-  budgetMin     Int?
-  budgetMax     Int?
-  bedrooms      String[]
-  neighborhoods String[]
-  amenities     String[]
-  moveInDate    DateTime?
-
-  // Lifestyle preferences (for AI matching)
-  vibes             String[] // urban-explorer, nightlife, fitness, family-friendly, etc.
-  priorities        String[] // quiet, walkable, nightlife, family-friendly, safe, good-transit, parks, trendy, well-maintained
-  hasDog            Boolean  @default(false)
-  hasCat            Boolean  @default(false)
-  hasKids           Boolean  @default(false)
-  worksFromHome     Boolean  @default(false)
-  needsParking      Boolean  @default(false)
-  commuteAddress    String?  // Work address for commute calculations
-  commutePreference String?  // walkable, transit, driving
-
-  // Import tracking - uncomment after running migration:
-  // importBatchId String? // Links to ImportLog for batch tracking
-
-  // Saved buildings (v3)
-  savedBuildings ClientSavedBuilding[]
-
-  // Saved listings (individual units)
-  savedListings ClientSavedListing[]
-
-  // Listing notes (pros/cons/notes)
-  listingNotes ClientListingNote[]
-
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  reports      ProReport[]
-  shareReports ClientShareReport[]
+  id                String                @id @default(cuid())
+  locatorId         String
+  name              String
+  email             String?
+  phone             String?
+  notes             String?
+  status            String                @default("active")
+  budgetMin         Int?
+  budgetMax         Int?
+  bedrooms          String[]
+  neighborhoods     String[]
+  amenities         String[]
+  moveInDate        DateTime?
+  vibes             String[]
+  priorities        String[]
+  hasDog            Boolean               @default(false)
+  hasCat            Boolean               @default(false)
+  hasKids           Boolean               @default(false)
+  worksFromHome     Boolean               @default(false)
+  needsParking      Boolean               @default(false)
+  commuteAddress    String?
+  commutePreference String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  source            String?
+  intakeRef         String?
+  contactPreference String?
+  listingNotes      ClientListingNote[]
+  savedBuildings    ClientSavedBuilding[]
+  savedListings     ClientSavedListing[]
+  shareReports      ClientShareReport[]
+  locator           LocatorProfile        @relation(fields: [locatorId], references: [id], onDelete: Cascade)
+  reports           ProReport[]
 
   @@index([locatorId])
   @@index([status])
 }
 
-// Shareable client report (public link, no login required)
 model ClientShareReport {
-  id        String        @id @default(cuid())
-  shareId   String        @unique @default(cuid())
-  clientId  String
-  client    LocatorClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
-
-  // Snapshot of data at time of share
-  clientName  String
-  preferences Json   // Budget, bedrooms, neighborhoods, vibes, priorities, etc.
-  listings    Json   // Array of listing snapshots with building/neighborhood data
-
-  // Metadata
-  viewCount    Int       @default(0)
+  id           String        @id @default(cuid())
+  shareId      String        @unique @default(cuid())
+  clientId     String
+  clientName   String
+  preferences  Json
+  listings     Json
+  viewCount    Int           @default(0)
   lastViewedAt DateTime?
   expiresAt    DateTime?
-  isActive     Boolean   @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  client       LocatorClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@unique([clientId, shareId])
   @@index([shareId])
 }
 
-// Credit usage tracking
 model CreditLedger {
   id        String         @id @default(cuid())
   locatorId String
+  action    String
+  amount    Int
+  balance   Int
+  metadata  Json?
+  createdAt DateTime       @default(now())
   locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
-
-  action   String // search, report, monthly_reset
-  amount   Int // positive = credit, negative = debit
-  balance  Int
-  metadata Json?
-
-  createdAt DateTime @default(now())
 
   @@index([locatorId])
   @@index([createdAt])
 }
 
-// Saved apartment searches
 model ProSavedSearch {
   id        String         @id @default(cuid())
   locatorId String
+  name      String
+  filters   Json
+  newCount  Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
   locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
-
-  name     String
-  filters  Json // neighborhoods, budget, beds, amenities
-  newCount Int  @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@index([locatorId])
 }
 
-// Property comparisons (max 3 properties)
 model ProComparison {
-  id        String         @id @default(cuid())
-  locatorId String
-  locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
-
+  id          String         @id @default(cuid())
+  locatorId   String
   name        String?
   propertyIds String[]
   notes       String?
-
-  createdAt DateTime @default(now())
+  createdAt   DateTime       @default(now())
+  locator     LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
 
   @@index([locatorId])
 }
 
-// Client-facing reports
 model ProReport {
-  id        String         @id @default(cuid())
-  locatorId String
-  locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
-  clientId  String?
-  client    LocatorClient? @relation(fields: [clientId], references: [id], onDelete: SetNull)
-
-  title           String
-  propertyIds     String[] // Legacy - kept for migration
-  buildingIds     String[] // v3 - building references
-  neighborhoodIds String[]
-  customNotes     String?
-  aiSummary       String? // AI-generated report summary
-
-  // Client info snapshot
-  locatorName      String?
+  id               String               @id @default(cuid())
+  locatorId        String
+  clientId         String?
+  title            String
+  propertyIds      String[]
+  buildingIds      String[]
+  neighborhoodIds  String[]
+  customNotes      String?
+  aiSummary        String?
+  shareToken       String               @unique @default(cuid())
+  isPublic         Boolean              @default(true)
+  viewCount        Int                  @default(0)
+  pdfUrl           String?
+  createdAt        DateTime             @default(now())
   clientBudget     String?
   clientMoveDate   String?
   clientPriorities String[]
+  locatorName      String?
   publishedAt      DateTime?
-
-  // Sharing
-  shareToken String  @unique @default(cuid())
-  isPublic   Boolean @default(true)
-  viewCount  Int     @default(0)
-
-  // PDF
-  pdfUrl String?
-
-  createdAt DateTime @default(now())
-
-  // Report content relations
-  properties    ReportProperty[]
-  neighborhoods ReportNeighborhood[]
+  client           LocatorClient?       @relation(fields: [clientId], references: [id])
+  locator          LocatorProfile       @relation(fields: [locatorId], references: [id], onDelete: Cascade)
+  neighborhoods    ReportNeighborhood[]
+  properties       ReportProperty[]
 
   @@index([locatorId])
   @@index([clientId])
   @@index([shareToken])
 }
 
-// Per-report property with snapshot data and locator customization
 model ReportProperty {
-  id       String    @id @default(cuid())
-  reportId String
-  report   ProReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
-
-  // Source reference (optional)
-  buildingId String?
-  unitId     String?
-
-  // Snapshot data
+  id            String               @id @default(cuid())
+  reportId      String
+  buildingId    String?
+  unitId        String?
   name          String
   address       String
   neighborhood  String
@@ -786,137 +576,83 @@ model ReportProperty {
   availableDate String?
   amenities     String[]
   walkScore     Int?
-
-  // Locator customization
-  isRecommended Boolean @default(false)
+  isRecommended Boolean              @default(false)
   locatorNote   String?
-  sortOrder     Int     @default(0)
-
-  // Move-in costs
-  deposit    Int?
-  adminFee   Int?
-  petDeposit Int?
-  petRent    Int?
-  promos     String?
-
-  // Structured notes (pros/cons/notes)
-  notes ReportPropertyNote[]
-
-  createdAt DateTime @default(now())
+  sortOrder     Int                  @default(0)
+  deposit       Int?
+  adminFee      Int?
+  petDeposit    Int?
+  petRent       Int?
+  promos        String?
+  createdAt     DateTime             @default(now())
+  report        ProReport            @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  notes         ReportPropertyNote[]
 
   @@index([reportId])
 }
 
-// Per-report neighborhood with snapshot data
 model ReportNeighborhood {
   id             String    @id @default(cuid())
   reportId       String
-  report         ProReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
   neighborhoodId String?
-
-  name        String
-  vibe        String?
-  walkability String?
-  safety      String?
-  dogFriendly String?
-  sortOrder   Int     @default(0)
-
-  createdAt DateTime @default(now())
+  name           String
+  vibe           String?
+  walkability    String?
+  safety         String?
+  dogFriendly    String?
+  sortOrder      Int       @default(0)
+  createdAt      DateTime  @default(now())
+  report         ProReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
   @@index([reportId])
 }
 
-// Import log for bulk client imports - uncomment after running migration:
-// model ImportLog {
-//   id        String         @id @default(cuid())
-//   locatorId String
-//   locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
-//
-//   fileName      String
-//   fileSize      Int    // bytes
-//   totalRows     Int
-//   importedRows  Int
-//   skippedRows   Int
-//   failedRows    Int
-//   duplicateRows Int
-//   columnMapping Json   // saved mapping for reference
-//   status        String @default("completed") // processing, completed, failed
-//
-//   createdAt DateTime @default(now())
-//
-//   @@index([locatorId])
-// }
-
-// ============================================================================
-// CLIENT LISTING NOTES - Pros/Cons/Notes for listings per client
-// ============================================================================
-
-// Structured notes that locators can attach to listings for specific clients
 model ClientListingNote {
-  id        String         @id @default(cuid())
-  clientId  String
-  client    LocatorClient  @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  unitId    String
-  unit      Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  locatorId String
-  locator   LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
-
-  type            String   // 'pro' | 'con' | 'note'
+  id              String         @id @default(cuid())
+  clientId        String
+  unitId          String
+  locatorId       String
+  type            String
   content         String
-  visibleToClient Boolean  @default(true)
-  sortOrder       Int      @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  visibleToClient Boolean        @default(true)
+  sortOrder       Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  client          LocatorClient  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  locator         LocatorProfile @relation(fields: [locatorId], references: [id], onDelete: Cascade)
+  unit            Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
   @@index([clientId, unitId])
   @@index([locatorId])
 }
 
-// Snapshot of notes for published reports
 model ReportPropertyNote {
   id         String         @id @default(cuid())
   propertyId String
+  type       String
+  content    String
+  sortOrder  Int            @default(0)
+  createdAt  DateTime       @default(now())
   property   ReportProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  type      String  // 'pro' | 'con' | 'note'
-  content   String
-  sortOrder Int     @default(0)
-
-  createdAt DateTime @default(now())
 
   @@index([propertyId])
 }
 
-// ============================================================================
-// FIELD EDITS - Crowdsourced corrections to listing data
-// ============================================================================
-
-// Audit trail for field edits (locator corrections to scraped data)
 model FieldEdit {
-  id String @id @default(cuid())
-
-  // Polymorphic reference - one must be null
-  unitId     String?
-  unit       Unit?     @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  buildingId String?
-  building   Building? @relation(fields: [buildingId], references: [id], onDelete: Cascade)
-
-  fieldName     String // e.g., "rentMin", "deposit", "specials"
-  previousValue Json?  // null for first edit
-  newValue      Json   // the corrected value
-
-  source String @default("locator") // "scraper" | "locator" | "admin"
-
-  // Who made the edit
-  editedById String?
-  editedBy   LocatorProfile? @relation(fields: [editedById], references: [id])
-
-  // Conflict tracking
-  hasConflict   Boolean @default(false)
-  conflictValue Json?   // scraped value that differs from locator edit
-
-  createdAt DateTime @default(now())
+  id            String          @id @default(cuid())
+  unitId        String?
+  buildingId    String?
+  fieldName     String
+  previousValue Json?
+  newValue      Json
+  source        String          @default("locator")
+  editedById    String?
+  hasConflict   Boolean         @default(false)
+  conflictValue Json?
+  createdAt     DateTime        @default(now())
+  building      Building?       @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  editedBy      LocatorProfile? @relation(fields: [editedById], references: [id])
+  unit          Unit?           @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
   @@index([unitId, fieldName, createdAt(sort: Desc)])
   @@index([buildingId, fieldName, createdAt(sort: Desc)])

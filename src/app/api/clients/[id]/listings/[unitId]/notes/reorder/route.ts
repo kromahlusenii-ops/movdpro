@@ -4,13 +4,13 @@ import { getSessionUserCached } from '@/lib/pro-auth'
 import prisma from '@/lib/db'
 
 type RouteParams = {
-  params: Promise<{ clientId: string; unitId: string }>
+  params: Promise<{ id: string; unitId: string }>
 }
 
 // PUT - Reorder notes
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const { clientId, unitId } = await params
+    const { id: clientId, unitId } = await params
     const user = await getSessionUserCached()
 
     if (!user) {
@@ -74,7 +74,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       )
     )
 
-    revalidateTag(`clients-${user.id}`, 'max')
+    revalidateTag(`clients-${user.id}`)
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -28,7 +28,7 @@ export async function POST(
       return NextResponse.json({ error: 'No locator profile' }, { status: 404 })
     }
 
-    // Get client with all their saved listings
+    // Get client with all their saved listings and notes
     const client = await prisma.locatorClient.findFirst({
       where: {
         id: clientId,
@@ -44,6 +44,13 @@ export async function POST(
                     neighborhood: true,
                     management: true,
                   },
+                },
+                clientNotes: {
+                  where: {
+                    clientId,
+                    visibleToClient: true,
+                  },
+                  orderBy: [{ type: 'asc' }, { sortOrder: 'asc' }],
                 },
               },
             },
@@ -118,7 +125,7 @@ export async function POST(
         })
       }
 
-      await prisma.reportProperty.create({
+      const reportProperty = await prisma.reportProperty.create({
         data: {
           reportId: report.id,
           buildingId: building.id,
@@ -142,6 +149,19 @@ export async function POST(
           sortOrder: sortOrder++,
         },
       })
+
+      // Snapshot visible notes as ReportPropertyNotes
+      const visibleNotes = unit.clientNotes || []
+      for (const note of visibleNotes) {
+        await prisma.reportPropertyNote.create({
+          data: {
+            propertyId: reportProperty.id,
+            type: note.type,
+            content: note.content,
+            sortOrder: note.sortOrder,
+          },
+        })
+      }
     }
 
     // Add properties from saved buildings (without specific unit)
@@ -220,6 +240,11 @@ export async function POST(
         client: true,
         properties: {
           orderBy: { sortOrder: 'asc' },
+          include: {
+            notes: {
+              orderBy: [{ type: 'asc' }, { sortOrder: 'asc' }],
+            },
+          },
         },
         neighborhoods: {
           orderBy: { sortOrder: 'asc' },

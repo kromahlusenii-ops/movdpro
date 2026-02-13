@@ -4,7 +4,7 @@ import { getSessionUserCached } from '@/lib/pro-auth'
 import prisma from '@/lib/db'
 
 type RouteParams = {
-  params: Promise<{ clientId: string; unitId: string }>
+  params: Promise<{ id: string; unitId: string }>
 }
 
 // Helper to verify client ownership and get locator
@@ -30,7 +30,7 @@ async function verifyClientOwnership(clientId: string, userId: string) {
 // GET - List all notes for a client-listing pair
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { clientId, unitId } = await params
+    const { id: clientId, unitId } = await params
     const user = await getSessionUserCached()
 
     if (!user) {
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // POST - Create a new note
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { clientId, unitId } = await params
+    const { id: clientId, unitId } = await params
     const user = await getSessionUserCached()
 
     if (!user) {
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     })
 
-    revalidateTag(`clients-${user.id}`, 'max')
+    revalidateTag(`clients-${user.id}`)
 
     return NextResponse.json({ note })
   } catch (error) {
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 // PUT - Update a note
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const { clientId, unitId } = await params
+    const { id: clientId, unitId } = await params
     const user = await getSessionUserCached()
 
     if (!user) {
@@ -177,7 +177,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       },
     })
 
-    revalidateTag(`clients-${user.id}`, 'max')
+    revalidateTag(`clients-${user.id}`)
 
     return NextResponse.json({ note })
   } catch (error) {
@@ -189,7 +189,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE - Delete a note
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const { clientId, unitId } = await params
+    const { id: clientId, unitId } = await params
     const user = await getSessionUserCached()
 
     if (!user) {
@@ -226,7 +226,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       where: { id },
     })
 
-    revalidateTag(`clients-${user.id}`, 'max')
+    revalidateTag(`clients-${user.id}`)
 
     return NextResponse.json({ success: true })
   } catch (error) {
