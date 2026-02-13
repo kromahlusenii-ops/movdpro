@@ -175,15 +175,39 @@ async function scrapeGreystarProperty(
   const floorPlans: ScrapedFloorPlan[] = []
   // Keep the full URL including www if present
   const baseUrl = propertyUrl.replace(/\/$/, '')
-  const floorplansUrl = `${baseUrl}/floorplans/`
+
+  // Try different floor plans URL formats (some sites use /floorplans, others use /floor-plans)
+  const floorplansPaths = ['/floorplans/', '/floor-plans/', '/floorplans', '/floor-plans']
+  let floorplansUrl = `${baseUrl}/floorplans/`
+  let navigated = false
 
   const propertyData: Partial<ScrapedBuilding> = {
-    floorplansUrl,
     listingUrl: propertyUrl,
   }
 
-  // Navigate to the floorplans page
-  await page.goto(floorplansUrl, { waitUntil: 'networkidle', timeout: 30000 })
+  // Try each floor plans URL format until one works
+  for (const path of floorplansPaths) {
+    const tryUrl = `${baseUrl}${path}`
+    try {
+      const response = await page.goto(tryUrl, { waitUntil: 'networkidle', timeout: 30000 })
+      // Check if we got a valid page (not 404)
+      if (response && response.status() < 400) {
+        floorplansUrl = tryUrl
+        navigated = true
+        break
+      }
+    } catch {
+      // Try next URL format
+      continue
+    }
+  }
+
+  if (!navigated) {
+    // Fall back to first option if all failed
+    await page.goto(`${baseUrl}/floorplans/`, { waitUntil: 'networkidle', timeout: 30000 })
+  }
+
+  propertyData.floorplansUrl = floorplansUrl
 
   // Wait for floor plan content to load
   await page.waitForTimeout(3000)

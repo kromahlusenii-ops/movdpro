@@ -14,3 +14,8 @@
 **What changed:** Fixed budget filter logic in listings cache - was too restrictive (required entire rent range within budget). Now shows listings with any overlap in budget range.
 **Files touched:** listings-cache.ts
 **Next steps:** None immediate.
+
+## 2026-02-13
+**What changed:** Updated Greystar scraper to try multiple floor plans URL formats (/floorplans/, /floor-plans/, etc.) since some properties like Alexan use different paths.
+**Files touched:** scrapers/greystar.ts
+**Next steps:** Re-run sync to populate units for buildings with /floor-plans URL format.
