@@ -143,7 +143,7 @@ export async function getLocatorWithEmailCached(userId: string) {
         where: { userId: uid },
         include: {
           user: {
-            select: { email: true },
+            select: { email: true, name: true },
           },
         },
       })

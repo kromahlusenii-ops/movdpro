@@ -6,7 +6,7 @@ import { createSession, setSessionCookie } from '@/lib/auth'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, companyName } = body
+    const { email, password, name, companyName } = body
 
     if (!email || !password) {
       return NextResponse.json(
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       user = await prisma.user.create({
         data: {
           email: email.toLowerCase(),
-          name: companyName || null,
+          name: name || null,
         },
         include: { locatorProfile: true },
       })

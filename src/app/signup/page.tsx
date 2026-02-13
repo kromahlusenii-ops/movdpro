@@ -7,6 +7,7 @@ import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react'
 
 export default function ProSignupPage() {
   const router = useRouter()
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -38,6 +39,7 @@ export default function ProSignupPage() {
         body: JSON.stringify({
           email,
           password,
+          name: fullName.trim() || undefined,
           companyName: companyName || undefined,
         }),
       })
@@ -75,6 +77,21 @@ export default function ProSignupPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="fullName" className="block text-sm font-medium mb-2">
+              Full Name
+            </label>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              placeholder="Your full name"
+              className="w-full px-4 py-3 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-foreground/20"
+            />
+          </div>
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-2">
               Email
@@ -151,7 +168,7 @@ export default function ProSignupPage() {
 
           <button
             type="submit"
-            disabled={loading || !email || !password}
+            disabled={loading || !fullName || !email || !password}
             className="w-full py-3.5 rounded-lg font-semibold bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (

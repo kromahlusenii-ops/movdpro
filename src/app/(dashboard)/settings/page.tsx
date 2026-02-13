@@ -1,6 +1,7 @@
 import { getSessionUserCached, getLocatorWithEmailCached, getLocatorWithIntakeSettingsCached } from '@/lib/pro-auth'
 import { SubscriptionActions } from './SubscriptionActions'
 import { IntakeSettings } from './IntakeSettings'
+import { AccountSettings } from './AccountSettings'
 
 export default async function ProSettingsPage({
   searchParams,
@@ -30,19 +31,11 @@ export default async function ProSettingsPage({
       </div>
 
       {/* Account */}
-      <div className="bg-background rounded-xl border p-6 mb-6">
-        <h2 className="font-semibold mb-4">Account</h2>
-        <dl className="space-y-4">
-          <div>
-            <dt className="text-sm text-muted-foreground">Email</dt>
-            <dd className="font-medium">{locator?.user.email}</dd>
-          </div>
-          <div>
-            <dt className="text-sm text-muted-foreground">Company</dt>
-            <dd className="font-medium">{locator?.companyName || 'Not set'}</dd>
-          </div>
-        </dl>
-      </div>
+      <AccountSettings
+        initialName={locator?.user.name ?? null}
+        initialCompanyName={locator?.companyName ?? null}
+        email={locator?.user.email ?? ''}
+      />
 
       {/* Client Intake Form */}
       <div className="mb-6">
