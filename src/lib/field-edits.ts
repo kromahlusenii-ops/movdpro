@@ -9,6 +9,29 @@ import type {
 } from '@/types/field-edits'
 
 /**
+ * Parse user name, falling back to email prefix if name is not set
+ */
+function parseEditorName(user: { name: string | null; email: string } | null | undefined): { firstName: string; lastName: string } {
+  if (!user) return { firstName: '', lastName: '' }
+
+  if (user.name) {
+    const parts = user.name.split(' ')
+    return {
+      firstName: parts[0] || '',
+      lastName: parts.slice(1).join(' ') || '',
+    }
+  }
+
+  // Use email prefix as name fallback
+  const emailPrefix = user.email.split('@')[0]
+  // Capitalize first letter
+  return {
+    firstName: emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1),
+    lastName: '',
+  }
+}
+
+/**
  * Get the current display value for a field, applying any locator edits as overlay
  */
 export async function getFieldWithEdit<T>(
@@ -27,7 +50,7 @@ export async function getFieldWithEdit<T>(
       editedBy: {
         include: {
           user: {
-            select: { name: true },
+            select: { name: true, email: true },
           },
         },
       },
@@ -43,9 +66,8 @@ export async function getFieldWithEdit<T>(
     }
   }
 
-  // Parse editor name into firstName/lastName
-  const editorName = lastEdit.editedBy?.user?.name || ''
-  const [firstName = '', lastName = ''] = editorName.split(' ')
+  // Parse editor name
+  const { firstName, lastName } = parseEditorName(lastEdit.editedBy?.user)
 
   const formattedEdit: FieldEditRecord = {
     id: lastEdit.id,
@@ -135,7 +157,7 @@ export async function createFieldEdit(
       editedBy: {
         include: {
           user: {
-            select: { name: true },
+            select: { name: true, email: true },
           },
         },
       },
@@ -143,8 +165,7 @@ export async function createFieldEdit(
   })
 
   // Parse editor name
-  const editorName = edit.editedBy?.user?.name || ''
-  const [firstName = '', lastName = ''] = editorName.split(' ')
+  const { firstName, lastName } = parseEditorName(edit.editedBy?.user)
 
   return {
     id: edit.id,
@@ -182,7 +203,7 @@ export async function getFieldEditHistory(
       editedBy: {
         include: {
           user: {
-            select: { name: true },
+            select: { name: true, email: true },
           },
         },
       },
@@ -190,8 +211,7 @@ export async function getFieldEditHistory(
   })
 
   return edits.map((edit) => {
-    const editorName = edit.editedBy?.user?.name || ''
-    const [firstName = '', lastName = ''] = editorName.split(' ')
+    const { firstName, lastName } = parseEditorName(edit.editedBy?.user)
 
     return {
       id: edit.id,
@@ -229,7 +249,7 @@ export async function getEntityFieldEdits(
       editedBy: {
         include: {
           user: {
-            select: { name: true },
+            select: { name: true, email: true },
           },
         },
       },
@@ -241,8 +261,7 @@ export async function getEntityFieldEdits(
 
   for (const edit of edits) {
     if (!editsByField.has(edit.fieldName)) {
-      const editorName = edit.editedBy?.user?.name || ''
-      const [firstName = '', lastName = ''] = editorName.split(' ')
+      const { firstName, lastName } = parseEditorName(edit.editedBy?.user)
 
       editsByField.set(edit.fieldName, {
         id: edit.id,
@@ -374,7 +393,7 @@ export async function getUnresolvedConflicts(): Promise<FieldEditRecord[]> {
       editedBy: {
         include: {
           user: {
-            select: { name: true },
+            select: { name: true, email: true },
           },
         },
       },
@@ -392,8 +411,7 @@ export async function getUnresolvedConflicts(): Promise<FieldEditRecord[]> {
   })
 
   return edits.map((edit) => {
-    const editorName = edit.editedBy?.user?.name || ''
-    const [firstName = '', lastName = ''] = editorName.split(' ')
+    const { firstName, lastName } = parseEditorName(edit.editedBy?.user)
 
     return {
       id: edit.id,
