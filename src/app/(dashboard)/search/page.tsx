@@ -925,11 +925,13 @@ export default function ProSearchPage() {
           </div>
 
           {buildingResults.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <ul className="grid gap-3">
               {buildingResults.map(building => (
-                <BuildingSearchCard key={building.id} building={building} />
+                <li key={building.id}>
+                  <BuildingSearchCard building={building} />
+                </li>
               ))}
-            </div>
+            </ul>
           ) : (
             <div className="text-center py-10 bg-background rounded-lg border" role="status">
               <Building2 className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
