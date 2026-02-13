@@ -1,13 +1,14 @@
 /**
- * Sync Script — Discover properties, scrape buildings + units + deals
+ * Sync Script — Discover properties, scrape buildings + units + deals + photos
  *
  * Run: npx tsx scripts/sync.ts
  *
  * Steps:
  * 1. fullSyncAll() — discover properties from portfolio pages, scrape buildings + units
- * 2. Standalone scrapers — scrape each provider for specials/deals
- * 3. syncSpecialsFromBuildings() — save deals to the database
- * 4. Cleanup — deactivate stale + expired specials
+ * 2. syncBuildingPhotos() — fetch Google Place IDs and photos for new buildings
+ * 3. Standalone scrapers — scrape each provider for specials/deals
+ * 4. syncSpecialsFromBuildings() — save deals to the database
+ * 5. Cleanup — deactivate stale + expired specials
  */
 
 import { fullSyncAll } from '../src/lib/scrapers/full-sync'
@@ -20,6 +21,7 @@ import {
   deactivateStaleSpecials,
   deactivateExpiredSpecials,
 } from '../src/lib/scrapers/specials-sync'
+import { syncBuildingPlaceIds, syncBuildingPhotos } from '../src/lib/scrapers/building-photos'
 import prisma from '../src/lib/db'
 
 async function main() {
@@ -30,7 +32,7 @@ async function main() {
   console.log('='.repeat(60))
 
   // ── Step 1: Full sync (discover + scrape buildings & units) ──
-  console.log('\n[1/4] Running full sync (buildings + units)...\n')
+  console.log('\n[1/5] Running full sync (buildings + units)...\n')
   const syncResults = await fullSyncAll()
 
   let totalDiscovered = 0
@@ -53,8 +55,22 @@ async function main() {
     console.log(`  Errors: ${syncErrors.length}`)
   }
 
-  // ── Step 2: Scrape specials/deals from each provider ──
-  console.log('\n[2/4] Scraping specials/deals...\n')
+  // ── Step 2: Sync building photos from Google Places ──
+  console.log('\n[2/5] Syncing building photos...\n')
+
+  const placeIdResult = await syncBuildingPlaceIds()
+  console.log(`  Place IDs: ${placeIdResult.updated} new`)
+
+  const photoResult = await syncBuildingPhotos()
+  console.log(`  Photos: ${photoResult.updated} new, ${photoResult.notFound} unavailable`)
+
+  const photoErrors = [...placeIdResult.errors, ...photoResult.errors]
+  if (photoErrors.length > 0) {
+    syncErrors.push(...photoErrors)
+  }
+
+  // ── Step 3: Scrape specials/deals from each provider ──
+  console.log('\n[3/5] Scraping specials/deals...\n')
 
   const scrapers = [
     { name: 'Greystar', slug: 'greystar', fn: scrapeGreystarCharlotte },
@@ -103,7 +119,7 @@ async function main() {
   console.log(`\n  Specials: ${totalSpecialsCreated} created, ${totalSpecialsUpdated} updated`)
 
   // ── Step 4: Cleanup stale + expired specials ──
-  console.log('\n[3/4] Cleaning up stale specials...\n')
+  console.log('\n[4/5] Cleaning up stale specials...\n')
 
   const staleDeactivated =
     (await deactivateStaleSpecials('greystar')) +
@@ -122,6 +138,7 @@ async function main() {
   console.log('='.repeat(60))
   console.log(`  Buildings:  ${totalCreated} new, ${totalUpdated} updated`)
   console.log(`  Units:      ${totalUnits} created`)
+  console.log(`  Photos:     ${placeIdResult.updated} place IDs, ${photoResult.updated} photos`)
   console.log(`  Specials:   ${totalSpecialsCreated} new, ${totalSpecialsUpdated} updated`)
   console.log(`  Cleanup:    ${staleDeactivated + expiredDeactivated} deactivated`)
   console.log(`  Errors:     ${syncErrors.length + specialsErrors.length}`)
