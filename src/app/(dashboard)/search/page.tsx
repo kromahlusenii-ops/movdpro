@@ -57,6 +57,7 @@ export default function ProSearchPage() {
 
   // Building search state
   const [buildingSearchQuery, setBuildingSearchQuery] = useState('')
+  const [buildingNeighborhoods, setBuildingNeighborhoods] = useState<string[]>([])
   const [buildingResults, setBuildingResults] = useState<BuildingResult[]>([])
   const [buildingSearchLoading, setBuildingSearchLoading] = useState(false)
   const [buildingTotal, setBuildingTotal] = useState(0)
@@ -388,7 +389,7 @@ export default function ProSearchPage() {
   const buildingTotalPages = Math.ceil(buildingTotal / pageSize)
 
   // Building search function
-  const searchBuildings = useCallback(async (query: string, pageNum: number = 1) => {
+  const searchBuildings = useCallback(async (query: string, neighborhoods: string[], pageNum: number = 1) => {
     setBuildingSearchLoading(true)
     setHasBuildingSearched(true)
     setStatusMessage('Searching buildings...')
@@ -397,6 +398,9 @@ export default function ProSearchPage() {
       const params = new URLSearchParams()
       if (query.trim()) {
         params.set('q', query.trim())
+      }
+      if (neighborhoods.length > 0) {
+        params.set('neighborhoods', neighborhoods.join(','))
       }
       params.set('limit', String(pageSize))
       params.set('offset', String((pageNum - 1) * pageSize))
@@ -417,7 +421,7 @@ export default function ProSearchPage() {
     }
   }, [])
 
-  // Debounced building search on query change
+  // Debounced building search on query/filter change
   useEffect(() => {
     if (searchMode !== 'buildings') return
 
@@ -427,7 +431,7 @@ export default function ProSearchPage() {
 
     buildingSearchTimer.current = setTimeout(() => {
       setBuildingPage(1)
-      searchBuildings(buildingSearchQuery, 1)
+      searchBuildings(buildingSearchQuery, buildingNeighborhoods, 1)
     }, 300)
 
     return () => {
@@ -435,21 +439,21 @@ export default function ProSearchPage() {
         clearTimeout(buildingSearchTimer.current)
       }
     }
-  }, [buildingSearchQuery, searchMode, searchBuildings])
+  }, [buildingSearchQuery, buildingNeighborhoods, searchMode, searchBuildings])
 
   // Load initial buildings when switching to building mode
   useEffect(() => {
     if (searchMode === 'buildings' && !hasBuildingSearched) {
-      searchBuildings('', 1)
+      searchBuildings('', [], 1)
     }
   }, [searchMode, hasBuildingSearched, searchBuildings])
 
   const handleBuildingPageChange = useCallback((newPage: number) => {
     setBuildingPage(newPage)
-    searchBuildings(buildingSearchQuery, newPage)
+    searchBuildings(buildingSearchQuery, buildingNeighborhoods, newPage)
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setStatusMessage(`Showing page ${newPage}`)
-  }, [buildingSearchQuery, searchBuildings])
+  }, [buildingSearchQuery, buildingNeighborhoods, searchBuildings])
 
   return (
     <div className="p-6">
@@ -500,35 +504,100 @@ export default function ProSearchPage() {
         </div>
       </header>
 
-      {/* Building Search */}
+      {/* Building Search Filters */}
       {searchMode === 'buildings' && (
         <section
-          aria-label="Building search"
+          aria-label="Building search filters"
           className="bg-background rounded-xl border p-4 mb-6"
         >
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              value={buildingSearchQuery}
-              onChange={(e) => setBuildingSearchQuery(e.target.value)}
-              placeholder="Search by building name, address, or neighborhood..."
-              className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              autoFocus
-            />
-            {buildingSearchQuery && (
-              <button
-                onClick={() => setBuildingSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted"
-              >
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
+          <div className="flex flex-wrap items-end gap-3">
+            {/* Building Name Search */}
+            <div className="w-72">
+              <label htmlFor="building-search" className="block text-xs font-medium text-muted-foreground mb-1.5">
+                Building Name
+              </label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  id="building-search"
+                  type="text"
+                  value={buildingSearchQuery}
+                  onChange={(e) => setBuildingSearchQuery(e.target.value)}
+                  placeholder="Search buildings..."
+                  className="w-full pl-8 pr-8 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                />
+                {buildingSearchQuery && (
+                  <button
+                    onClick={() => setBuildingSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted"
+                  >
+                    <X className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Neighborhood Dropdown */}
+            <div className="w-52">
+              <SearchableDropdown
+                options={NEIGHBORHOOD_OPTIONS}
+                selected={buildingNeighborhoods}
+                onChange={setBuildingNeighborhoods}
+                placeholder="All areas"
+                searchable={true}
+                multiple={true}
+                label="Neighborhood"
+                id="building-neighborhoods-filter"
+              />
+            </div>
+
+            {/* Loading Indicator */}
+            {buildingSearchLoading && (
+              <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                <div className="w-4 h-4 border-2 border-muted border-t-foreground rounded-full animate-spin" />
+                <span>Searching...</span>
+              </div>
             )}
           </div>
-          {buildingSearchLoading && (
-            <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
-              <div className="w-4 h-4 border-2 border-muted border-t-foreground rounded-full animate-spin" />
-              <span>Searching...</span>
+
+          {/* Active Building Filters */}
+          {(buildingSearchQuery || buildingNeighborhoods.length > 0) && (
+            <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t">
+              <span className="text-xs text-muted-foreground">Filters:</span>
+              {buildingSearchQuery && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">
+                  &quot;{buildingSearchQuery}&quot;
+                  <button
+                    onClick={() => setBuildingSearchQuery('')}
+                    className="hover:text-foreground/70"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {buildingNeighborhoods.map(hood => (
+                <span
+                  key={hood}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs"
+                >
+                  {hood}
+                  <button
+                    onClick={() => setBuildingNeighborhoods(buildingNeighborhoods.filter(n => n !== hood))}
+                    className="hover:text-foreground/70"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              <button
+                onClick={() => {
+                  setBuildingSearchQuery('')
+                  setBuildingNeighborhoods([])
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Clear all
+              </button>
             </div>
           )}
         </section>
