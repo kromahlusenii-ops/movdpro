@@ -24,3 +24,8 @@
 **What changed:** Alexan Loso building now has 34 floor plan types (92 available units) after running sync-alexan.ts. Building will now show listings when selected in the UI.
 **Files touched:** Database (Unit records)
 **Next steps:** None for Alexan. MAA scraper still needs work for 5 remaining empty buildings.
+
+## 2026-02-14
+**What changed:** Added client edit history endpoint (GET /api/clients/[id]/history). Added bulk save listings endpoint (POST /api/clients/bulk-save-listings). Updated client PATCH to track field edits via ClientFieldEdit model.
+**Files touched:** clients/[id]/history/route.ts, clients/bulk-save-listings/route.ts, clients/[id]/route.ts
+**Next steps:** None immediate.

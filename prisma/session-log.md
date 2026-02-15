@@ -9,3 +9,8 @@
 **What changed:** Added ImportLog model (currently commented out) for tracking client imports. Schema ready but migration pending due to Supabase connection timeout.
 **Files touched:** schema.prisma
 **Next steps:** Run `npx prisma db push` when Supabase connection is stable to enable ImportLog tracking.
+
+## 2026-02-14
+**What changed:** Added ClientFieldEdit model for audit trail of client field changes. Links edits to LocatorClient and LocatorProfile. Migration pushed successfully.
+**Files touched:** schema.prisma
+**Next steps:** None immediate.

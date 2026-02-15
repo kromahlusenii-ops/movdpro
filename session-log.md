@@ -14,3 +14,8 @@
 **What changed:** Fixed router cache issue where clients list showed empty after import. Added `router.refresh()` before navigation. Created CLAUDE.md with project documentation and testing requirements.
 **Files touched:** CLAUDE.md
 **Next steps:** None immediate. Import feature is complete and deployed.
+
+## 2026-02-14
+**What changed:** Added client field editing with audit trail. Locators can now edit any client field inline with full history tracking. Added bulk save listings to client feature with multi-select. Added toast notifications. Ran database migration for ClientFieldEdit model.
+**Files touched:** prisma/schema.prisma, src/components/clients/*, src/lib/client-edits.ts, src/types/client-edits.ts
+**Next steps:** None immediate. Feature deployed to production.

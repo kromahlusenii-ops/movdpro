@@ -24,3 +24,8 @@
 **What changed:** Created dedicated Alexan scraper to extract all floor plans from Alexan-style websites. Uses `.floor-plan` elements with `bed-X` class for bedroom counts, `.rent-container` for pricing, and `.detail-bar` for sqft. Successfully synced Alexan Loso from 1 unit to 34 floor plan types (92 available units).
 **Files touched:** scripts/sync-alexan.ts (new)
 **Next steps:** None immediate. Can reuse sync-alexan.ts for other Alexan properties.
+
+## 2026-02-14
+**What changed:** Added client-edits.ts for creating and retrieving client field edit audit records. Functions: createClientFieldEdit, getClientFieldEditHistory, getClientLastEdits, serializeEditsMap.
+**Files touched:** client-edits.ts
+**Next steps:** None immediate.
