@@ -4,6 +4,37 @@
 > Before working in any directory, read its `session-log.md` and `decisions.md` files.
 > After completing work, update those files with what you changed.
 
+## AI Agent Guidelines
+
+### Vision Document Requirement
+
+**Before creating or running any task, read `vision.md` in the project root.**
+
+The vision document is the source of truth for:
+- Project goals and objectives
+- Key constraints and non-negotiables
+- Architectural decisions and rationale
+- User experience principles
+- Success criteria
+
+### Conflict Resolution
+
+If any conflicts are detected between a requested task and the vision document:
+
+1. Stop and identify the specific conflict
+2. Explain how the task conflicts with the stated vision
+3. Ask the user to clarify how to resolve the conflict before proceeding
+
+Never proceed with a task that contradicts the vision without explicit user approval.
+
+### Progressive Discovery
+
+The `ai/` directory contains additional rules, commands, and workflows. Each folder has an `index.md` describing its contents.
+
+- Only read `ai/*` folders when needed for the specific task
+- Skip folders irrelevant to the current domain (e.g., skip frontend folders for backend work)
+- The `ai/**/index.md` files are auto-generated—do not edit them manually
+
 ## Project Overview
 
 MOVD Pro is a SaaS platform for apartment locators in Charlotte, NC. It helps locators manage clients, search listings, create reports, and match clients with apartments based on preferences.
