@@ -6,6 +6,9 @@
 
 # Testing
 /coverage
+/playwright-report/
+/test-results/
+/e2e/.auth/
 
 # Next.js
 /.next/
@@ -37,3 +40,6 @@ next-env.d.ts
 # Prisma
 prisma/*.db
 prisma/*.db-journal
+
+# OpenMemory - IDE/Assistant specific rules
+.cursor/rules/openmemory.mdc
