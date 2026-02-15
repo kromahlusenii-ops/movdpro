@@ -19,3 +19,8 @@
 **What changed:** Added website search to building dropdown - can now search buildings by domain (e.g., "alexan.com").
 **Files touched:** search/page.tsx
 **Next steps:** None immediate.
+
+## 2026-02-14
+**What changed:** Optimized building detail and listing detail views for mobile. Added responsive padding, stacked header buttons, horizontal-scrolling filter chips, compact unit cards, and touch-friendly tap targets.
+**Files touched:** property/[id]/page.tsx, listing/[id]/page.tsx
+**Next steps:** None immediate.
