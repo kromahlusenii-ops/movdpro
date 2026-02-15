@@ -439,7 +439,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
   if (loading) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="animate-pulse">
           <div className="h-8 bg-muted rounded w-48 mb-6" />
           <div className="h-64 bg-muted rounded-xl mb-6" />
@@ -452,7 +452,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
   if (!building) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
@@ -479,33 +479,33 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const allPhotos = [building.primaryPhotoUrl, ...building.photos].filter(Boolean) as string[]
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Back */}
       <Link
         href="/search"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 md:mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to search
       </Link>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex flex-col gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-2xl font-bold">{building.name}</h1>
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+            <h1 className="text-xl md:text-2xl font-bold">{building.name}</h1>
             {building.management && (
-              <span className="px-2 py-1 rounded bg-emerald-100 text-emerald-700 text-sm font-medium">
+              <span className="px-2 py-1 rounded bg-emerald-100 text-emerald-700 text-xs md:text-sm font-medium">
                 {building.management.name}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <MapPin className="w-4 h-4" />
-            <span>
+          <div className="flex flex-wrap items-center gap-1.5 md:gap-2 text-sm md:text-base text-muted-foreground">
+            <MapPin className="w-4 h-4 flex-shrink-0" />
+            <span className="break-words">
               {building.address}, {building.city}, {building.state} {building.zipCode}
             </span>
-            <span className="text-muted-foreground/50">·</span>
+            <span className="text-muted-foreground/50 hidden sm:inline">·</span>
             <Link href={`/neighborhood/${building.neighborhood.slug}`} className="hover:underline">
               {building.neighborhood.name}
             </Link>
@@ -515,12 +515,13 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Action Buttons - Stack on mobile */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           {/* Save to Client */}
           <div className="relative">
             <button
               onClick={() => setSaveDropdownOpen(!saveDropdownOpen)}
-              className="px-4 py-2 rounded-lg font-medium bg-muted hover:bg-muted/80 transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg font-medium bg-muted hover:bg-muted/80 transition-colors flex items-center justify-center gap-2"
             >
               <UserPlus className="w-4 h-4" />
               Save to Client
@@ -534,7 +535,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   aria-label="Close menu"
                   tabIndex={-1}
                 />
-                <div className="absolute right-0 top-full mt-2 w-64 bg-background rounded-lg border shadow-lg z-50" role="menu" aria-label="Save to client">
+                <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-full sm:w-64 bg-background rounded-lg border shadow-lg z-50" role="menu" aria-label="Save to client">
                   <div className="p-3 border-b">
                     <p className="text-sm font-medium">Save to client</p>
                   </div>
@@ -574,7 +575,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               href={building.floorplansUrl || `${building.listingUrl?.replace(/\/$/, '')}/floorplans`}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
             >
               <ExternalLink className="w-4 h-4" />
               View Floorplans
@@ -667,9 +668,9 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
           {/* Floor Plans */}
           <div className="bg-background rounded-xl border">
-            <div className="p-4 border-b">
+            <div className="p-3 md:p-4 border-b">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold">Available Floor Plans</h2>
+                <h2 className="font-semibold text-sm md:text-base">Available Floor Plans</h2>
                 <div className="flex items-center gap-2">
                   {(bedroomFilter !== null || maxRent !== null) && (
                     <button
@@ -679,21 +680,21 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                       }}
                       className="text-xs text-muted-foreground hover:text-foreground"
                     >
-                      Clear filters
+                      Clear
                     </button>
                   )}
                   {multiSelectMode ? (
                     <button
                       onClick={exitMultiSelect}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors"
                     >
                       <X className="w-3.5 h-3.5" />
-                      Exit Select
+                      <span className="hidden sm:inline">Exit</span> Select
                     </button>
                   ) : (
                     <button
                       onClick={() => setMultiSelectMode(true)}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-muted hover:bg-muted/80 transition-colors"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-muted hover:bg-muted/80 transition-colors"
                       title="Select multiple units"
                     >
                       <ListChecks className="w-3.5 h-3.5" />
@@ -702,38 +703,40 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   )}
                 </div>
               </div>
-              {/* Filters */}
-              <div className="flex flex-wrap gap-2">
-                {/* Bedroom Filter */}
-                {[
-                  { value: null, label: 'All' },
-                  { value: 0, label: 'Studio' },
-                  { value: 1, label: '1 BR' },
-                  { value: 2, label: '2 BR' },
-                  { value: 3, label: '3+ BR' },
-                ].map((option) => (
-                  <button
-                    key={option.label}
-                    onClick={() => setBedroomFilter(option.value)}
-                    className={cn(
-                      'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                      bedroomFilter === option.value
-                        ? 'bg-foreground text-background'
-                        : 'bg-muted hover:bg-muted/80'
-                    )}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+              {/* Filters - Scrollable on mobile */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                {/* Bedroom Filter - Horizontal scroll on mobile */}
+                <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+                  {[
+                    { value: null, label: 'All' },
+                    { value: 0, label: 'Studio' },
+                    { value: 1, label: '1 BR' },
+                    { value: 2, label: '2 BR' },
+                    { value: 3, label: '3+' },
+                  ].map((option) => (
+                    <button
+                      key={option.label}
+                      onClick={() => setBedroomFilter(option.value)}
+                      className={cn(
+                        'px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0',
+                        bedroomFilter === option.value
+                          ? 'bg-foreground text-background'
+                          : 'bg-muted hover:bg-muted/80'
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
                 {/* Price Filter */}
-                <div className="flex items-center gap-2 ml-2">
-                  <span className="text-sm text-muted-foreground">Max:</span>
+                <div className="flex items-center gap-2 sm:ml-2">
+                  <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">Max rent:</span>
                   <select
                     value={maxRent || ''}
                     onChange={(e) => setMaxRent(e.target.value ? parseInt(e.target.value) : null)}
-                    className="px-2 py-1.5 rounded-lg text-sm bg-muted border-0 focus:ring-1 focus:ring-foreground"
+                    className="flex-1 sm:flex-none px-2 py-1.5 rounded-lg text-xs md:text-sm bg-muted border-0 focus:ring-1 focus:ring-foreground"
                   >
-                    <option value="">Any price</option>
+                    <option value="">Any</option>
                     <option value="1500">$1,500</option>
                     <option value="2000">$2,000</option>
                     <option value="2500">$2,500</option>
@@ -753,85 +756,110 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   <div
                     key={unit.id}
                     className={cn(
-                      'p-4 flex items-center gap-4 transition-colors',
-                      multiSelectMode && 'cursor-pointer hover:bg-muted/50',
+                      'p-3 md:p-4 transition-colors',
+                      multiSelectMode && 'cursor-pointer hover:bg-muted/50 active:bg-muted',
                       isSelected && 'bg-emerald-50'
                     )}
                     onClick={multiSelectMode ? () => toggleUnit(unit.id) : undefined}
                   >
-                    {/* Checkbox for multi-select mode */}
-                    {multiSelectMode && (
-                      <div
-                        className={cn(
-                          'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
-                          isSelected
-                            ? 'bg-emerald-600 border-emerald-600'
-                            : 'border-muted-foreground/30 hover:border-muted-foreground/50'
-                        )}
-                      >
-                        {isSelected && <Check className="w-3 h-3 text-white" />}
-                      </div>
-                    )}
+                    {/* Mobile: Stack layout, Desktop: Row layout */}
+                    <div className="flex items-start gap-3">
+                      {/* Checkbox for multi-select mode */}
+                      {multiSelectMode && (
+                        <div
+                          className={cn(
+                            'w-6 h-6 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+                            isSelected
+                              ? 'bg-emerald-600 border-emerald-600'
+                              : 'border-muted-foreground/30'
+                          )}
+                        >
+                          {isSelected && <Check className="w-4 h-4 text-white" />}
+                        </div>
+                      )}
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <h3 className="font-medium">{unit.name || <BedroomLabel bedrooms={unit.bedrooms} />}</h3>
-                        {unit.availableCount > 0 && (
-                          <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-medium">
-                            {unit.availableCount} available
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Bed className="w-3.5 h-3.5" />
-                          <span>{unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} bed`}</span>
+                      <div className="flex-1 min-w-0">
+                        {/* Header row with name and price */}
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-medium text-sm md:text-base">{unit.name || <BedroomLabel bedrooms={unit.bedrooms} />}</h3>
+                            {unit.availableCount > 0 && (
+                              <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] md:text-xs font-medium">
+                                {unit.availableCount} avail
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="font-bold text-sm md:text-base">
+                              ${unit.rentMin.toLocaleString()}
+                              {unit.rentMin !== unit.rentMax && (
+                                <span className="hidden sm:inline"> - ${unit.rentMax.toLocaleString()}</span>
+                              )}
+                            </p>
+                            <p className="text-[10px] md:text-xs text-muted-foreground">/mo</p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Bath className="w-3.5 h-3.5" />
-                          <span>{unit.bathrooms} bath</span>
-                        </div>
-                        {unit.sqftMin && unit.sqftMax && (
+
+                        {/* Details row */}
+                        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <Maximize className="w-3.5 h-3.5" />
-                            <span>
-                              {unit.sqftMin === unit.sqftMax
-                                ? `${unit.sqftMin.toLocaleString()} sq ft`
-                                : `${unit.sqftMin.toLocaleString()} - ${unit.sqftMax.toLocaleString()} sq ft`}
-                            </span>
+                            <Bed className="w-3 md:w-3.5 h-3 md:h-3.5" />
+                            <span>{unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} bed`}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Bath className="w-3 md:w-3.5 h-3 md:h-3.5" />
+                            <span>{unit.bathrooms} bath</span>
+                          </div>
+                          {unit.sqftMin && unit.sqftMax && (
+                            <div className="flex items-center gap-1">
+                              <Maximize className="w-3 md:w-3.5 h-3 md:h-3.5" />
+                              <span>
+                                {unit.sqftMin === unit.sqftMax
+                                  ? `${unit.sqftMin.toLocaleString()} sqft`
+                                  : `${unit.sqftMin.toLocaleString()}-${unit.sqftMax.toLocaleString()}`}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Save buttons - Below details on mobile */}
+                        {!multiSelectMode && (
+                          <div
+                            className="flex items-center gap-2 mt-2 md:hidden"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {savedClients.length > 0 && <SavedIndicator clients={savedClients} />}
+                            <UnitSaveToClient
+                              unitId={unit.id}
+                              clients={clients}
+                              onSave={handleSaveUnit}
+                              onRemove={handleRemoveUnit}
+                            />
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-bold">
-                        ${unit.rentMin.toLocaleString()}
-                        {unit.rentMin !== unit.rentMax && ` - $${unit.rentMax.toLocaleString()}`}
-                      </p>
-                      <p className="text-xs text-muted-foreground">/month</p>
+                      {/* Save buttons - Right side on desktop */}
+                      {!multiSelectMode && (
+                        <div
+                          className="hidden md:flex items-center gap-2 flex-shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {savedClients.length > 0 && <SavedIndicator clients={savedClients} />}
+                          <UnitSaveToClient
+                            unitId={unit.id}
+                            clients={clients}
+                            onSave={handleSaveUnit}
+                            onRemove={handleRemoveUnit}
+                          />
+                        </div>
+                      )}
                     </div>
-
-                    {/* Saved indicator + Add to Client button */}
-                    {!multiSelectMode && (
-                      <div
-                        className="flex items-center gap-2 flex-shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {savedClients.length > 0 && <SavedIndicator clients={savedClients} />}
-                        <UnitSaveToClient
-                          unitId={unit.id}
-                          clients={clients}
-                          onSave={handleSaveUnit}
-                          onRemove={handleRemoveUnit}
-                        />
-                      </div>
-                    )}
                   </div>
                 )
               })}
               {filteredUnits.length === 0 && (
-                <div className="p-6 text-center text-muted-foreground">
+                <div className="p-6 text-center text-muted-foreground text-sm">
                   No floor plans match your filters
                 </div>
               )}
@@ -840,25 +868,25 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
           {/* Amenities */}
           {building.amenities.length > 0 && (
-            <div className="bg-background rounded-xl border p-4">
-              <h2 className="font-semibold mb-4">Amenities</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="bg-background rounded-xl border p-3 md:p-4">
+              <h2 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Amenities</h2>
+              <div className="grid grid-cols-2 gap-2 md:gap-3">
                 {building.amenities.map((amenity) => (
-                  <div key={amenity} className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 text-emerald-600" />
-                    <span>{AMENITY_LABELS[amenity] || amenity}</span>
+                  <div key={amenity} className="flex items-center gap-2 text-xs md:text-sm">
+                    <Check className="w-3.5 md:w-4 h-3.5 md:h-4 text-emerald-600 flex-shrink-0" />
+                    <span className="truncate">{AMENITY_LABELS[amenity] || amenity}</span>
                   </div>
                 ))}
                 {building.petPolicy && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <PawPrint className="w-4 h-4 text-muted-foreground" />
-                    <span>{building.petPolicy === 'dogs-allowed' ? 'Dogs Allowed' : building.petPolicy}</span>
+                  <div className="flex items-center gap-2 text-xs md:text-sm">
+                    <PawPrint className="w-3.5 md:w-4 h-3.5 md:h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate">{building.petPolicy === 'dogs-allowed' ? 'Dogs Allowed' : building.petPolicy}</span>
                   </div>
                 )}
                 {building.parkingType && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Car className="w-4 h-4 text-muted-foreground" />
-                    <span>{building.parkingType === 'garage' ? 'Garage Parking' : building.parkingType}</span>
+                  <div className="flex items-center gap-2 text-xs md:text-sm">
+                    <Car className="w-3.5 md:w-4 h-3.5 md:h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate">{building.parkingType === 'garage' ? 'Garage Parking' : building.parkingType}</span>
                   </div>
                 )}
               </div>
@@ -867,18 +895,18 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Community Verification Banner */}
           <CommunityVerificationBanner />
 
           {/* Contact */}
-          <div className="bg-background rounded-xl border p-4">
-            <h2 className="font-semibold mb-4">Contact</h2>
-            <div className="space-y-3">
+          <div className="bg-background rounded-xl border p-3 md:p-4">
+            <h2 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Contact</h2>
+            <div className="space-y-2 md:space-y-3">
               {building.phone && (
                 <a
                   href={`tel:${building.phone}`}
-                  className="flex items-center gap-3 text-sm hover:text-foreground/80 transition-colors"
+                  className="flex items-center gap-2 md:gap-3 text-xs md:text-sm hover:text-foreground/80 transition-colors"
                 >
                   <Phone className="w-4 h-4 text-muted-foreground" />
                   <span>{building.phone}</span>
@@ -889,7 +917,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   href={building.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm hover:text-foreground/80 transition-colors"
+                  className="flex items-center gap-2 md:gap-3 text-xs md:text-sm hover:text-foreground/80 transition-colors"
                 >
                   <Globe className="w-4 h-4 text-muted-foreground" />
                   <span>Visit Website</span>
@@ -900,9 +928,9 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* Fees & Specials (Editable) */}
-          <div className="bg-background rounded-xl border p-4">
-            <h2 className="font-semibold mb-4">Fees & Specials</h2>
-            <div className="space-y-4">
+          <div className="bg-background rounded-xl border p-3 md:p-4">
+            <h2 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Fees & Specials</h2>
+            <div className="space-y-3 md:space-y-4">
               <EditableField
                 targetType="building"
                 targetId={building.id}
@@ -939,56 +967,56 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* Neighborhood */}
-          <div className="bg-background rounded-xl border p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold">Neighborhood</h2>
+          <div className="bg-background rounded-xl border p-3 md:p-4">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <h2 className="font-semibold text-sm md:text-base">Neighborhood</h2>
               <Link
                 href={`/neighborhood/${building.neighborhood.slug}`}
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="text-xs md:text-sm text-muted-foreground hover:text-foreground"
               >
-                View Details →
+                Details →
               </Link>
             </div>
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                <span className="text-lg font-bold">{building.neighborhood.grade}</span>
+            <div className="flex items-center gap-3 mb-3 md:mb-4">
+              <div className="w-10 md:w-12 h-10 md:h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                <span className="text-base md:text-lg font-bold">{building.neighborhood.grade}</span>
               </div>
-              <div>
-                <p className="font-medium">{building.neighborhood.name}</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="min-w-0">
+                <p className="font-medium text-sm md:text-base truncate">{building.neighborhood.name}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Score: {building.neighborhood.compositeScore.toFixed(0)}/100
                 </p>
               </div>
             </div>
 
             {/* Walk/Transit/Bike Scores */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-3 gap-1.5 md:gap-2 mb-3 md:mb-4">
               {building.neighborhood.walkScore && (
-                <div className="text-center p-2 rounded-lg bg-muted/50">
-                  <p className="text-lg font-bold">{building.neighborhood.walkScore}</p>
-                  <p className="text-xs text-muted-foreground">Walk</p>
+                <div className="text-center p-1.5 md:p-2 rounded-lg bg-muted/50">
+                  <p className="text-base md:text-lg font-bold">{building.neighborhood.walkScore}</p>
+                  <p className="text-[10px] md:text-xs text-muted-foreground">Walk</p>
                 </div>
               )}
               {building.neighborhood.transitScore && (
-                <div className="text-center p-2 rounded-lg bg-muted/50">
-                  <p className="text-lg font-bold">{building.neighborhood.transitScore}</p>
-                  <p className="text-xs text-muted-foreground">Transit</p>
+                <div className="text-center p-1.5 md:p-2 rounded-lg bg-muted/50">
+                  <p className="text-base md:text-lg font-bold">{building.neighborhood.transitScore}</p>
+                  <p className="text-[10px] md:text-xs text-muted-foreground">Transit</p>
                 </div>
               )}
               {building.neighborhood.bikeScore && (
-                <div className="text-center p-2 rounded-lg bg-muted/50">
-                  <p className="text-lg font-bold">{building.neighborhood.bikeScore}</p>
-                  <p className="text-xs text-muted-foreground">Bike</p>
+                <div className="text-center p-1.5 md:p-2 rounded-lg bg-muted/50">
+                  <p className="text-base md:text-lg font-bold">{building.neighborhood.bikeScore}</p>
+                  <p className="text-[10px] md:text-xs text-muted-foreground">Bike</p>
                 </div>
               )}
             </div>
 
             {/* Highlights */}
             {building.neighborhood.highlights.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1 md:gap-1.5">
                 {building.neighborhood.highlights.slice(0, 4).map((highlight, i) => (
-                  <span key={i} className="px-2 py-1 rounded-full bg-muted text-xs">
+                  <span key={i} className="px-1.5 md:px-2 py-0.5 md:py-1 rounded-full bg-muted text-[10px] md:text-xs">
                     {highlight}
                   </span>
                 ))}
@@ -998,8 +1026,8 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
           {/* Management */}
           {building.management && (
-            <div className="bg-background rounded-xl border p-4">
-              <h2 className="font-semibold mb-3">Managed By</h2>
+            <div className="bg-background rounded-xl border p-3 md:p-4">
+              <h2 className="font-semibold mb-3 text-sm md:text-base">Managed By</h2>
               <div className="flex items-center gap-3">
                 {building.management.logoUrl ? (
                   <Image
@@ -1007,21 +1035,21 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     alt={building.management.name}
                     width={48}
                     height={48}
-                    className="rounded-lg"
+                    className="rounded-lg w-10 h-10 md:w-12 md:h-12"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-emerald-600" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
                   </div>
                 )}
-                <div>
-                  <p className="font-medium">{building.management.name}</p>
+                <div className="min-w-0">
+                  <p className="font-medium text-sm md:text-base truncate">{building.management.name}</p>
                   {building.management.website && (
                     <a
                       href={building.management.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-foreground"
+                      className="text-xs md:text-sm text-muted-foreground hover:text-foreground"
                     >
                       Visit site →
                     </a>

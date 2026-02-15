@@ -191,7 +191,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
   if (loading) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="animate-pulse">
           <div className="h-8 bg-muted rounded w-48 mb-6" />
           <div className="h-64 bg-muted rounded-xl mb-6" />
@@ -204,7 +204,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
   if (!listing) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <Link
           href="/search"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
@@ -223,39 +223,40 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
   const { building } = listing
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Back */}
       <Link
         href="/search"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 md:mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to search
       </Link>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex flex-col gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-2xl font-bold">
+          {/* Unit title - Stack on mobile */}
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-2 mb-2">
+            <h1 className="text-xl md:text-2xl font-bold">
               {listing.unitNumber || listing.name || formatBedrooms(listing.bedrooms)}
             </h1>
-            <span className="text-muted-foreground">at</span>
-            <Link href={`/property/${building.id}`} className="text-2xl font-bold hover:underline">
+            <span className="text-muted-foreground text-sm sm:text-base">at</span>
+            <Link href={`/property/${building.id}`} className="text-xl md:text-2xl font-bold hover:underline">
               {building.name}
             </Link>
             {building.management && (
-              <span className="px-2 py-1 rounded bg-emerald-100 text-emerald-700 text-sm font-medium">
+              <span className="px-2 py-1 rounded bg-emerald-100 text-emerald-700 text-xs md:text-sm font-medium w-fit">
                 {building.management.name}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <MapPin className="w-4 h-4" />
-            <span>
+          <div className="flex flex-wrap items-center gap-1.5 md:gap-2 text-sm md:text-base text-muted-foreground">
+            <MapPin className="w-4 h-4 flex-shrink-0" />
+            <span className="break-words">
               {building.address}, {building.city}, {building.state} {building.zipCode}
             </span>
-            <span className="text-muted-foreground/50">·</span>
+            <span className="text-muted-foreground/50 hidden sm:inline">·</span>
             <Link href={`/neighborhood/${building.neighborhood.slug}`} className="hover:underline">
               {building.neighborhood.name}
             </Link>
@@ -265,12 +266,13 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Action Buttons - Stack on mobile */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           {/* Save to Client */}
           <div className="relative">
             <button
               onClick={() => setSaveDropdownOpen(!saveDropdownOpen)}
-              className="px-4 py-2 rounded-lg font-medium bg-muted hover:bg-muted/80 transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg font-medium bg-muted hover:bg-muted/80 transition-colors flex items-center justify-center gap-2"
             >
               <UserPlus className="w-4 h-4" />
               Save to Client
@@ -284,7 +286,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                   aria-label="Close menu"
                   tabIndex={-1}
                 />
-                <div className="absolute right-0 top-full mt-2 w-64 bg-background rounded-lg border shadow-lg z-50" role="menu" aria-label="Save to client">
+                <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-full sm:w-64 bg-background rounded-lg border shadow-lg z-50" role="menu" aria-label="Save to client">
                   <div className="p-3 border-b">
                     <p className="text-sm font-medium">Save to client</p>
                   </div>
@@ -324,7 +326,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               href={floorplanUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
             >
               <ExternalLink className="w-4 h-4" />
               View Floorplans
@@ -353,9 +355,9 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
           <CommunityVerificationBanner />
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
             {/* Editable Rent Min */}
-            <div className="bg-background rounded-xl border p-4">
+            <div className="bg-background rounded-xl border p-3 md:p-4">
               <EditableField
                 targetType="unit"
                 targetId={listing.id}
@@ -371,7 +373,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Editable Rent Max */}
-            <div className="bg-background rounded-xl border p-4">
+            <div className="bg-background rounded-xl border p-3 md:p-4">
               <EditableField
                 targetType="unit"
                 targetId={listing.id}
@@ -386,34 +388,34 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               />
             </div>
 
-            <div className="bg-background rounded-xl border p-4">
+            <div className="bg-background rounded-xl border p-3 md:p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Bed className="w-4 h-4" />
-                <span className="text-xs">Bedrooms</span>
+                <span className="text-[10px] md:text-xs">Bedrooms</span>
               </div>
-              <p className="font-bold text-xl">{listing.bedrooms === 0 ? 'Studio' : listing.bedrooms}</p>
+              <p className="font-bold text-lg md:text-xl">{listing.bedrooms === 0 ? 'Studio' : listing.bedrooms}</p>
             </div>
 
-            <div className="bg-background rounded-xl border p-4">
+            <div className="bg-background rounded-xl border p-3 md:p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Bath className="w-4 h-4" />
-                <span className="text-xs">Bathrooms</span>
+                <span className="text-[10px] md:text-xs">Bathrooms</span>
               </div>
-              <p className="font-bold text-xl">{listing.bathrooms}</p>
+              <p className="font-bold text-lg md:text-xl">{listing.bathrooms}</p>
             </div>
 
             {listing.sqftMin && (
-              <div className="bg-background rounded-xl border p-4">
+              <div className="bg-background rounded-xl border p-3 md:p-4 col-span-2 sm:col-span-1">
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                   <Maximize className="w-4 h-4" />
-                  <span className="text-xs">Size</span>
+                  <span className="text-[10px] md:text-xs">Size</span>
                 </div>
-                <p className="font-bold text-xl">
+                <p className="font-bold text-lg md:text-xl">
                   {listing.sqftMin === listing.sqftMax
                     ? listing.sqftMin.toLocaleString()
                     : `${listing.sqftMin.toLocaleString()}-${listing.sqftMax?.toLocaleString()}`}
+                  <span className="text-xs md:text-sm text-muted-foreground font-normal ml-1">sq ft</span>
                 </p>
-                <p className="text-xs text-muted-foreground">sq ft</p>
               </div>
             )}
           </div>
@@ -471,13 +473,13 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
           {/* Amenities */}
           {building.amenities.length > 0 && (
-            <div className="bg-background rounded-xl border p-4">
-              <h2 className="font-semibold mb-4">Building Amenities</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="bg-background rounded-xl border p-3 md:p-4">
+              <h2 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Building Amenities</h2>
+              <div className="grid grid-cols-2 gap-2 md:gap-3">
                 {building.amenities.map((amenity) => (
-                  <div key={amenity} className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 text-emerald-600" />
-                    <span>{amenity}</span>
+                  <div key={amenity} className="flex items-center gap-2 text-xs md:text-sm">
+                    <Check className="w-3.5 md:w-4 h-3.5 md:h-4 text-emerald-600 flex-shrink-0" />
+                    <span className="truncate">{amenity}</span>
                   </div>
                 ))}
               </div>
@@ -486,13 +488,13 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Building Info */}
-          <div className="bg-background rounded-xl border p-4">
-            <h2 className="font-semibold mb-3">Building</h2>
+          <div className="bg-background rounded-xl border p-3 md:p-4">
+            <h2 className="font-semibold mb-3 text-sm md:text-base">Building</h2>
             <Link href={`/property/${building.id}`} className="block group">
               <div className="flex items-center gap-3">
-                <div className="w-16 h-12 rounded-lg overflow-hidden">
+                <div className="w-14 md:w-16 h-10 md:h-12 rounded-lg overflow-hidden flex-shrink-0">
                   <BuildingImage
                     src={building.primaryPhotoUrl}
                     alt={building.name}
@@ -502,11 +504,11 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     iconSize="sm"
                   />
                 </div>
-                <div>
-                  <p className="font-medium group-hover:underline">{building.name}</p>
+                <div className="min-w-0">
+                  <p className="font-medium group-hover:underline text-sm md:text-base truncate">{building.name}</p>
                   {building.rating && (
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <div className="flex items-center gap-1 text-xs md:text-sm text-muted-foreground">
+                      <Star className="w-3 md:w-3.5 h-3 md:h-3.5 text-amber-500 fill-amber-500" />
                       <span>{building.rating.toFixed(1)}</span>
                       {building.reviewCount && <span>({building.reviewCount})</span>}
                     </div>
@@ -515,10 +517,10 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               </div>
             </Link>
 
-            <div className="mt-4 pt-4 border-t space-y-2 text-sm">
+            <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t space-y-2 text-xs md:text-sm">
               <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                <span className="text-muted-foreground">
+                <MapPin className="w-3.5 md:w-4 h-3.5 md:h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <span className="text-muted-foreground break-words">
                   {building.address}, {building.city}, {building.state} {building.zipCode}
                 </span>
               </div>
@@ -538,39 +540,39 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
           </div>
 
           {/* Neighborhood */}
-          <div className="bg-background rounded-xl border p-4">
+          <div className="bg-background rounded-xl border p-3 md:p-4">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold">Neighborhood</h2>
+              <h2 className="font-semibold text-sm md:text-base">Neighborhood</h2>
               <Link
                 href={`/neighborhood/${building.neighborhood.slug}`}
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="text-xs md:text-sm text-muted-foreground hover:text-foreground"
               >
-                View Details →
+                Details →
               </Link>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                <span className="text-lg font-bold">{building.neighborhood.grade}</span>
+              <div className="w-10 md:w-12 h-10 md:h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                <span className="text-base md:text-lg font-bold">{building.neighborhood.grade}</span>
               </div>
-              <div>
-                <p className="font-medium">{building.neighborhood.name}</p>
-                <p className="text-sm text-muted-foreground">Charlotte, NC</p>
+              <div className="min-w-0">
+                <p className="font-medium text-sm md:text-base truncate">{building.neighborhood.name}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Charlotte, NC</p>
               </div>
             </div>
 
             {/* Walk/Transit Scores */}
-            <div className="grid grid-cols-2 gap-2 mt-4">
+            <div className="grid grid-cols-2 gap-2 mt-3 md:mt-4">
               {building.neighborhood.walkScore && (
                 <div className="text-center p-2 rounded-lg bg-muted/50">
-                  <p className="text-lg font-bold">{building.neighborhood.walkScore}</p>
-                  <p className="text-xs text-muted-foreground">Walk Score</p>
+                  <p className="text-base md:text-lg font-bold">{building.neighborhood.walkScore}</p>
+                  <p className="text-[10px] md:text-xs text-muted-foreground">Walk</p>
                 </div>
               )}
               {building.neighborhood.transitScore && (
                 <div className="text-center p-2 rounded-lg bg-muted/50">
-                  <p className="text-lg font-bold">{building.neighborhood.transitScore}</p>
-                  <p className="text-xs text-muted-foreground">Transit Score</p>
+                  <p className="text-base md:text-lg font-bold">{building.neighborhood.transitScore}</p>
+                  <p className="text-[10px] md:text-xs text-muted-foreground">Transit</p>
                 </div>
               )}
             </div>
@@ -578,8 +580,8 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
           {/* Management */}
           {building.management && (
-            <div className="bg-background rounded-xl border p-4">
-              <h2 className="font-semibold mb-3">Managed By</h2>
+            <div className="bg-background rounded-xl border p-3 md:p-4">
+              <h2 className="font-semibold mb-3 text-sm md:text-base">Managed By</h2>
               <div className="flex items-center gap-3">
                 {building.management.logoUrl ? (
                   <Image
@@ -587,14 +589,14 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     alt={building.management.name}
                     width={48}
                     height={48}
-                    className="rounded-lg"
+                    className="rounded-lg w-10 h-10 md:w-12 md:h-12"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-emerald-600" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
                   </div>
                 )}
-                <p className="font-medium">{building.management.name}</p>
+                <p className="font-medium text-sm md:text-base">{building.management.name}</p>
               </div>
             </div>
           )}
