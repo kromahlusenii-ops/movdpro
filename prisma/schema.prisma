@@ -9,15 +9,14 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  email          String          @unique
-  name           String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  locatorProfile LocatorProfile?
-  magicLinks     MagicLink[]
-  sessions       QuizSession[]
-  shareLinks     ShareLink[]
+  id         String        @id @default(cuid())
+  email      String        @unique
+  name       String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  magicLinks MagicLink[]
+  sessions   QuizSession[]
+  shareLinks ShareLink[]
 
   @@index([email])
 }
@@ -31,6 +30,32 @@ model MagicLink {
   usedAt    DateTime?
   createdAt DateTime  @default(now())
   user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([email])
+}
+
+model ProUser {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  locatorProfile LocatorProfile?
+  magicLinks     ProMagicLink[]
+
+  @@index([email])
+}
+
+model ProMagicLink {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  email     String
+  userId    String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      ProUser?  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([email])
@@ -419,12 +444,12 @@ model LocatorProfile {
   intakeSlug           String?             @unique
   intakeEnabled        Boolean             @default(true)
   intakeWelcomeMsg     String?
+  clientFieldEdits     ClientFieldEdit[]
   listingNotes         ClientListingNote[]
   creditLedger         CreditLedger[]
-  clientFieldEdits     ClientFieldEdit[]
   fieldEdits           FieldEdit[]
   clients              LocatorClient[]
-  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                 ProUser             @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   comparisons          ProComparison[]
   reports              ProReport[]
   savedSearches        ProSavedSearch[]

@@ -2,7 +2,11 @@ import { cookies } from 'next/headers'
 import { randomBytes, createHash } from 'crypto'
 import prisma from './db'
 
+// Consumer session cookie (MOVD quiz users)
 const SESSION_COOKIE_NAME = 'movd_session'
+// Pro session cookie (MOVD Pro locators)
+const PRO_SESSION_COOKIE_NAME = 'movd_pro_session'
+
 const SESSION_DURATION_DAYS = 30
 const MAGIC_LINK_EXPIRY_MINUTES = 15
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
@@ -186,6 +190,99 @@ export async function findOrCreateUser(email: string, name?: string): Promise<{ 
   } else if (name && !user.name) {
     // Update name if user exists but doesn't have a name yet
     user = await prisma.user.update({
+      where: { id: user.id },
+      data: { name },
+    })
+  }
+
+  return { id: user.id, email: user.email, name: user.name }
+}
+
+// =============================================================================
+// MOVD PRO AUTH FUNCTIONS (separate from consumer auth)
+// =============================================================================
+
+export async function createProSession(userId: string): Promise<string> {
+  const sessionToken = generateToken()
+  const hashedToken = hashToken(sessionToken)
+  const expiresAt = new Date(Date.now() + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000)
+
+  // Store session token in ProMagicLink
+  await prisma.proMagicLink.create({
+    data: {
+      token: hashedToken,
+      email: '', // Not needed for session tokens
+      userId,
+      expiresAt,
+      usedAt: new Date(), // Mark as used immediately (this is a session, not a login link)
+    },
+  })
+
+  return sessionToken
+}
+
+export async function setProSessionCookie(sessionToken: string): Promise<void> {
+  const cookieStore = await cookies()
+  const expiresAt = new Date(Date.now() + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000)
+
+  cookieStore.set(PRO_SESSION_COOKIE_NAME, sessionToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    expires: expiresAt,
+    path: '/',
+  })
+}
+
+export async function getProSessionUser(): Promise<{ id: string; email: string } | null> {
+  const cookieStore = await cookies()
+  const sessionToken = cookieStore.get(PRO_SESSION_COOKIE_NAME)?.value
+
+  if (!sessionToken) {
+    return null
+  }
+
+  const hashedToken = hashToken(sessionToken)
+
+  // Find session in ProMagicLink
+  const session = await prisma.proMagicLink.findUnique({
+    where: { token: hashedToken },
+    include: { user: true },
+  })
+
+  if (!session || !session.user) {
+    return null
+  }
+
+  // Check if session expired
+  if (new Date() > session.expiresAt) {
+    return null
+  }
+
+  return { id: session.user.id, email: session.user.email }
+}
+
+export async function clearProSessionCookie(): Promise<void> {
+  const cookieStore = await cookies()
+  cookieStore.delete(PRO_SESSION_COOKIE_NAME)
+}
+
+export async function findOrCreateProUser(email: string, name?: string): Promise<{ id: string; email: string; name: string | null }> {
+  const normalizedEmail = email.toLowerCase().trim()
+
+  let user = await prisma.proUser.findUnique({
+    where: { email: normalizedEmail },
+  })
+
+  if (!user) {
+    user = await prisma.proUser.create({
+      data: {
+        email: normalizedEmail,
+        name: name || null,
+      },
+    })
+  } else if (name && !user.name) {
+    user = await prisma.proUser.update({
       where: { id: user.id },
       data: { name },
     })

@@ -4,14 +4,14 @@ import { cookies } from 'next/headers'
 import { hashToken } from './auth'
 import prisma from './db'
 
-const SESSION_COOKIE_NAME = 'movd_session'
+const PRO_SESSION_COOKIE_NAME = 'movd_pro_session'
 
 /**
- * Cached session user lookup - deduplicates within a single request
+ * Cached Pro session user lookup - deduplicates within a single request
  */
 export const getSessionUserCached = cache(async (): Promise<{ id: string; email: string } | null> => {
   const cookieStore = await cookies()
-  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value
+  const sessionToken = cookieStore.get(PRO_SESSION_COOKIE_NAME)?.value
 
   if (!sessionToken) {
     return null
@@ -19,7 +19,7 @@ export const getSessionUserCached = cache(async (): Promise<{ id: string; email:
 
   const hashedToken = hashToken(sessionToken)
 
-  const session = await prisma.magicLink.findUnique({
+  const session = await prisma.proMagicLink.findUnique({
     where: { token: hashedToken },
     include: { user: true },
   })

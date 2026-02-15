@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/db'
-import { createSession, setSessionCookie } from '@/lib/auth'
+import { createProSession, setProSessionCookie } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user already exists with a locator profile
-    const existingUser = await prisma.user.findUnique({
+    // Check if Pro user already exists with a locator profile
+    const existingUser = await prisma.proUser.findUnique({
       where: { email: email.toLowerCase() },
       include: { locatorProfile: true },
     })
@@ -38,10 +38,10 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12)
 
-    // Create user if doesn't exist, or use existing
+    // Create Pro user if doesn't exist, or use existing
     let user = existingUser
     if (!user) {
-      user = await prisma.user.create({
+      user = await prisma.proUser.create({
         data: {
           email: email.toLowerCase(),
           name: name || null,
@@ -66,9 +66,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Create session and set cookie
-    const sessionToken = await createSession(user.id)
-    await setSessionCookie(sessionToken)
+    // Create Pro session and set cookie
+    const sessionToken = await createProSession(user.id)
+    await setProSessionCookie(sessionToken)
 
     return NextResponse.json({ success: true })
   } catch (error) {
