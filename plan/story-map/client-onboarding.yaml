@@ -1,0 +1,125 @@
+name: client-onboarding
+description: Locator adds a new client to track their apartment search requirements
+
+personas:
+  - id: locator-sarah
+    name: Sarah
+    description: Independent apartment locator with 3 years experience
+
+painPoints:
+  - id: pp-scattered-info
+    name: Scattered client info
+    description: Client details are spread across texts, emails, and notes
+    impact: 8
+    frequency: 9
+
+  - id: pp-manual-matching
+    name: Manual property matching
+    description: Have to manually search inventory for each client's criteria
+    impact: 7
+    frequency: 8
+
+steps:
+  - id: step-navigate
+    name: Navigate to clients
+    description: User accesses the clients section from dashboard
+    action: Click "Clients" in the navigation sidebar
+    intent: Access client management
+    success: Clients page loads with list or empty state
+
+  - id: step-click-add
+    name: Start new client
+    description: User initiates adding a new client
+    action: Click "Add Client" button
+    intent: Begin capturing new client information
+    success: New client form appears with empty fields
+
+  - id: step-basic-info
+    name: Enter basic info
+    description: User enters client name and contact details
+    action: Fill in name (required), email (optional), phone (optional)
+    intent: Record client identity and contact method
+    success: Name field has value, form ready for next section
+    checkpoint: true
+
+  - id: step-budget
+    name: Set budget range
+    description: User enters client's budget constraints
+    action: Enter minimum and maximum budget values
+    intent: Define affordable rent range for matching
+    success: Budget fields show dollar values
+
+  - id: step-bedrooms
+    name: Select bedrooms
+    description: User selects bedroom requirements
+    action: Click one or more bedroom options (Studio, 1 BR, 2 BR, 3+ BR)
+    intent: Filter properties by size requirements
+    success: Selected bedroom chips appear highlighted
+
+  - id: step-neighborhoods
+    name: Choose neighborhoods
+    description: User selects preferred neighborhoods
+    action: Click neighborhood tags (South End, NoDa, etc.)
+    intent: Filter properties by location preference
+    success: Selected neighborhoods appear highlighted
+
+  - id: step-lifestyle
+    name: Add lifestyle preferences
+    description: User optionally expands lifestyle section for detailed preferences
+    action: Click "Lifestyle Preferences" accordion, select vibes/priorities/pets
+    intent: Capture detailed matching criteria for better recommendations
+    success: Lifestyle section expands, selections are highlighted
+
+  - id: step-notes
+    name: Add notes
+    description: User adds free-form notes about the client
+    action: Type additional context in notes field
+    intent: Capture information that doesn't fit structured fields
+    success: Notes textarea shows entered text
+
+  - id: step-submit
+    name: Submit client
+    description: User submits the form to create the client
+    action: Click "Add Client" button
+    intent: Save client and get property recommendations
+    success: Loading spinner appears, then recommendations screen
+    checkpoint: true
+
+  - id: step-review-recs
+    name: Review recommendations
+    description: User sees AI-matched property recommendations
+    action: Scroll through recommended listings
+    intent: Quickly identify good matches for client
+    success: Recommendations list displays with match scores
+
+  - id: step-select-listings
+    name: Select listings to save
+    description: User selects listings to add to client profile
+    action: Click listing cards to toggle selection
+    intent: Curate initial shortlist for client
+    success: Selected listings show checkmark, count updates
+
+  - id: step-save-listings
+    name: Save and finish
+    description: User saves selected listings and completes onboarding
+    action: Click "Add to Client" button
+    intent: Complete onboarding with initial recommendations
+    success: Redirected to client detail page with saved listings
+    checkpoint: true
+
+userStories:
+  - id: us-quick-add
+    painPoint: pp-scattered-info
+    story: As a locator, I want to quickly add a new client so that I can start tracking their search immediately
+    functionalRequirements:
+      - Given client name, should create client record
+      - Given optional contact info, should save email and phone
+      - Given form submission, should redirect to recommendations or client list
+
+  - id: us-smart-match
+    painPoint: pp-manual-matching
+    story: As a locator, I want automatic property recommendations so that I don't have to manually search inventory
+    functionalRequirements:
+      - Given client preferences, should return matching properties
+      - Given matching properties, should display match percentage
+      - Given selected properties, should save to client profile

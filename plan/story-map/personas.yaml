@@ -1,0 +1,12 @@
+personas:
+  - id: locator-sarah
+    name: Sarah
+    description: Independent apartment locator with 3 years experience in Charlotte. Works primarily from her phone while visiting properties. Has 15-20 active clients at any time.
+
+  - id: locator-marcus
+    name: Marcus
+    description: New locator just starting out. Less tech-savvy, needs clear guidance. Currently building his client base with 5-8 clients.
+
+  - id: locator-team-lead
+    name: Jordan
+    description: Team lead at a small locator agency. Manages 3 junior locators and handles VIP clients personally. Power user who values efficiency.
