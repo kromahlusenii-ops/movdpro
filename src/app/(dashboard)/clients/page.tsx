@@ -11,30 +11,32 @@ export default async function ProClientsPage() {
   const placedClients = clients.filter((c) => c.status === 'placed')
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
-      <header className="flex items-center justify-between mb-8">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Clients</h1>
-          <p className="text-muted-foreground">
-            <span className="sr-only">Summary: </span>
-            {activeClients.length} active · {placedClients.length} placed
-          </p>
+          <h1 className="text-xl md:text-2xl font-bold">Clients</h1>
+          {(activeClients.length > 0 || placedClients.length > 0) && (
+            <p className="text-sm text-muted-foreground mt-0.5">
+              <span className="sr-only">Summary: </span>
+              {activeClients.length} active{placedClients.length > 0 && `, ${placedClients.length} placed`}
+            </p>
+          )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link
             href="/clients/import"
-            className="px-4 py-2.5 rounded-lg font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className="px-3 py-2 rounded-lg text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           >
             <Upload className="w-4 h-4" aria-hidden="true" />
-            Import
+            <span>Import</span>
           </Link>
           <Link
             href="/clients/new"
-            className="px-4 py-2.5 rounded-lg font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className="px-3 py-2 rounded-lg text-sm font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
-            Add Client
+            <span>Add Client</span>
           </Link>
         </div>
       </header>
