@@ -28,3 +28,9 @@
 **Decision:** Passwordless magic link via SendGrid.
 **Rejected:** Password auth (friction), OAuth (complexity for B2B).
 **Impact:** Users authenticate via email link. No passwords stored.
+
+## Separate User Tables — 2026-02-14
+**Context:** MOVD (consumer quiz) and MOVD Pro (locator SaaS) need separate user bases.
+**Decision:** Create ProUser + ProMagicLink tables for Pro. User table stays for consumers.
+**Rejected:** Shared User table with type field, single auth system with roles.
+**Impact:** Completely separate auth systems. Pro uses movd_pro_session cookie. LocatorProfile references ProUser.
