@@ -599,19 +599,24 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 />
               </div>
               {allPhotos.length > 1 && (
-                <div className="p-3 flex gap-2 overflow-x-auto">
-                  {allPhotos.map((photo, i) => (
+                <div className="p-2 md:p-3 flex flex-wrap gap-1.5 md:gap-2">
+                  {allPhotos.slice(0, 8).map((photo, i) => (
                     <button
                       key={i}
                       onClick={() => setSelectedPhoto(i)}
                       className={cn(
-                        'w-20 h-14 rounded-md overflow-hidden flex-shrink-0 border-2 transition-colors',
+                        'w-14 h-10 md:w-20 md:h-14 rounded-md overflow-hidden border-2 transition-colors',
                         selectedPhoto === i ? 'border-foreground' : 'border-transparent hover:border-muted-foreground'
                       )}
                     >
                       <Image src={photo} alt="" width={80} height={56} className="w-full h-full object-cover" />
                     </button>
                   ))}
+                  {allPhotos.length > 8 && (
+                    <span className="flex items-center text-xs text-muted-foreground px-2">
+                      +{allPhotos.length - 8} more
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -703,48 +708,43 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   )}
                 </div>
               </div>
-              {/* Filters - Scrollable on mobile */}
-              <div className="flex flex-col sm:flex-row gap-2">
-                {/* Bedroom Filter - Horizontal scroll on mobile */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
-                  {[
-                    { value: null, label: 'All' },
-                    { value: 0, label: 'Studio' },
-                    { value: 1, label: '1 BR' },
-                    { value: 2, label: '2 BR' },
-                    { value: 3, label: '3+' },
-                  ].map((option) => (
-                    <button
-                      key={option.label}
-                      onClick={() => setBedroomFilter(option.value)}
-                      className={cn(
-                        'px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0',
-                        bedroomFilter === option.value
-                          ? 'bg-foreground text-background'
-                          : 'bg-muted hover:bg-muted/80'
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-                {/* Price Filter */}
-                <div className="flex items-center gap-2 sm:ml-2">
-                  <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">Max rent:</span>
-                  <select
-                    value={maxRent || ''}
-                    onChange={(e) => setMaxRent(e.target.value ? parseInt(e.target.value) : null)}
-                    className="flex-1 sm:flex-none px-2 py-1.5 rounded-lg text-xs md:text-sm bg-muted border-0 focus:ring-1 focus:ring-foreground"
+              {/* Filters */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Bedroom Filter */}
+                {[
+                  { value: null, label: 'All' },
+                  { value: 0, label: 'Studio' },
+                  { value: 1, label: '1 BR' },
+                  { value: 2, label: '2 BR' },
+                  { value: 3, label: '3+' },
+                ].map((option) => (
+                  <button
+                    key={option.label}
+                    onClick={() => setBedroomFilter(option.value)}
+                    className={cn(
+                      'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                      bedroomFilter === option.value
+                        ? 'bg-foreground text-background'
+                        : 'bg-muted hover:bg-muted/80'
+                    )}
                   >
-                    <option value="">Any</option>
-                    <option value="1500">$1,500</option>
-                    <option value="2000">$2,000</option>
-                    <option value="2500">$2,500</option>
-                    <option value="3000">$3,000</option>
-                    <option value="3500">$3,500</option>
-                    <option value="4000">$4,000</option>
-                  </select>
-                </div>
+                    {option.label}
+                  </button>
+                ))}
+                {/* Price Filter */}
+                <select
+                  value={maxRent || ''}
+                  onChange={(e) => setMaxRent(e.target.value ? parseInt(e.target.value) : null)}
+                  className="px-2 py-1.5 rounded-lg text-xs bg-muted border-0 focus:ring-1 focus:ring-foreground"
+                >
+                  <option value="">Max: Any</option>
+                  <option value="1500">Max: $1.5k</option>
+                  <option value="2000">Max: $2k</option>
+                  <option value="2500">Max: $2.5k</option>
+                  <option value="3000">Max: $3k</option>
+                  <option value="3500">Max: $3.5k</option>
+                  <option value="4000">Max: $4k</option>
+                </select>
               </div>
             </div>
             <div className="divide-y">
