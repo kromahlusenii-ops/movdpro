@@ -3,11 +3,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import prisma from '@/lib/db'
 import { getSessionUserCached } from '@/lib/pro-auth'
-import { ArrowLeft, Mail, Phone, FileText, MapPin, Building2, Star, Dog, Cat, Baby, Home, Car, Bed, Bath, Ruler } from 'lucide-react'
+import { getClientLastEdits, serializeEditsMap } from '@/lib/client-edits'
+import { ArrowLeft, Mail, Phone, FileText, MapPin, Building2, Star, Bed, Bath, Ruler } from 'lucide-react'
 import { ClientActions } from './ClientActions'
 import { RemoveListingButton } from './RemoveListingButton'
 import { ShareButton } from './ShareButton'
 import { ListingNotesPanel } from '@/components/features/listing-notes/ListingNotesPanel'
+import { ClientEditableDetails } from '@/components/clients'
 import type { ClientListingNote } from '@/components/features/listing-notes/types'
 
 async function getClientData(userId: string, clientId: string) {
@@ -56,7 +58,11 @@ async function getClientData(userId: string, clientId: string) {
   const client = locator.clients[0]
   if (!client) return null
 
-  return { client }
+  // Fetch last edits for each field
+  const lastEditsMap = await getClientLastEdits(client.id)
+  const lastEdits = serializeEditsMap(lastEditsMap)
+
+  return { client, lastEdits }
 }
 
 function formatBedrooms(bedrooms: number): string {
@@ -79,7 +85,7 @@ export default async function ClientDetailPage({
     notFound()
   }
 
-  const { client } = data
+  const { client, lastEdits } = data
 
   return (
     <div className="p-8 max-w-3xl">
@@ -134,116 +140,33 @@ export default async function ClientDetailPage({
         </div>
       </div>
 
-      {/* Requirements */}
-      <div className="bg-background rounded-xl border p-6 mb-6">
-        <h2 className="font-semibold mb-4">Requirements</h2>
-        <dl className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <dt className="text-sm text-muted-foreground">Budget</dt>
-            <dd className="font-medium">
-              {client.budgetMin && client.budgetMax
-                ? `$${client.budgetMin.toLocaleString()} - $${client.budgetMax.toLocaleString()}`
-                : 'Not specified'}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm text-muted-foreground">Bedrooms</dt>
-            <dd className="font-medium">
-              {client.bedrooms.length > 0 ? client.bedrooms.join(', ') : 'Not specified'}
-            </dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-sm text-muted-foreground">Preferred Neighborhoods</dt>
-            <dd className="font-medium">
-              {client.neighborhoods.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {client.neighborhoods.map(hood => (
-                    <span key={hood} className="px-2 py-0.5 rounded bg-muted text-sm">
-                      {hood}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                'Not specified'
-              )}
-            </dd>
-          </div>
-        </dl>
-      </div>
-
-      {/* Lifestyle Preferences */}
-      {((client.vibes?.length ?? 0) > 0 || client.hasDog || client.hasCat || client.hasKids || client.worksFromHome || client.needsParking || client.commuteAddress) && (
-        <div className="bg-background rounded-xl border p-6 mb-6">
-          <h2 className="font-semibold mb-4">Lifestyle Preferences</h2>
-          <div className="space-y-4">
-            {client.vibes && client.vibes.length > 0 && (
-              <div>
-                <dt className="text-sm text-muted-foreground mb-1">Vibes</dt>
-                <div className="flex flex-wrap gap-1.5">
-                  {client.vibes.map((vibe: string) => (
-                    <span key={vibe} className="px-2 py-0.5 rounded bg-muted text-sm capitalize">
-                      {vibe.replace('-', ' ')}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="flex flex-wrap gap-3">
-              {client.hasDog && (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 text-sm font-medium">
-                  <Dog className="w-4 h-4" />
-                  Dog
-                </span>
-              )}
-              {client.hasCat && (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 text-sm font-medium">
-                  <Cat className="w-4 h-4" />
-                  Cat
-                </span>
-              )}
-              {client.hasKids && (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-sm font-medium">
-                  <Baby className="w-4 h-4" />
-                  Kids
-                </span>
-              )}
-              {client.worksFromHome && (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 text-sm font-medium">
-                  <Home className="w-4 h-4" />
-                  Works from Home
-                </span>
-              )}
-              {client.needsParking && (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-sm font-medium">
-                  <Car className="w-4 h-4" />
-                  Needs Parking
-                </span>
-              )}
-            </div>
-            {client.commuteAddress && (
-              <div>
-                <dt className="text-sm text-muted-foreground">Commute to</dt>
-                <dd className="font-medium mt-0.5">
-                  {client.commuteAddress}
-                  {client.commutePreference && (
-                    <span className="ml-2 text-sm text-muted-foreground">
-                      (prefers {client.commutePreference})
-                    </span>
-                  )}
-                </dd>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Notes */}
-      {client.notes && (
-        <div className="bg-background rounded-xl border p-6 mb-6">
-          <h2 className="font-semibold mb-2">Notes</h2>
-          <p className="text-muted-foreground whitespace-pre-wrap">{client.notes}</p>
-        </div>
-      )}
+      {/* Editable Client Details */}
+      <ClientEditableDetails
+        client={{
+          id: client.id,
+          name: client.name,
+          email: client.email,
+          phone: client.phone,
+          contactPreference: client.contactPreference,
+          budgetMin: client.budgetMin,
+          budgetMax: client.budgetMax,
+          bedrooms: client.bedrooms,
+          neighborhoods: client.neighborhoods,
+          amenities: client.amenities,
+          moveInDate: client.moveInDate,
+          vibes: client.vibes,
+          priorities: client.priorities,
+          hasDog: client.hasDog,
+          hasCat: client.hasCat,
+          hasKids: client.hasKids,
+          worksFromHome: client.worksFromHome,
+          needsParking: client.needsParking,
+          commuteAddress: client.commuteAddress,
+          commutePreference: client.commutePreference,
+          notes: client.notes,
+        }}
+        lastEdits={lastEdits}
+      />
 
       {/* Saved Listings */}
       <div className="bg-background rounded-xl border mb-6">

@@ -301,9 +301,11 @@ async function scrapeGreystarProperty(
       const imgEl = card.querySelector('img[src*="floorplan"], img[src*="floor-plan"], img.fp-image, img')
       const image = imgEl?.getAttribute('src') || imgEl?.getAttribute('data-src') || null
 
-      // Count available units
-      const availMatch = text.match(/(\d+)\s*(?:available|unit)/i)
-      const available = availMatch ? parseInt(availMatch[1], 10) : 1
+      // Count available units - match "X available" or "X units available", but not "Unit X"
+      // Cap at 50 to avoid picking up building-wide totals
+      const availMatch = text.match(/(\d+)\s*(?:units?\s+)?available/i)
+      const rawAvailable = availMatch ? parseInt(availMatch[1], 10) : 1
+      const available = Math.min(rawAvailable, 50)
 
       if (rent) {
         results.push({ name, beds, baths, sqft, rent, available, image })

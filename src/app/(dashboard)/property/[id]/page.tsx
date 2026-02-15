@@ -1,10 +1,19 @@
 'use client'
 
-import { useState, useEffect, use, useMemo } from 'react'
+import { useState, useEffect, use, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { EditableField } from '@/components/listings'
+import {
+  EditableField,
+  UnitSaveToClient,
+  UnitMultiSelectToolbar,
+  ClientPickerDialog,
+  SavedIndicator,
+} from '@/components/listings'
 import { CommunityVerificationBanner } from '@/components/CommunityVerificationBanner'
+import { Toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/useToast'
+import { useLongPress } from '@/hooks/useLongPress'
 import {
   ArrowLeft,
   MapPin,
@@ -21,6 +30,8 @@ import {
   Check,
   Car,
   PawPrint,
+  ListChecks,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FieldEditRecord } from '@/types/field-edits'
@@ -90,6 +101,7 @@ interface Client {
   id: string
   name: string
   savedBuildings?: { buildingId: string }[]
+  savedListings?: { listingId: string }[]
 }
 
 const AMENITY_LABELS: Record<string, string> = {
@@ -123,6 +135,12 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const [bedroomFilter, setBedroomFilter] = useState<number | null>(null)
   const [maxRent, setMaxRent] = useState<number | null>(null)
 
+  // Unit save state
+  const [multiSelectMode, setMultiSelectMode] = useState(false)
+  const [selectedUnits, setSelectedUnits] = useState<Set<string>>(new Set())
+  const [clientPickerOpen, setClientPickerOpen] = useState(false)
+  const { toasts, toast, dismiss } = useToast()
+
   // Filtered units
   const filteredUnits = useMemo(() => {
     if (!building) return []
@@ -140,6 +158,180 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
       return true
     })
   }, [building, bedroomFilter, maxRent])
+
+  // Build map of unitId -> clients for saved indicators
+  const unitToClientsMap = useMemo(() => {
+    const map = new Map<string, Array<{ id: string; name: string }>>()
+    clients.forEach((client) => {
+      client.savedListings?.forEach((saved) => {
+        const existing = map.get(saved.listingId) || []
+        existing.push({ id: client.id, name: client.name })
+        map.set(saved.listingId, existing)
+      })
+    })
+    return map
+  }, [clients])
+
+  const getUnitSavedClients = useCallback(
+    (unitId: string) => unitToClientsMap.get(unitId) || [],
+    [unitToClientsMap]
+  )
+
+  // Toggle unit selection
+  const toggleUnit = useCallback((unitId: string) => {
+    setSelectedUnits((prev) => {
+      const next = new Set(prev)
+      if (next.has(unitId)) {
+        next.delete(unitId)
+      } else {
+        next.add(unitId)
+      }
+      return next
+    })
+  }, [])
+
+  // Exit multi-select mode
+  const exitMultiSelect = useCallback(() => {
+    setMultiSelectMode(false)
+    setSelectedUnits(new Set())
+  }, [])
+
+  // Handle escape key to exit multi-select
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && multiSelectMode) {
+        exitMultiSelect()
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [multiSelectMode, exitMultiSelect])
+
+  // Save a single unit to a client
+  const handleSaveUnit = useCallback(
+    async (clientId: string, unitId: string, notes?: string) => {
+      try {
+        const res = await fetch(`/api/clients/${clientId}/listings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ listingId: unitId, notes }),
+        })
+
+        if (res.ok) {
+          const client = clients.find((c) => c.id === clientId)
+          setClients((prev) =>
+            prev.map((c) =>
+              c.id === clientId
+                ? { ...c, savedListings: [...(c.savedListings || []), { listingId: unitId }] }
+                : c
+            )
+          )
+          toast({
+            type: 'success',
+            title: 'Saved to client',
+            description: `Added to ${client?.name || 'client'}`,
+          })
+        }
+      } catch (error) {
+        console.error('Save unit error:', error)
+        toast({
+          type: 'error',
+          title: 'Failed to save',
+          description: 'Please try again',
+        })
+      }
+    },
+    [clients, toast]
+  )
+
+  // Remove a unit from a client
+  const handleRemoveUnit = useCallback(
+    async (clientId: string, unitId: string) => {
+      try {
+        const res = await fetch(`/api/clients/${clientId}/listings`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ listingId: unitId }),
+        })
+
+        if (res.ok) {
+          const client = clients.find((c) => c.id === clientId)
+          setClients((prev) =>
+            prev.map((c) =>
+              c.id === clientId
+                ? {
+                    ...c,
+                    savedListings: (c.savedListings || []).filter((sl) => sl.listingId !== unitId),
+                  }
+                : c
+            )
+          )
+          toast({
+            type: 'info',
+            title: 'Removed from client',
+            description: `Removed from ${client?.name || 'client'}`,
+          })
+        }
+      } catch (error) {
+        console.error('Remove unit error:', error)
+        toast({
+          type: 'error',
+          title: 'Failed to remove',
+          description: 'Please try again',
+        })
+      }
+    },
+    [clients, toast]
+  )
+
+  // Bulk save selected units to multiple clients
+  const handleBulkSave = useCallback(
+    async (clientIds: string[], notes?: string) => {
+      const unitIds = Array.from(selectedUnits)
+      try {
+        const res = await fetch('/api/clients/bulk-save-listings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ unitIds, clientIds, notes }),
+        })
+
+        if (res.ok) {
+          // Update local state
+          setClients((prev) =>
+            prev.map((c) => {
+              if (clientIds.includes(c.id)) {
+                const existingListingIds = new Set(c.savedListings?.map((sl) => sl.listingId) || [])
+                const newListings = unitIds
+                  .filter((id) => !existingListingIds.has(id))
+                  .map((listingId) => ({ listingId }))
+                return {
+                  ...c,
+                  savedListings: [...(c.savedListings || []), ...newListings],
+                }
+              }
+              return c
+            })
+          )
+
+          toast({
+            type: 'success',
+            title: 'Units saved',
+            description: `Added ${unitIds.length} unit${unitIds.length !== 1 ? 's' : ''} to ${clientIds.length} client${clientIds.length !== 1 ? 's' : ''}`,
+          })
+
+          exitMultiSelect()
+        }
+      } catch (error) {
+        console.error('Bulk save error:', error)
+        toast({
+          type: 'error',
+          title: 'Failed to save',
+          description: 'Please try again',
+        })
+      }
+    },
+    [selectedUnits, toast, exitMultiSelect]
+  )
 
   useEffect(() => {
     // Fetch building data
@@ -478,17 +670,37 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             <div className="p-4 border-b">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-semibold">Available Floor Plans</h2>
-                {(bedroomFilter !== null || maxRent !== null) && (
-                  <button
-                    onClick={() => {
-                      setBedroomFilter(null)
-                      setMaxRent(null)
-                    }}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Clear filters
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {(bedroomFilter !== null || maxRent !== null) && (
+                    <button
+                      onClick={() => {
+                        setBedroomFilter(null)
+                        setMaxRent(null)
+                      }}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Clear filters
+                    </button>
+                  )}
+                  {multiSelectMode ? (
+                    <button
+                      onClick={exitMultiSelect}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Exit Select
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setMultiSelectMode(true)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-muted hover:bg-muted/80 transition-colors"
+                      title="Select multiple units"
+                    >
+                      <ListChecks className="w-3.5 h-3.5" />
+                      Select
+                    </button>
+                  )}
+                </div>
               </div>
               {/* Filters */}
               <div className="flex flex-wrap gap-2">
@@ -533,47 +745,91 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               </div>
             </div>
             <div className="divide-y">
-              {filteredUnits.map((unit) => (
-                <div key={unit.id} className="p-4 flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="font-medium">{unit.name || <BedroomLabel bedrooms={unit.bedrooms} />}</h3>
-                      {unit.availableCount > 0 && (
-                        <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-medium">
-                          {unit.availableCount} available
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Bed className="w-3.5 h-3.5" />
-                        <span>{unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} bed`}</span>
+              {filteredUnits.map((unit) => {
+                const savedClients = getUnitSavedClients(unit.id)
+                const isSelected = selectedUnits.has(unit.id)
+
+                return (
+                  <div
+                    key={unit.id}
+                    className={cn(
+                      'p-4 flex items-center gap-4 transition-colors',
+                      multiSelectMode && 'cursor-pointer hover:bg-muted/50',
+                      isSelected && 'bg-emerald-50'
+                    )}
+                    onClick={multiSelectMode ? () => toggleUnit(unit.id) : undefined}
+                  >
+                    {/* Checkbox for multi-select mode */}
+                    {multiSelectMode && (
+                      <div
+                        className={cn(
+                          'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+                          isSelected
+                            ? 'bg-emerald-600 border-emerald-600'
+                            : 'border-muted-foreground/30 hover:border-muted-foreground/50'
+                        )}
+                      >
+                        {isSelected && <Check className="w-3 h-3 text-white" />}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Bath className="w-3.5 h-3.5" />
-                        <span>{unit.bathrooms} bath</span>
-                      </div>
-                      {unit.sqftMin && unit.sqftMax && (
-                        <div className="flex items-center gap-1">
-                          <Maximize className="w-3.5 h-3.5" />
-                          <span>
-                            {unit.sqftMin === unit.sqftMax
-                              ? `${unit.sqftMin.toLocaleString()} sq ft`
-                              : `${unit.sqftMin.toLocaleString()} - ${unit.sqftMax.toLocaleString()} sq ft`}
+                    )}
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-medium">{unit.name || <BedroomLabel bedrooms={unit.bedrooms} />}</h3>
+                        {unit.availableCount > 0 && (
+                          <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-medium">
+                            {unit.availableCount} available
                           </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Bed className="w-3.5 h-3.5" />
+                          <span>{unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} bed`}</span>
                         </div>
-                      )}
+                        <div className="flex items-center gap-1">
+                          <Bath className="w-3.5 h-3.5" />
+                          <span>{unit.bathrooms} bath</span>
+                        </div>
+                        {unit.sqftMin && unit.sqftMax && (
+                          <div className="flex items-center gap-1">
+                            <Maximize className="w-3.5 h-3.5" />
+                            <span>
+                              {unit.sqftMin === unit.sqftMax
+                                ? `${unit.sqftMin.toLocaleString()} sq ft`
+                                : `${unit.sqftMin.toLocaleString()} - ${unit.sqftMax.toLocaleString()} sq ft`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-bold">
+                        ${unit.rentMin.toLocaleString()}
+                        {unit.rentMin !== unit.rentMax && ` - $${unit.rentMax.toLocaleString()}`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">/month</p>
+                    </div>
+
+                    {/* Saved indicator + Add to Client button */}
+                    {!multiSelectMode && (
+                      <div
+                        className="flex items-center gap-2 flex-shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {savedClients.length > 0 && <SavedIndicator clients={savedClients} />}
+                        <UnitSaveToClient
+                          unitId={unit.id}
+                          clients={clients}
+                          onSave={handleSaveUnit}
+                          onRemove={handleRemoveUnit}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold">
-                      ${unit.rentMin.toLocaleString()}
-                      {unit.rentMin !== unit.rentMax && ` - $${unit.rentMax.toLocaleString()}`}
-                    </p>
-                    <p className="text-xs text-muted-foreground">/month</p>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
               {filteredUnits.length === 0 && (
                 <div className="p-6 text-center text-muted-foreground">
                   No floor plans match your filters
@@ -776,6 +1032,25 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
           )}
         </div>
       </div>
+
+      {/* Toast notifications */}
+      <Toaster toasts={toasts} onDismiss={dismiss} />
+
+      {/* Multi-select toolbar */}
+      <UnitMultiSelectToolbar
+        selectedCount={selectedUnits.size}
+        onAddToClient={() => setClientPickerOpen(true)}
+        onClear={exitMultiSelect}
+      />
+
+      {/* Client picker dialog for bulk save */}
+      <ClientPickerDialog
+        isOpen={clientPickerOpen}
+        onClose={() => setClientPickerOpen(false)}
+        clients={clients}
+        selectedUnitCount={selectedUnits.size}
+        onSave={handleBulkSave}
+      />
     </div>
   )
 }

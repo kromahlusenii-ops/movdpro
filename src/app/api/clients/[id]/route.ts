@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { getSessionUserCached } from '@/lib/pro-auth'
 import prisma from '@/lib/db'
+import { createClientFieldEdit } from '@/lib/client-edits'
+import { PREFERENCE_FIELDS, type ClientEditableFieldName } from '@/types/client-edits'
 
 // GET - Get single client
 export async function GET(
@@ -76,27 +78,99 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { name, email, phone, budgetMin, budgetMax, bedrooms, neighborhoods, notes, status } = body
+    const {
+      name,
+      email,
+      phone,
+      budgetMin,
+      budgetMax,
+      bedrooms,
+      neighborhoods,
+      notes,
+      status,
+      vibes,
+      priorities,
+      hasDog,
+      hasCat,
+      hasKids,
+      worksFromHome,
+      needsParking,
+      commuteAddress,
+      commutePreference,
+      moveInDate,
+      amenities,
+      contactPreference,
+    } = body
 
-    const client = await prisma.locatorClient.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(email !== undefined && { email }),
-        ...(phone !== undefined && { phone }),
-        ...(budgetMin !== undefined && { budgetMin }),
-        ...(budgetMax !== undefined && { budgetMax }),
-        ...(bedrooms !== undefined && { bedrooms }),
-        ...(neighborhoods !== undefined && { neighborhoods }),
-        ...(notes !== undefined && { notes }),
-        ...(status !== undefined && { status }),
-      },
-    })
+    // Track which fields changed and if any are preference fields
+    const changedFields: { fieldName: ClientEditableFieldName; oldValue: unknown; newValue: unknown }[] = []
+    let preferencesChanged = false
+
+    // Build update data and track changes
+    const updateData: Record<string, unknown> = {}
+
+    const checkAndAddField = (fieldName: ClientEditableFieldName, newVal: unknown) => {
+      if (newVal !== undefined) {
+        const oldVal = existing[fieldName as keyof typeof existing]
+        // Check if value actually changed
+        const hasChanged = JSON.stringify(oldVal) !== JSON.stringify(newVal)
+        if (hasChanged) {
+          updateData[fieldName] = newVal
+          changedFields.push({ fieldName, oldValue: oldVal, newValue: newVal })
+          if (PREFERENCE_FIELDS.includes(fieldName)) {
+            preferencesChanged = true
+          }
+        }
+      }
+    }
+
+    // Check all fields
+    checkAndAddField('name', name)
+    checkAndAddField('email', email)
+    checkAndAddField('phone', phone)
+    checkAndAddField('budgetMin', budgetMin)
+    checkAndAddField('budgetMax', budgetMax)
+    checkAndAddField('bedrooms', bedrooms)
+    checkAndAddField('neighborhoods', neighborhoods)
+    checkAndAddField('notes', notes)
+    checkAndAddField('status', status)
+    checkAndAddField('vibes', vibes)
+    checkAndAddField('priorities', priorities)
+    checkAndAddField('hasDog', hasDog)
+    checkAndAddField('hasCat', hasCat)
+    checkAndAddField('hasKids', hasKids)
+    checkAndAddField('worksFromHome', worksFromHome)
+    checkAndAddField('needsParking', needsParking)
+    checkAndAddField('commuteAddress', commuteAddress)
+    checkAndAddField('commutePreference', commutePreference)
+    checkAndAddField('moveInDate', moveInDate ? new Date(moveInDate) : null)
+    checkAndAddField('amenities', amenities)
+    checkAndAddField('contactPreference', contactPreference)
+
+    // Only update if there are changes
+    let client = existing
+    if (Object.keys(updateData).length > 0) {
+      client = await prisma.locatorClient.update({
+        where: { id },
+        data: updateData,
+      })
+
+      // Create edit records for each changed field
+      for (const change of changedFields) {
+        await createClientFieldEdit(
+          id,
+          change.fieldName,
+          change.newValue as never,
+          locator.id,
+          change.oldValue as never
+        )
+      }
+    }
 
     revalidateTag(`clients-${user.id}`, 'max')
     revalidateTag(`locator-${user.id}`, 'max')
 
-    return NextResponse.json({ client })
+    return NextResponse.json({ client, preferencesChanged })
   } catch (error) {
     console.error('Update client error:', error)
     return NextResponse.json({ error: 'Failed to update client' }, { status: 500 })

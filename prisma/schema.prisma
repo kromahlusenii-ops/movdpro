@@ -421,6 +421,7 @@ model LocatorProfile {
   intakeWelcomeMsg     String?
   listingNotes         ClientListingNote[]
   creditLedger         CreditLedger[]
+  clientFieldEdits     ClientFieldEdit[]
   fieldEdits           FieldEdit[]
   clients              LocatorClient[]
   user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -461,6 +462,7 @@ model LocatorClient {
   source            String?
   intakeRef         String?
   contactPreference String?
+  fieldEdits        ClientFieldEdit[]
   listingNotes      ClientListingNote[]
   savedBuildings    ClientSavedBuilding[]
   savedListings     ClientSavedListing[]
@@ -657,4 +659,19 @@ model FieldEdit {
   @@index([unitId, fieldName, createdAt(sort: Desc)])
   @@index([buildingId, fieldName, createdAt(sort: Desc)])
   @@index([hasConflict])
+}
+
+model ClientFieldEdit {
+  id            String         @id @default(cuid())
+  clientId      String
+  fieldName     String
+  previousValue Json?
+  newValue      Json
+  editedById    String
+  createdAt     DateTime       @default(now())
+  client        LocatorClient  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  editedBy      LocatorProfile @relation(fields: [editedById], references: [id])
+
+  @@index([clientId, fieldName, createdAt(sort: Desc)])
+  @@index([editedById])
 }
