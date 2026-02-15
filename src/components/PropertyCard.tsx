@@ -27,7 +27,6 @@ import {
   Ruler,
   Star,
   Tag,
-  ExternalLink,
   UserPlus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -78,12 +77,6 @@ export interface PropertyCardData {
 
 interface PropertyCardProps {
   listing: PropertyCardData
-  /** Whether this card is in compare selection */
-  isCompareSelected?: boolean
-  /** Whether compare selection is at max (3) */
-  compareDisabled?: boolean
-  /** Toggle compare selection */
-  onCompareToggle?: () => void
   /** Open save dropdown */
   onSaveClick?: () => void
   /** Whether save dropdown is open */
@@ -115,9 +108,6 @@ function formatBedrooms(bedrooms: number): string {
 
 export function PropertyCard({
   listing,
-  isCompareSelected = false,
-  compareDisabled = false,
-  onCompareToggle,
   onSaveClick,
   saveDropdownOpen = false,
   className,
@@ -338,49 +328,8 @@ export function PropertyCard({
       </Link>
 
       {/* Actions */}
-      <div className="flex flex-col gap-1.5 flex-shrink-0">
-        {/* View Floorplans Button */}
-        {(listing.building.floorplansUrl || listing.building.listingUrl) && (
-          <a
-            href={
-              listing.building.floorplansUrl ||
-              `${listing.building.listingUrl?.replace(/\/$/, '')}/floorplans`
-            }
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-            aria-label={`View floorplans for ${listing.building.name} (opens in new tab)`}
-            {...actionAttr(ACTION_TYPES.VIEW_FLOORPLANS)}
-          >
-            <ExternalLink className="w-3 h-3" aria-hidden="true" />
-            Floorplans
-          </a>
-        )}
-
-        {onCompareToggle && (
-          <button
-            onClick={onCompareToggle}
-            disabled={!isCompareSelected && compareDisabled}
-            aria-pressed={isCompareSelected}
-            className={cn(
-              'px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-              isCompareSelected
-                ? 'bg-foreground text-background'
-                : 'bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50'
-            )}
-            aria-label={
-              isCompareSelected
-                ? `Remove ${listing.building.name} from comparison`
-                : `Add ${listing.building.name} to comparison`
-            }
-            {...actionAttr(ACTION_TYPES.COMPARE)}
-          >
-            {isCompareSelected ? 'Selected' : 'Compare'}
-          </button>
-        )}
-
-        {onSaveClick && (
+      {onSaveClick && (
+        <div className="flex flex-col gap-1.5 flex-shrink-0">
           <button
             onClick={onSaveClick}
             aria-expanded={saveDropdownOpen}
@@ -392,8 +341,8 @@ export function PropertyCard({
             <UserPlus className="w-3 h-3" aria-hidden="true" />
             Save
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </article>
   )
 }
