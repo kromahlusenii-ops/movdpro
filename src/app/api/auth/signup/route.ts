@@ -2,25 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/db'
 import { createProSession, setProSessionCookie } from '@/lib/auth'
+import { signupSchema } from '@/lib/api-schemas'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, name, companyName } = body
+    const parsed = signupSchema.safeParse(body)
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      )
+    if (!parsed.success) {
+      const message = parsed.error.issues[0]?.message ?? 'Invalid request'
+      return NextResponse.json({ error: message }, { status: 400 })
     }
 
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
-        { status: 400 }
-      )
-    }
+    const { email, password, name, companyName } = parsed.data
 
     // Check if Pro user already exists with a locator profile
     const existingUser = await prisma.proUser.findUnique({

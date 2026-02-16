@@ -1,18 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { MapPin, Bed, Bath, Ruler, Star, Tag, ExternalLink, UserPlus, Check, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { MapPin, Bed, Bath, Ruler, Star, Tag, UserPlus, Check } from 'lucide-react'
 import { Listing, ClientSummary, GRADE_LABELS, formatBedrooms } from '@/types'
 
 interface ListingCardProps {
   listing: Listing
   clients: ClientSummary[]
-  compareList: string[]
   saveDropdownId: string | null
   savingTo: string | null
   saveDropdownRef: React.RefObject<HTMLDivElement>
-  onToggleCompare: (buildingId: string) => void
   onSaveDropdownToggle: (listingId: string | null) => void
   onSaveToClient: (clientId: string, listingId: string) => void
   onRemoveFromClient: (clientId: string, listingId: string) => void
@@ -22,11 +19,9 @@ interface ListingCardProps {
 export function ListingCard({
   listing,
   clients,
-  compareList,
   saveDropdownId,
   savingTo,
   saveDropdownRef,
-  onToggleCompare,
   onSaveDropdownToggle,
   onSaveToClient,
   onRemoveFromClient,
@@ -140,39 +135,6 @@ export function ListingCard({
 
       {/* Actions - horizontal row on mobile */}
       <div className="flex items-center gap-2 mt-2 pt-2 border-t">
-        {/* View Floorplans Button */}
-        {(listing.building.floorplansUrl || listing.building.listingUrl) && (
-          <a
-            href={listing.building.floorplansUrl || `${listing.building.listingUrl?.replace(/\/$/, '')}/floorplans`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-            aria-label={`View floorplans for ${listing.building.name} (opens in new tab)`}
-          >
-            <ExternalLink className="w-3 h-3" aria-hidden="true" />
-            Floorplans
-          </a>
-        )}
-
-        <button
-          onClick={() => onToggleCompare(listing.building.id)}
-          disabled={!compareList.includes(listing.building.id) && compareList.length >= 3}
-          aria-pressed={compareList.includes(listing.building.id)}
-          className={cn(
-            'px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-            compareList.includes(listing.building.id)
-              ? 'bg-foreground text-background'
-              : 'bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50'
-          )}
-          aria-label={compareList.includes(listing.building.id)
-            ? `Remove ${listing.building.name} from comparison`
-            : `Add ${listing.building.name} to comparison`
-          }
-        >
-          {compareList.includes(listing.building.id) ? 'Selected' : 'Compare'}
-        </button>
-
         {/* Save to Client Dropdown */}
         <div className="relative" ref={isDropdownOpen ? saveDropdownRef : undefined}>
           <button
@@ -180,10 +142,10 @@ export function ListingCard({
             aria-expanded={isDropdownOpen}
             aria-haspopup="menu"
             aria-label={`Save ${listing.building.name} to client`}
-            className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-muted text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className="px-3 py-1.5 rounded-md text-xs font-medium border border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
           >
-            <UserPlus className="w-3 h-3" aria-hidden="true" />
-            Save
+            <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
+            Save to Client
           </button>
 
           {isDropdownOpen && (

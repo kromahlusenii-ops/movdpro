@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 import { sendIntakeConfirmationEmail, sendLocatorNotificationEmail } from '@/lib/email'
 import { getAppUrl } from '@/lib/utils'
+import { intakeSubmissionSchema } from '@/lib/api-schemas'
 
 type RouteParams = {
   params: Promise<{ slug: string }>
@@ -79,6 +80,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json()
+    const parsed = intakeSubmissionSchema.safeParse(body)
+
+    if (!parsed.success) {
+      const message = parsed.error.issues[0]?.message ?? 'Invalid request'
+      return NextResponse.json({ error: message }, { status: 400 })
+    }
+
     const {
       name,
       email,
@@ -89,31 +97,32 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       budgetMax,
       vibes,
       intakeRef,
-    } = body
+    } = parsed.data
 
-    // Validate required fields
-    if (!name) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-    }
-
-    if (!email && !phone) {
-      return NextResponse.json(
-        { error: 'Email or phone is required' },
-        { status: 400 }
-      )
-    }
+    const budgetMinNum =
+      typeof budgetMin === 'number'
+        ? budgetMin
+        : typeof budgetMin === 'string'
+          ? parseFloat(budgetMin) || null
+          : null
+    const budgetMaxNum =
+      typeof budgetMax === 'number'
+        ? budgetMax
+        : typeof budgetMax === 'string'
+          ? parseFloat(budgetMax) || null
+          : null
 
     // Create the client
     const client = await prisma.locatorClient.create({
       data: {
         locatorId: locator.id,
         name,
-        email: email || null,
-        phone: phone || null,
+        email: email && String(email).trim() ? String(email).trim() : null,
+        phone: phone && String(phone).trim() ? String(phone).trim() : null,
         contactPreference: contactPreference || null,
         moveInDate: moveInDate ? new Date(moveInDate) : null,
-        budgetMin: budgetMin || null,
-        budgetMax: budgetMax || null,
+        budgetMin: budgetMinNum,
+        budgetMax: budgetMaxNum,
         vibes: vibes || [],
         source: 'intake_form',
         intakeRef: intakeRef || null,
@@ -139,8 +148,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         to: email,
         clientName: name,
         locatorName,
-        budgetMin,
-        budgetMax,
+        budgetMin: budgetMinNum ?? undefined,
+        budgetMax: budgetMaxNum ?? undefined,
         moveInDate: moveInDateFormatted,
         vibes,
       })
@@ -151,11 +160,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     await sendLocatorNotificationEmail({
       to: locator.user.email,
       clientName: name,
-      clientEmail: email,
-      clientPhone: phone,
+      clientEmail: email && String(email).trim() ? String(email).trim() : undefined,
+      clientPhone: phone && String(phone).trim() ? String(phone).trim() : undefined,
       contactPreference,
-      budgetMin,
-      budgetMax,
+      budgetMin: budgetMinNum ?? undefined,
+      budgetMax: budgetMaxNum ?? undefined,
       moveInDate: moveInDateFormatted,
       vibes,
       dashboardUrl,

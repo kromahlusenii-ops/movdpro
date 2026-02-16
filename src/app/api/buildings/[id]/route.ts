@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionUserCached } from '@/lib/pro-auth'
+import { getEntityFieldEdits } from '@/lib/field-edits'
 import prisma from '@/lib/db'
 
 interface RouteParams {
@@ -73,6 +74,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const rentMin = rents.length > 0 ? Math.min(...rents) : null
     const rentMax = rents.length > 0 ? Math.max(...rents) : null
 
+    // Fetch field edits for this building (included to avoid client-side waterfall)
+    const editsMap = await getEntityFieldEdits('building', id)
+    const edits: Record<string, unknown> = {}
+    editsMap.forEach((value, key) => {
+      edits[key] = value
+    })
+
     // Get unique bedroom counts
     const bedroomCounts = [...new Set(building.units.map((u) => u.bedrooms))].sort()
     const bedroomLabels = bedroomCounts.map((c) => {
@@ -125,7 +133,33 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           photoUrl: u.photoUrl,
         })),
         lastSyncedAt: building.lastSyncedAt,
+
+        // Fees & Policies (from Smart Apartment Data)
+        adminFee: building.adminFee,
+        applicationFee: building.applicationFee,
+        petDeposit: building.petDeposit,
+        petRent: building.petRent,
+        petFeeNonrefundable: building.petFeeNonrefundable,
+        petWeightLimit: building.petWeightLimit,
+        petBreedRestrictions: building.petBreedRestrictions,
+        maxPets: building.maxPets,
+        currentSpecials: building.currentSpecials,
+        specialsUpdatedAt: building.specialsUpdatedAt,
+        rentRangeStudio: building.rentRangeStudio,
+        rentRange1br: building.rentRange1br,
+        rentRange2br: building.rentRange2br,
+        rentRange3br: building.rentRange3br,
+        parkingFee: building.parkingFee,
+        trashValetFee: building.trashValetFee,
+        utilitiesIncluded: building.utilitiesIncluded,
+        shortTermPremium: building.shortTermPremium,
+        earlyTerminationFee: building.earlyTerminationFee,
+        guarantorPolicy: building.guarantorPolicy,
+        incomeRequirement: building.incomeRequirement,
+        additionalProvisions: building.additionalProvisions,
+        sadDataUpdatedAt: building.sadDataUpdatedAt,
       },
+      fieldEdits: edits,
     })
   } catch (error) {
     console.error('Building detail error:', error)

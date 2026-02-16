@@ -320,6 +320,42 @@ model Building {
   lastSyncedAt    DateTime?
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
+
+  // Fees (from Smart Apartment Data)
+  adminFee              Int?    // in dollars (e.g., 200)
+  applicationFee        Int?    // in dollars, per person
+  petDeposit            String? // text to handle ranges like "$300–$500"
+  petRent               String? // text to handle "15/mo (1 pet) $30/mo (2 pets)"
+  petFeeNonrefundable   String? // text, e.g., "$400" or "$400 (1 pet) $500 (2 pets)"
+  petWeightLimit        String? // "No Limit", "75 lbs", etc.
+  petBreedRestrictions  String? // "None", "Yes", or specific breeds listed
+  maxPets               Int?    // typically 2 or 3
+
+  // Specials
+  currentSpecials    String?   // full text of current concessions
+  specialsUpdatedAt  DateTime? // when specials were last verified
+
+  // Rent Ranges
+  rentRangeStudio String? // "$1,210–$1,610" or null
+  rentRange1br    String?
+  rentRange2br    String?
+  rentRange3br    String?
+
+  // Parking & Utilities
+  parkingFee       String? // complex text: "Garage ($100–$175)" or "Surface Lot/Open"
+  trashValetFee    String?
+  utilitiesIncluded String? // "Water", "Cable, Water", "All Bills", etc.
+
+  // Lease Terms
+  shortTermPremium    String?
+  earlyTerminationFee String?
+  guarantorPolicy     String?
+  incomeRequirement   String? // "3x rent" or NULL
+
+  // Misc
+  additionalProvisions String?   // catch-all for notes
+  sadDataUpdatedAt     DateTime? // last Smart Apartment Data extraction date
+
   management      ManagementCompany?    @relation(fields: [managementId], references: [id])
   neighborhood    Neighborhood          @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
   savedToClients  ClientSavedBuilding[]
@@ -331,6 +367,9 @@ model Building {
   @@index([neighborhoodId])
   @@index([lat, lng])
   @@index([isAvailable])
+  @@index([adminFee])
+  @@index([applicationFee])
+  @@index([maxPets])
 }
 
 model Special {

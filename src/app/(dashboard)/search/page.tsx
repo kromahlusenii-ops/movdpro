@@ -883,11 +883,9 @@ export default function ProSearchPage() {
                   <ListingCard
                     listing={listing}
                     clients={clients}
-                    compareList={compareList}
                     saveDropdownId={saveDropdownId}
                     savingTo={savingTo}
                     saveDropdownRef={saveDropdownRef}
-                    onToggleCompare={toggleCompare}
                     onSaveDropdownToggle={setSaveDropdownId}
                     onSaveToClient={saveToClient}
                     onRemoveFromClient={removeFromClient}
