@@ -57,10 +57,10 @@ export async function POST(request: NextRequest) {
 
     // Invalidate detail page cache so edits show immediately
     if (targetType === 'unit') {
-      revalidateTag(`listing-${targetId}`)
-      revalidateTag(`unit-${targetId}`)
+      revalidateTag(`listing-${targetId}`, 'max')
+      revalidateTag(`unit-${targetId}`, 'max')
     } else {
-      revalidateTag(`building-${targetId}`)
+      revalidateTag(`building-${targetId}`, 'max')
     }
 
     return NextResponse.json({ edit })
