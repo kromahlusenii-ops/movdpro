@@ -44,10 +44,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const mappings: ColumnMapping[] = JSON.parse(mappingsJson)
-    const duplicateResolutions: DuplicateMatch[] = duplicateResolutionsJson
-      ? JSON.parse(duplicateResolutionsJson)
-      : []
+    let mappings: ColumnMapping[]
+    let duplicateResolutions: DuplicateMatch[] = []
+    try {
+      mappings = JSON.parse(mappingsJson) as ColumnMapping[]
+      if (duplicateResolutionsJson) {
+        duplicateResolutions = JSON.parse(duplicateResolutionsJson) as DuplicateMatch[]
+      }
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON in mappings or duplicateResolutions' },
+        { status: 400 }
+      )
+    }
 
     // Check required fields are mapped
     const unmappedRequired = getUnmappedRequiredFields(mappings)

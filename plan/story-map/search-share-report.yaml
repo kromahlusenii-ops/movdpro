@@ -1,0 +1,67 @@
+name: search-share-report
+description: Locator searches for listings, adds them to a client, generates a share report, and emails it
+
+personas:
+  - id: locator-sarah
+    name: Sarah
+    description: Independent apartment locator with 3 years experience
+
+steps:
+  - id: step-create-client
+    name: Create or select client
+    description: Ensure a client exists with the target email for receiving the report
+    action: Create client "Share Test" with email luiikromah@gmail.com, or use existing client
+    intent: Have a client to add listings to and receive the report email
+    success: Client exists with email
+    checkpoint: true
+
+  - id: step-navigate-search
+    name: Navigate to search
+    description: Open the search page
+    action: Click "Search" in navigation or go to /search
+    intent: Access listings search
+    success: Search page loads with filters
+
+  - id: step-search-listings
+    name: Search for listings
+    description: Apply filters and run search
+    action: Set budget/neighborhoods/bedrooms, click Search or wait for results
+    intent: Find matching listings
+    success: Listings display with results
+
+  - id: step-review-listings
+    name: Review listings
+    description: Browse and evaluate search results
+    action: Scroll through listings, view details
+    intent: Identify good matches for client
+    success: Can see multiple listings with rent, bedrooms, neighborhood
+    checkpoint: true
+
+  - id: step-add-to-client
+    name: Add listings to client
+    description: Save selected listings to the client
+    action: Click "Save to client" on 2-3 listings, select the target client
+    intent: Curate listings for the share report
+    success: Listings saved to client, status shows "Saved to [client name]"
+
+  - id: step-navigate-client
+    name: Open client detail
+    description: Navigate to the client's page
+    action: Go to /clients, click client name or direct to /clients/[id]
+    intent: Access client profile with saved listings
+    success: Client detail page shows saved listings
+
+  - id: step-generate-share
+    name: Generate share report
+    description: Create shareable report from client's saved listings
+    action: Click "Share" button
+    intent: Create report link and optionally email it
+    success: Share dialog opens with share URL
+
+  - id: step-send-email
+    name: Send report via email
+    description: Email the report link to the client
+    action: Click "Send to [email]" button in share dialog
+    intent: Deliver report to client's inbox
+    success: "Email Sent!" confirmation appears
+    checkpoint: true

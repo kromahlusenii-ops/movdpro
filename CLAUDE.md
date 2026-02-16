@@ -176,6 +176,7 @@ SENDGRID_API_KEY=       # For magic link emails
 STRIPE_SECRET_KEY=      # Stripe API key
 STRIPE_WEBHOOK_SECRET=  # Stripe webhook signing secret
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+GOOGLE_MAPS_API_KEY=    # Server-side Google Maps/Places API (preferred over NEXT_PUBLIC_)
 ```
 
 ## Key Features

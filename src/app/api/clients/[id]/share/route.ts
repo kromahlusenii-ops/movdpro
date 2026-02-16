@@ -202,7 +202,7 @@ export async function POST(
     })
 
     const body = await request.json().catch(() => ({}))
-    const { expiresInDays, sendEmail } = body
+    const { expiresInDays, sendEmail, recipientEmail } = body
 
     // Build preferences snapshot
     const preferences = {
@@ -308,11 +308,12 @@ export async function POST(
 
     const shareUrl = `${APP_URL}/share/${shareReport.shareId}`
 
-    // Send email if requested and client has email
+    // Send email if requested (use recipientEmail override or client.email)
     let emailSent = false
-    if (sendEmail && client.email) {
+    const emailTo = recipientEmail || client.email
+    if (sendEmail && emailTo) {
       const emailResult = await sendShareReportEmail({
-        to: client.email,
+        to: emailTo,
         clientName: client.name.split(' ')[0],
         shareUrl,
         listingCount: listings.length,

@@ -16,8 +16,9 @@ export function generateToken(): string {
   return randomBytes(32).toString('base64url')
 }
 
+/** Hash token with SHA3-256 before storage/compare. Avoids timing oracle attacks. See timing-safe-compare.mdc */
 export function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex')
+  return createHash('sha3-256').update(token).digest('hex')
 }
 
 export async function createMagicLink(email: string): Promise<{ token: string; rateLimited: boolean }> {

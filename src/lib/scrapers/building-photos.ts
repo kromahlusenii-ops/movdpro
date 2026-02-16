@@ -6,7 +6,9 @@
 
 import prisma from '../db'
 
-const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+// Server-only key preferred; NEXT_PUBLIC_ exposes key to client bundle
+const GOOGLE_API_KEY =
+  process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
 interface SyncResult {
   updated: number
@@ -22,7 +24,7 @@ export async function syncBuildingPlaceIds(): Promise<SyncResult> {
   const result: SyncResult = { updated: 0, notFound: 0, failed: 0, errors: [] }
 
   if (!GOOGLE_API_KEY) {
-    result.errors.push('GOOGLE_API_KEY not set')
+    result.errors.push('GOOGLE_MAPS_API_KEY not set')
     return result
   }
 
@@ -67,7 +69,7 @@ export async function syncBuildingPhotos(): Promise<SyncResult> {
   const result: SyncResult = { updated: 0, notFound: 0, failed: 0, errors: [] }
 
   if (!GOOGLE_API_KEY) {
-    result.errors.push('GOOGLE_API_KEY not set')
+    result.errors.push('GOOGLE_MAPS_API_KEY not set')
     return result
   }
 

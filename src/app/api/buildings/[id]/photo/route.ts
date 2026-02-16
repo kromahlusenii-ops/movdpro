@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSessionUserCached } from '@/lib/pro-auth'
 import prisma from '@/lib/db'
 
-const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+// Server-only key preferred; NEXT_PUBLIC_ exposes key to client bundle
+const GOOGLE_API_KEY =
+  process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
 type RouteParams = {
   params: Promise<{ id: string }>

@@ -1,30 +1,32 @@
-# Human Test: Client Onboarding
+# Test: Client Onboarding
 
 **Persona**: Sarah — Independent apartment locator with 3 years experience
 
-**Duration**: 10-15 minutes
+**Role**: Locator • Tech level: intermediate • Patience: 7/10
+
+**Goals**: Capture new client info quickly; get AI recommendations; save to client profile
 
 ---
 
-## Pre-test Setup
+## Pre-test
 
-- [ ] Start screen recording (Loom, QuickTime, or similar)
-- [ ] Clear browser state (cookies, cache) or use incognito
-- [ ] Log into MOVD Pro with test account
-- [ ] Have test client info ready:
-  - Name: "Alex Thompson"
+- Start screen recording
+- Clear state (cookies, cache)
+- Prepare credentials: log into MOVD Pro with test account
+- Have test client info ready:
+  - Name: Alex Thompson
   - Email: alex.thompson@example.com
   - Phone: (704) 555-1234
-  - Budget: $1,500 - $2,200/month
-  - Bedrooms: 1 BR or 2 BR
+  - Budget: $1,500 – $2,200/month
+  - Bedrooms: 1 BR, 2 BR
   - Neighborhoods: South End, NoDa
-  - Notes: "Moving for new job at Bank of America. Prefers walkable area."
+  - Notes: Moving for new job at Bank of America. Prefers walkable area.
 
 ---
 
 ## Instructions
 
-Read each step out loud before attempting it. Think aloud as you work — describe what you see, what you expect, and any confusion or friction you encounter.
+Read each step out loud before attempting it. Think aloud as you work — this helps reviewers follow along.
 
 ---
 
@@ -32,211 +34,121 @@ Read each step out loud before attempting it. Think aloud as you work — descri
 
 ### Step 1: Navigate to Clients
 
-**Goal**: Access the client management section
-
-**Do**: Find and click the "Clients" link in the navigation
-
-**Think aloud**:
-- Where do you expect to find clients?
-- Is the navigation clear?
-
-**Success**: Clients page loads showing your client list or empty state
+- **Goal**: Access client management
+- **Do**: Click "Clients" in the navigation sidebar
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Clients page loads with list or empty state
 
 ---
 
-### Step 2: Start New Client
+### Step 2: Start new client
 
-**Goal**: Begin adding a new client
-
-**Do**: Find and click the "Add Client" button
-
-**Think aloud**:
-- Is the button easy to find?
-- Is the label clear?
-
-**Success**: New client form appears with empty fields
+- **Goal**: Begin capturing new client information
+- **Do**: Click "Add Client" button
+- **Think aloud**: What do you see? Any friction?
+- **Success**: New client form appears with empty fields
 
 ---
 
-### Step 3: Enter Basic Info ✓ CHECKPOINT
+### Step 3: Enter basic info ✓ CHECKPOINT
 
-**Goal**: Record client identity
-
-**Do**:
-1. Enter name: "Alex Thompson"
-2. Enter email: alex.thompson@example.com
-3. Enter phone: (704) 555-1234
-
-**Think aloud**:
-- Are the fields clearly labeled?
-- Is it clear which fields are required?
-- Does the phone field accept your format?
-
-**Success**: Name, email, and phone fields are filled
+- **Goal**: Record client identity and contact method
+- **Do**: Fill in name (required), email (optional), phone (optional)
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Name field has value, form ready for next section
 
 ---
 
-### Step 4: Set Budget Range
+### Step 4: Set budget range
 
-**Goal**: Define the client's affordable rent range
-
-**Do**: Enter $1,500 as minimum and $2,200 as maximum
-
-**Think aloud**:
-- Is the budget input intuitive?
-- Do you need to type the dollar sign?
-- Is the min/max layout clear?
-
-**Success**: Budget fields show 1500 and 2200
+- **Goal**: Define affordable rent range for matching
+- **Do**: Enter minimum and maximum budget values
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Budget fields show dollar values
 
 ---
 
-### Step 5: Select Bedrooms
+### Step 5: Select bedrooms
 
-**Goal**: Set bedroom requirements
-
-**Do**: Click "1 BR" and "2 BR" buttons
-
-**Think aloud**:
-- Can you select multiple options?
-- Is the selection state clear?
-- Are the labels intuitive?
-
-**Success**: Both 1 BR and 2 BR appear selected/highlighted
+- **Goal**: Filter properties by size requirements
+- **Do**: Click one or more bedroom options (Studio, 1 BR, 2 BR, 3+ BR)
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Selected bedroom chips appear highlighted
 
 ---
 
-### Step 6: Choose Neighborhoods
+### Step 6: Choose neighborhoods
 
-**Goal**: Set location preferences
-
-**Do**: Click "South End" and "NoDa" tags
-
-**Think aloud**:
-- Are all Charlotte neighborhoods shown?
-- Can you find the ones you want?
-- Is multi-select obvious?
-
-**Success**: South End and NoDa appear selected
+- **Goal**: Filter properties by location preference
+- **Do**: Click neighborhood tags (South End, NoDa, etc.)
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Selected neighborhoods appear highlighted
 
 ---
 
-### Step 7: Add Lifestyle Preferences (Optional)
+### Step 7: Add lifestyle preferences
 
-**Goal**: Capture detailed matching criteria
-
-**Do**:
-1. Click "Lifestyle Preferences" to expand
-2. Select "Young Professional" vibe
-3. Toggle "Works from Home"
-
-**Think aloud**:
-- Did you notice this section?
-- Is the accordion obvious?
-- Are the options relevant to apartment searching?
-
-**Success**: Lifestyle section expanded, selections visible
+- **Goal**: Capture detailed matching criteria for better recommendations
+- **Do**: Click "Lifestyle Preferences" accordion, select vibes/priorities/pets
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Lifestyle section expands, selections are highlighted
 
 ---
 
-### Step 8: Add Notes
+### Step 8: Add notes
 
-**Goal**: Capture additional context
-
-**Do**: Type "Moving for new job at Bank of America. Prefers walkable area."
-
-**Think aloud**:
-- Is the notes field big enough?
-- What kind of info would you typically put here?
-
-**Success**: Notes field shows your text
+- **Goal**: Capture information that doesn't fit structured fields
+- **Do**: Type additional context in notes field
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Notes textarea shows entered text
 
 ---
 
-### Step 9: Submit Client ✓ CHECKPOINT
+### Step 9: Submit client ✓ CHECKPOINT
 
-**Goal**: Save the client and get recommendations
-
-**Do**: Click "Add Client" button
-
-**Think aloud**:
-- Is it clear what will happen?
-- Do you expect to see recommendations?
-- Is the loading state clear?
-
-**Success**: Button shows loading, then recommendations screen appears
+- **Goal**: Save client and get property recommendations
+- **Do**: Click "Add Client" button
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Loading spinner appears, then recommendations screen
 
 ---
 
-### Step 10: Review Recommendations
+### Step 10: Review recommendations
 
-**Goal**: See AI-matched properties
-
-**Do**: Scroll through the recommended listings
-
-**Think aloud**:
-- Do the recommendations seem relevant?
-- Is the match score helpful?
-- Can you see enough info to evaluate each listing?
-
-**Success**: You can see multiple listings with match percentages
+- **Goal**: Quickly identify good matches for client
+- **Do**: Scroll through recommended listings
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Recommendations list displays with match scores
 
 ---
 
-### Step 11: Select Listings to Save
+### Step 11: Select listings to save
 
-**Goal**: Build initial shortlist
-
-**Do**: Click 2-3 listings that look promising
-
-**Think aloud**:
-- Is the selection interaction clear?
-- Can you tell which are selected?
-- Is the count updating?
-
-**Success**: Selected listings show checkmarks, count shows "X selected"
+- **Goal**: Curate initial shortlist for client
+- **Do**: Click listing cards to toggle selection
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Selected listings show checkmark, count updates
 
 ---
 
-### Step 12: Save and Finish ✓ CHECKPOINT
+### Step 12: Save and finish ✓ CHECKPOINT
 
-**Goal**: Complete the onboarding
-
-**Do**: Click "Add to Client" button
-
-**Think aloud**:
-- Is it clear these listings will be saved to the client?
-- What do you expect to see next?
-
-**Success**: Redirected to client detail page showing saved listings
+- **Goal**: Complete onboarding with initial recommendations
+- **Do**: Click "Add to Client" button
+- **Think aloud**: What do you see? Any friction?
+- **Success**: Redirected to client detail page with saved listings
 
 ---
 
-## Post-test Questions
+## Post-test
 
-Stop recording, then reflect:
-
-1. **What was confusing?**
-   - Any steps where you weren't sure what to do?
-   - Any UI elements that were unclear?
-
-2. **What worked well?**
-   - What felt smooth or intuitive?
-   - Any features you particularly liked?
-
-3. **Would you complete this in real life?**
-   - Is this faster than your current process?
-   - Would you use the recommendations feature?
-
-4. **What's missing?**
-   - Any client info you'd want to capture that wasn't available?
-   - Any workflow you'd expect that wasn't there?
+- Stop recording
+- What was confusing?
+- What worked well?
+- Would you complete this in real life?
 
 ---
 
-## Notes for Reviewer
+## Reference
 
-- Primary friction points to watch for
-- Time spent on each checkpoint
-- Any error states encountered
-- Mobile vs desktop differences (if applicable)
+User journey: `plan/story-map/client-onboarding.yaml`
