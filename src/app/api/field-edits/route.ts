@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import type { Prisma } from '@prisma/client'
 import { getSessionUserCached, getLocatorProfileCached } from '@/lib/pro-auth'
 import {
@@ -53,6 +54,14 @@ export async function POST(request: NextRequest) {
       newValue,
       locator.id
     )
+
+    // Invalidate detail page cache so edits show immediately
+    if (targetType === 'unit') {
+      revalidateTag(`listing-${targetId}`)
+      revalidateTag(`unit-${targetId}`)
+    } else {
+      revalidateTag(`building-${targetId}`)
+    }
 
     return NextResponse.json({ edit })
   } catch (error) {

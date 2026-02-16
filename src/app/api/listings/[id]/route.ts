@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionUserCached } from '@/lib/pro-auth'
+import { getEntityFieldEdits } from '@/lib/field-edits'
 import prisma from '@/lib/db'
 
 export async function GET(
@@ -64,6 +65,14 @@ export async function GET(
       return NextResponse.json({ error: 'Listing not found' }, { status: 404 })
     }
 
+    // Fetch field edits for this unit (included to avoid client-side waterfall)
+    const editsMap = await getEntityFieldEdits('unit', id)
+
+    const edits: Record<string, unknown> = {}
+    editsMap.forEach((value, key) => {
+      edits[key] = value
+    })
+
     // Format response
     const formattedListing = {
       id: listing.id,
@@ -101,7 +110,7 @@ export async function GET(
       },
     }
 
-    return NextResponse.json({ listing: formattedListing })
+    return NextResponse.json({ listing: formattedListing, fieldEdits: edits })
   } catch (error) {
     console.error('Listing fetch error:', error)
     return NextResponse.json({ error: 'Failed to fetch listing' }, { status: 500 })
